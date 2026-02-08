@@ -1,0 +1,47 @@
+export const signatureApartmentsData = [
+    {
+      id: "1",
+      nameEn: "Deluxe Twin Room",
+      nameAr: "غرفة توأم ديلوكس",
+      priceSar: 3800,
+      priceUsd: 1013,
+      currencySarAr: "ر.س",
+      currencySarEn: "SAR",
+      currencyUSDAr: "دولار",
+      currencyUSDEn: "USD",
+      mainImage: "/home/signature/room.png",
+      showScreen: true,
+      showDosh: true,
+      showWifi: true
+    },
+    {
+      id: "2",
+      nameEn: "Special Room( Men’s Section)",
+      nameAr: "غرفة خاصة (قسم الرجال)",
+      priceSar: 3000,
+      priceUsd: 800,
+      currencySarAr: "ر.س",
+      currencySarEn: "SAR",
+      currencyUSDAr: "دولار",
+      currencyUSDEn: "USD",
+      mainImage: "/home/signature/room.png",
+      showScreen: true,
+      showDosh: true,
+      showWifi: false
+    },
+    {
+      id: "3",
+      nameEn: "Premium Suite",
+      nameAr: "جناح بريميوم",
+      priceSar: 4500,
+      priceUsd: 1200,
+      currencySarAr: "ر.س",
+      currencySarEn: "SAR",
+      currencyUSDAr: "دولار",
+      currencyUSDEn: "USD",
+      mainImage: "/home/signature/room.png",
+      showScreen: true,
+      showDosh: true,
+      showWifi: true
+    },
+];

@@ -1,0 +1,56 @@
+{
+  "nav": {
+    "home": "الصفحة الرئيسية",
+    "trips": "الرحلات",
+    "umrah": "العمرة",
+    "companies": "الشركات"
+  },
+  "home": {
+    "hero": {
+      "title": "اعثر على رحلتك القادمة بأفضل عروض السفر",
+      "filter": "تصفية",
+      "searchPlaceholder": "بحث"
+    }
+  },
+  "exclusive-Travel": {
+    "exclusive": "Exclusive",
+    "travel": "Travel",
+    "deals": "Deals",
+    "subtitle": "Enjoy exclusive offers and discounts on top travel destinations"
+  },
+  "filter": {
+    "search": "بحث",
+    "filter": "فلترة",
+    "destination": "الوجهة",
+    "selectDestination": "اختر الوجهة",
+    "date": "التاريخ",
+    "selectDate": "اختر التاريخ",
+    "price": "السعر",
+    "duration": "المدة",
+    "guest": "عدد الأشخاص",
+    "from": "من",
+    "to": "إلى"
+  },
+  "destinations": {
+    "sharm": "شرم الشيخ",
+    "hurghada": "الغردقة",
+    "dahab": "دهب",
+    "marsa": "مرسى علم"
+  },
+  "footer": {
+    "description": "منصة تربط المسافرين بالرحلات وعروض السفر وشركات السفر الموثوقة",
+    "email": "أدخل بريدك الإلكتروني",
+    "send": "إرسال",
+    "newsletter": "ابقَ على اطلاع دائم بآخر التحديثات والرؤى والفعاليات من ماكات ميجاترونز.",
+    "rights": "جميع الحقوق محفوظة.",
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الاستخدام",
+    "legal": "القانون",
+    "sitemap": "خريطة الموقع"
+  },
+  "shared": {
+    "seeMore": "رؤية المزيد",
+    "close": "إغلاق",
+    "signOut": "تسجيل الخروج"
+  }
+}

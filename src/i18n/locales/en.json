@@ -1,0 +1,56 @@
+{
+  "nav": {
+    "home": "Home",
+    "trips": "Trips",
+    "umrah": "Umrah",
+    "companies": "Companies"
+  },
+  "home": {
+    "hero": {
+      "title": "Find Your Next Trip with the Best Travel Deals",
+      "filter": "Filter",
+      "searchPlaceholder": "Search"
+    },
+    "exclusive-Travel": {
+      "exclusive": "Exclusive",
+      "travel": "Travel",
+      "deals": "Deals",
+      "subtitle": "Enjoy exclusive offers and discounts on top travel destinations"
+    }
+  },
+  "filter": {
+    "search": "Search",
+    "filter": "Filter",
+    "destination": "Destination",
+    "selectDestination": "Select destination",
+    "date": "Date",
+    "selectDate": "Select date",
+    "price": "Price",
+    "duration": "Duration",
+    "guest": "Guest",
+    "from": "From",
+    "to": "To"
+  },
+  "destinations": {
+    "sharm": "Sharm El Sheikh",
+    "hurghada": "Hurghada",
+    "dahab": "Dahab",
+    "marsa": "Marsa Alam"
+  },
+  "footer": {
+    "description": "A platform that connects travelers with trips, travel deals, and trusted travel companies",
+    "email": "Enter your email",
+    "send": "send",
+    "newsletter": "Stay ahead with the latest updates, insights, and events from Macat Megatrons.",
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "legal": "Legal",
+    "sitemap": "Site Map"
+  },
+  "shared": {
+    "seeMore": "see more",
+    "close": "Close",
+    "signOut": "Sign Out"
+  }
+}
