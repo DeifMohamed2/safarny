@@ -2,6 +2,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@import "swiper/css";
+@import "swiper/css/navigation";
+@Wimport "swiper/css/pagination";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -81,4 +85,89 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight text-secondary;
   }
+}
+
+/* Tailwind v4 – hide scrollbar but keep scroll */
+.scrollbar-hide {
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE / Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;               /* Chrome / Safari */
+}
+
+/* react-responsive-pagination custom style */
+
+.pagination-custom {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pagination-custom li {
+  list-style: none;
+}
+
+.pagination-custom li a {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fff;
+  color: #333333;
+  box-shadow: 0px 0px 2px rgba(38, 56, 89, 0.24);
+  border-radius: 8px;
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+
+  transition: all 0.2s ease;
+}
+
+.pagination-custom li a[aria-label="Previous"],
+.pagination-custom li a[aria-label="Next"] {
+  background: #D4D7DE;
+  color: #263859;
+}
+
+.pagination-custom li a:hover {
+  background: #2F80ED;
+  color: #ffffff;
+}
+
+.pagination-custom li a[aria-label="Previous"]:hover,
+.pagination-custom li a[aria-label="Next"]:hover {
+  background: #bcbec5;
+  color: #263859;
+}
+
+.pagination-custom li.active a {
+  background: #2F80ED;
+  color: #ffffff;
+}
+.pagination-custom li.disabled {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fff;
+  color: #333333;
+  box-shadow: 0px 0px 2px rgba(38, 56, 89, 0.24);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.pagination-custom li.disabled a {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.rtl-pagination .pagination-custom {
+  direction: rtl;
 }

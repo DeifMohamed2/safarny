@@ -1,4 +1,3 @@
-import HeroSection from './components/HeroSection'
 import Quotes from './components/Quotes'
 import TripsSection from '../../components/shared/TripsSection'
 import TripCard from '@/components/shared/TripCard'
@@ -8,7 +7,7 @@ import { useState } from 'react'
 // import { useTranslation } from 'react-i18next'
 import TripsCarousel from '@/components/shared/TripsCarousel'
 
-const Home = () => {
+const CompanyProfile = () => {
   // const { i18n } = useTranslation()
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
 
@@ -28,8 +27,7 @@ const Home = () => {
     { id: "6", title: "Alexandria Weekend", location: "Alexandria, Egypt" },
   ]
   return (
-    <>
-      <HeroSection />
+    <div className='relative min-h-dvh sm:h-full max-w-340 w-full px-4 pt-32.5 mb-4 mx-auto'>
       <TripsSection
         title={
           <>
@@ -38,8 +36,6 @@ const Home = () => {
             <span className="text-sky-950"> Deals</span>
           </>
         } 
-        description='Enjoy exclusive offers and discounts on top travel destinations'
-        actionText='see more'
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -72,8 +68,6 @@ const Home = () => {
             <span className="text-orange-500">Trips</span>
           </>
         } 
-        description='Discover the most popular trips and destinations at great prices'
-        actionText='see more'
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -99,45 +93,9 @@ const Home = () => {
           ))}
         </TripsCarousel>
       </TripsSection>
-      <TripsSection
-        title={
-          <>
-            <span className="text-sky-950">Recommended </span>
-            <span className="text-orange-500">Umrah</span>
-            <span className="text-sky-950"> Trips</span>
-          </>
-        } 
-        description='Reliable and well-planned Umrah journeys to Makkah and Madinah.'
-        actionText='see more'
-      >
-        <TripsCarousel>
-          {trips.map(tripItem => (
-            <TripCard
-              key={tripItem.id}
-              data={{
-                id: tripItem.id,
-                image: trip,
-                title: tripItem.title,
-                category: "Red Sea Getaways",
-                duration: "5 Days / 4 Nights",
-                location: tripItem.location,
-                frequency: "Daily",
-                availableSpots: 12,
-                price: 8500,
-                oldPrice: 9000,
-                discountPercent: 10,
-                isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
-                onToggleFavorite: handleToggleFavorite,
-              }}
-            />
-          ))}
-        </TripsCarousel>
-      </TripsSection>
-
       <Quotes />
-    </>
+    </div>
   )
 }
 
-export default Home
+export default CompanyProfile

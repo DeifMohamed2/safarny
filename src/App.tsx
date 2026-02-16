@@ -5,7 +5,15 @@ import Layout from "./components/layouts/Layout";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 // import ProtectedRoute from "./routes/ProtectedRoute";
 import { AuthProvider } from "./auth";
-const Home = lazy(() => import('./pages/Home'))
+import Home from "./pages/Home";
+import Search from "./pages/Search";
+import Offers from "./pages/Offers";
+import Umrah from "./pages/Umrah";
+import Trips from "./pages/Trips";
+import CompanyProfile from "./pages/CompanyProfile";
+import SearchCompanies from "./pages/SearchCompanies";
+import Companies from "./pages/Companies";
+// const Home = lazy(() => import('./pages/Home'))
 const NotFound = lazy(() => import('./pages/not-found'))
 
 const routers = createBrowserRouter([
@@ -18,7 +26,13 @@ const routers = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Home /> },
-      { path: "trips", element: <Home /> },
+      { path: 'search', element: <Search /> },
+      { path: "trips", element: <Trips /> },
+      { path: "trips/offers", element: <Offers /> },
+      { path: "umrah", element: <Umrah /> },
+      { path: "companies", element: <Companies /> },
+      { path: "company-profile", element: <CompanyProfile /> },
+      { path: "companies/search", element: <SearchCompanies /> },
       { path: "*", element: <NotFound /> },
     ],
   },
