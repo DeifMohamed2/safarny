@@ -37,6 +37,36 @@
     "dahab": "Dahab",
     "marsa": "Marsa Alam"
   },
+  "Companies":{
+    "Companies": "Companies",
+    "subtitle": "Find the best travel companies offering trips across multiple destinations.",
+    "search": "Search",
+     "filter": "Filter",
+     "Top rated Companies": "Top rated Companies",
+     "description": "Discover the highest-rated travel companies on our platform.",
+     "All Companies": "All Companies",
+     "newsletter" :"Discover the highest-rated travel companies on our platform."
+  },
+  "search Companies":{
+   "Companies": "Companies",
+    "subtitle":"Find the best travel companies offering trips across multiple destinations.",
+     "search": "Search",
+     "filter": "Filter",
+     "newsletter" :"300+  companies that match your search"
+  },
+  "company-profile":{
+   "Wanderlust Journeys": "Wanderlust Journeys",
+   "newsletter":"4.8 • 2,347 reviews",
+   "Specializing in beach & leisure trips":"Specializing in beach & leisure trips",
+   "contact company":"contact company",
+   "About the Company":"About the Company",
+   "subtitle":"Wanderlust Journeys has been crafting unforgettable travel experiences since 2010. We specialize in luxury beach destinations and leisure travel packages across the Red Sea region. Our expert team curates every detail to ensure your vacation is seamless, relaxing, and truly memorable.",
+   "Destinations Covered":"Destinations Covered",
+   "El Gouna":"El Gouna",
+   "Soma Bay":"Soma Bay",
+   "Exclusive Travel Deals":"Exclusive Travel Deals",
+   "Popular Trips":"Popular Trips"
+  },
   "footer": {
     "description": "A platform that connects travelers with trips, travel deals, and trusted travel companies",
     "email": "Enter your email",

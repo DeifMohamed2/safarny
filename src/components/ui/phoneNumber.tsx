@@ -63,7 +63,7 @@ const InputComponent = React.forwardRef<
   React.ComponentProps<"input">
 >(({ className, ...props }, ref) => (
   <Input
-    className={cn("rounded-e-lg rounded-s-none focus-visible:ring-0", className)}
+    className={cn("rounded-e-md rounded-s-none focus-visible:ring-0 h-11.25 bg-[#F6F6F6] border-[#D4D7DE] text-[14px]", className)}
     {...props}
     ref={ref}
   />
@@ -92,7 +92,7 @@ const CountrySelect = ({
   return (
     <Popover
       open={isOpen}
-      modal
+      // modal
       onOpenChange={(open) => {
         setIsOpen(open);
         open && setSearchValue("");
@@ -102,7 +102,8 @@ const CountrySelect = ({
         <Button
           type="button"
           variant="outline"
-          className="flex gap-1 rounded-e-none rounded-s-lg border-r-0 px-3 focus:z-10"
+          className="flex gap-1 rounded-e-none rounded-s-md border-r-0 px-3 focus:z-10
+          h-11.25 bg-[#F6F6F6] border-[#D4D7DE]"
           disabled={disabled}
         >
           <FlagComponent
