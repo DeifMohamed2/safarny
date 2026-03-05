@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "react-i18next";
 
 interface BookingCardData {
   imageSrc: string;
@@ -39,6 +40,7 @@ const BookingCard = ({ data }: Props) => {
     onPrimaryClick,
     onSecondaryClick,
   } = data
+  const { t } = useTranslation()
 
   return (
     <div className="w-full relative flex flex-col lg:flex-row items-center p-4 gap-6.5 bg-white shadow-[0px_0px_6.3px_rgba(38,56,89,0.24)] rounded-[22px]">
@@ -84,9 +86,9 @@ const BookingCard = ({ data }: Props) => {
         <div className="flex flex-col p-3 gap-2 w-full border border-[#D8E5FD] rounded-[22px]">
           <div className="flex items-center gap-1.5">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12.0827 7.49984C12.0827 8.05237 11.8632 8.58228 11.4725 8.97298C11.0818 9.36368 10.5519 9.58317 9.99935 9.58317C9.44681 9.58317 8.91691 9.36368 8.52621 8.97298C8.13551 8.58228 7.91602 8.05237 7.91602 7.49984C7.91602 6.9473 8.13551 6.4174 8.52621 6.0267C8.91691 5.636 9.44681 5.4165 9.99935 5.4165C10.5519 5.4165 11.0818 5.636 11.4725 6.0267C11.8632 6.4174 12.0827 6.9473 12.0827 7.49984Z" stroke="#557BEB" stroke-width="1.5"/>
-              <path d="M11.0472 14.5782C10.7658 14.849 10.3904 15.0003 9.99975 15.0003C9.60915 15.0003 9.23373 14.849 8.95225 14.5782C6.37808 12.084 2.92892 9.29817 4.61058 5.25317C5.52142 3.06567 7.70475 1.6665 9.99975 1.6665C12.2947 1.6665 14.4789 3.0665 15.3889 5.25317C17.0689 9.29234 13.6281 12.0923 11.0472 14.5782Z" stroke="#557BEB" stroke-width="1.5"/>
-              <path d="M15 16.6665C15 17.5873 12.7617 18.3332 10 18.3332C7.23833 18.3332 5 17.5873 5 16.6665" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M12.0827 7.49984C12.0827 8.05237 11.8632 8.58228 11.4725 8.97298C11.0818 9.36368 10.5519 9.58317 9.99935 9.58317C9.44681 9.58317 8.91691 9.36368 8.52621 8.97298C8.13551 8.58228 7.91602 8.05237 7.91602 7.49984C7.91602 6.9473 8.13551 6.4174 8.52621 6.0267C8.91691 5.636 9.44681 5.4165 9.99935 5.4165C10.5519 5.4165 11.0818 5.636 11.4725 6.0267C11.8632 6.4174 12.0827 6.9473 12.0827 7.49984Z" stroke="#557BEB" strokeWidth="1.5"/>
+              <path d="M11.0472 14.5782C10.7658 14.849 10.3904 15.0003 9.99975 15.0003C9.60915 15.0003 9.23373 14.849 8.95225 14.5782C6.37808 12.084 2.92892 9.29817 4.61058 5.25317C5.52142 3.06567 7.70475 1.6665 9.99975 1.6665C12.2947 1.6665 14.4789 3.0665 15.3889 5.25317C17.0689 9.29234 13.6281 12.0923 11.0472 14.5782Z" stroke="#557BEB" strokeWidth="1.5"/>
+              <path d="M15 16.6665C15 17.5873 12.7617 18.3332 10 18.3332C7.23833 18.3332 5 17.5873 5 16.6665" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             <p className="text-base leading-6 text-[#232323]">
               {location}
@@ -97,7 +99,7 @@ const BookingCard = ({ data }: Props) => {
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14.25 4.5H3.75C2.92157 4.5 2.25 5.17157 2.25 6V14.25C2.25 15.0784 2.92157 15.75 3.75 15.75H14.25C15.0784 15.75 15.75 15.0784 15.75 14.25V6C15.75 5.17157 15.0784 4.5 14.25 4.5Z" stroke="#557BEB"/>
                 <path d="M2.25 7.5C2.25 6.0855 2.25 5.379 2.6895 4.9395C3.129 4.5 3.8355 4.5 5.25 4.5H12.75C14.1645 4.5 14.871 4.5 15.3105 4.9395C15.75 5.379 15.75 6.0855 15.75 7.5H2.25Z" fill="#557BEB"/>
-                <path d="M5.25 2.25V4.5M12.75 2.25V4.5" stroke="#557BEB" stroke-linecap="round"/>
+                <path d="M5.25 2.25V4.5M12.75 2.25V4.5" stroke="#557BEB" strokeLinecap="round"/>
                 <path d="M7.875 9H5.625C5.41789 9 5.25 9.16789 5.25 9.375V10.125C5.25 10.3321 5.41789 10.5 5.625 10.5H7.875C8.08211 10.5 8.25 10.3321 8.25 10.125V9.375C8.25 9.16789 8.08211 9 7.875 9Z" fill="#557BEB"/>
                 <path d="M7.875 12H5.625C5.41789 12 5.25 12.1679 5.25 12.375V13.125C5.25 13.3321 5.41789 13.5 5.625 13.5H7.875C8.08211 13.5 8.25 13.3321 8.25 13.125V12.375C8.25 12.1679 8.08211 12 7.875 12Z" fill="#557BEB"/>
                 <path d="M12.375 9H10.125C9.91789 9 9.75 9.16789 9.75 9.375V10.125C9.75 10.3321 9.91789 10.5 10.125 10.5H12.375C12.5821 10.5 12.75 10.3321 12.75 10.125V9.375C12.75 9.16789 12.5821 9 12.375 9Z" fill="#557BEB"/>
@@ -105,7 +107,7 @@ const BookingCard = ({ data }: Props) => {
               </svg>
               <div className="flex flex-col items-start">
                 <p className="font-poppins font-normal text-[12px] leading-4 text-[#6A7282] flex-none order-0">
-                  Booking Date
+                  {t("bookingHistory.bookingDate","Booking Date")}
                 </p>
                 <p className="font-poppins font-normal text-[14px] leading-5 text-[#101828] flex-none order-1">
                   {bookingDate}
@@ -116,7 +118,7 @@ const BookingCard = ({ data }: Props) => {
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14.25 4.5H3.75C2.92157 4.5 2.25 5.17157 2.25 6V14.25C2.25 15.0784 2.92157 15.75 3.75 15.75H14.25C15.0784 15.75 15.75 15.0784 15.75 14.25V6C15.75 5.17157 15.0784 4.5 14.25 4.5Z" stroke="#557BEB"/>
                 <path d="M2.25 7.5C2.25 6.0855 2.25 5.379 2.6895 4.9395C3.129 4.5 3.8355 4.5 5.25 4.5H12.75C14.1645 4.5 14.871 4.5 15.3105 4.9395C15.75 5.379 15.75 6.0855 15.75 7.5H2.25Z" fill="#557BEB"/>
-                <path d="M5.25 2.25V4.5M12.75 2.25V4.5" stroke="#557BEB" stroke-linecap="round"/>
+                <path d="M5.25 2.25V4.5M12.75 2.25V4.5" stroke="#557BEB" strokeLinecap="round"/>
                 <path d="M7.875 9H5.625C5.41789 9 5.25 9.16789 5.25 9.375V10.125C5.25 10.3321 5.41789 10.5 5.625 10.5H7.875C8.08211 10.5 8.25 10.3321 8.25 10.125V9.375C8.25 9.16789 8.08211 9 7.875 9Z" fill="#557BEB"/>
                 <path d="M7.875 12H5.625C5.41789 12 5.25 12.1679 5.25 12.375V13.125C5.25 13.3321 5.41789 13.5 5.625 13.5H7.875C8.08211 13.5 8.25 13.3321 8.25 13.125V12.375C8.25 12.1679 8.08211 12 7.875 12Z" fill="#557BEB"/>
                 <path d="M12.375 9H10.125C9.91789 9 9.75 9.16789 9.75 9.375V10.125C9.75 10.3321 9.91789 10.5 10.125 10.5H12.375C12.5821 10.5 12.75 10.3321 12.75 10.125V9.375C12.75 9.16789 12.5821 9 12.375 9Z" fill="#557BEB"/>
@@ -124,7 +126,7 @@ const BookingCard = ({ data }: Props) => {
               </svg>
               <div className="flex flex-col items-start">
                 <p className="font-poppins font-normal text-[12px] leading-4 text-[#6A7282] flex-none order-0">
-                  Travel Date
+                  {t("bookingHistory.travelDate","Travel Date")}
                 </p>
                 <p className="font-poppins font-normal text-[14px] leading-5 text-[#101828] flex-none order-1">
                   {travelDate}
@@ -133,12 +135,12 @@ const BookingCard = ({ data }: Props) => {
             </div>
             <div className="flex items-center gap-2">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.9375 9C15.9375 10.8399 15.2066 12.6045 13.9056 13.9056C12.6045 15.2066 10.8399 15.9375 9 15.9375C7.16006 15.9375 5.39548 15.2066 4.09445 13.9056C2.79341 12.6045 2.0625 10.8399 2.0625 9C2.0625 7.16006 2.79341 5.39548 4.09445 4.09445C5.39548 2.79341 7.16006 2.0625 9 2.0625C10.8399 2.0625 12.6045 2.79341 13.9056 4.09445C15.2066 5.39548 15.9375 7.16006 15.9375 9Z" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M8.4375 5.0625V9.5625H11.4375" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15.9375 9C15.9375 10.8399 15.2066 12.6045 13.9056 13.9056C12.6045 15.2066 10.8399 15.9375 9 15.9375C7.16006 15.9375 5.39548 15.2066 4.09445 13.9056C2.79341 12.6045 2.0625 10.8399 2.0625 9C2.0625 7.16006 2.79341 5.39548 4.09445 4.09445C5.39548 2.79341 7.16006 2.0625 9 2.0625C10.8399 2.0625 12.6045 2.79341 13.9056 4.09445C15.2066 5.39548 15.9375 7.16006 15.9375 9Z" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.4375 5.0625V9.5625H11.4375" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <div className="flex flex-col items-start">
                 <p className="font-poppins font-normal text-[12px] leading-4 text-[#6A7282] flex-none order-0">
-                  Duration
+                  {t("bookingHistory.duration","Duration")}
                 </p>
                 <p className="font-poppins font-normal text-[14px] leading-5 text-[#101828] flex-none order-1">
                   {duration}
@@ -151,17 +153,17 @@ const BookingCard = ({ data }: Props) => {
               </svg>
               <div className="flex flex-col items-start">
                 <p className="font-poppins font-normal text-[12px] leading-4 text-[#6A7282] flex-none order-0">
-                  Group
+                  {t("bookingHistory.group","Group")}
                 </p>
                 <p className="font-poppins font-normal text-[14px] leading-5 text-[#101828] flex-none order-1">
-                  {adults} Adults
+                  {adults} {t("bookingHistory.adults","Adults")}
                 </p>
               </div>
             </div>
           </div>
           <div className="w-full flex flex-col sm:flex-row justify-between sm:items-center pt-4 gap-5 border-t border-[#D8E5FD]">
             <p className="font-inter font-semibold text-[22px] lg:text-base xl:text-[22px] leading-8 capitalize text-black">
-              {pricePerPerson} egp / person
+              {pricePerPerson} {t("bookingHistory.egpperson","egp / person")}
             </p>
             <div className="flex items-center gap-3">
               <Button
@@ -170,7 +172,7 @@ const BookingCard = ({ data }: Props) => {
                 text-[#122445] text-base xl:text-lg font-medium capitalize
                 transition-all duration-300 active:scale-95 hover:bg-[#122445] hover:text-white hover:border-[#122445]"
               >
-                View details
+                {t("shared.viewDetails","View details")}
               </Button>
               <Button
                 onClick={onSecondaryClick} 
@@ -178,7 +180,7 @@ const BookingCard = ({ data }: Props) => {
                 text-[#FF383B] text-base xl:text-lg font-medium capitalize
                 transition-all duration-300 active:scale-95 hover:bg-[#FF383B]/20 hover:text-[#FF383B]"
               >
-                View details
+                {t("bookingHistory.cancelBooking","cancel booking")}
               </Button>
             </div>
           </div>

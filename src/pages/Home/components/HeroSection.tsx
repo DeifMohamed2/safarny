@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next'
 import SearchFilters from '@/components/shared/SearchFilters';
+import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ const HeroSection = () => {
 
   const [destination, setDestination] = useState("Sharm El Sheikh")
   const [date, setDate] = useState<Date | undefined>(new Date())
+  const navigate = useNavigate()
 
   const resetFilters = () => {
     setRoomCount("");
@@ -56,6 +58,7 @@ const HeroSection = () => {
                 roomCount,
                 guestsCount,
               })
+              navigate("/search")
             }}
           />
         </div>

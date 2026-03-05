@@ -20,17 +20,13 @@ const TripsCarousel = ({ children }: TripsCarouselProps) => {
   return (
     <div className="relative w-full">
       {/* Previous Button */}
-      {!isBeginning && (
-        <div className="absolute top-[50%] -left-2.5 [@media_(min-width:460px)]:left-0 z-10">
-          <NextArrow onClick={() => swiperRef.current?.slidePrev()} />
-        </div>
-      )}
+      <div className="absolute top-[50%] -left-2.5 min-[460px]:left-0 min-[1350px]:-left-1 z-10">
+        <NextArrow onClick={() => swiperRef.current?.slidePrev()} disabled={isBeginning}/>
+      </div>
       {/* Next Button */}
-      {!isEnd && (
-        <div className="absolute top-[50%] -right-2.5 [@media_(min-width:460px)]:right-0 z-10">
-          <PrevArrow onClick={() => swiperRef.current?.slideNext()} />
-        </div>
-      )}  
+      <div className="absolute top-[50%] -right-2.5 min-[460px]:right-0 z-10">
+        <PrevArrow onClick={() => swiperRef.current?.slideNext()} disabled={isEnd}/>
+      </div>
       <Swiper
         onSwiper={(swiper) => {
           swiperRef.current = swiper

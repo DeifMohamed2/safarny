@@ -16,6 +16,7 @@ import Companies from "./pages/Companies";
 import Profile from "./pages/Profile";
 import BookingHistory from "./pages/BookingHistory";
 import ContactUs from "./pages/ContactUs";
+import TripDetails from "./pages/TripDetails";
 // const Home = lazy(() => import('./pages/Home'))
 const NotFound = lazy(() => import('./pages/not-found'))
 
@@ -31,10 +32,11 @@ const routers = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'search', element: <Search /> },
       { path: "trips", element: <Trips /> },
+      { path: "trips/:id", element: <TripDetails /> },
       { path: "trips/offers", element: <Offers /> },
       { path: "umrah", element: <Umrah /> },
       { path: "companies", element: <Companies /> },
-      { path: "company-profile", element: <CompanyProfile /> },
+      { path: "companies/:id", element: <CompanyProfile /> },
       { path: "companies/search", element: <SearchCompanies /> },
       { path: "profile", element: <Profile /> },
       { path: "booking-history", element: <BookingHistory /> },

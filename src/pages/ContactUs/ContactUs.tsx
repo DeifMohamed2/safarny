@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-// import { useTranslation } from "react-i18next"
 
 import {
   Form,
@@ -17,28 +16,29 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { PhoneInput } from "@/components/ui/phoneNumber"
+import { useTranslation } from "react-i18next"
 
 const contactSchema = z.object({
   fullName: z
     .string()
-    .min(2, "Full name must be at least 2 characters"),
+    .min(2, "contactUs.errors.fullname"),
   email: z
     .string()
-    .email("Invalid email address"),
+    .email("contactUs.errors.email"),
   phone: z
     .string()
     .refine((value) => isValidPhoneNumber(value), {
-      message: "Invalid phone number",
+      message: "contactUs.errors.phone",
     }),
   message: z
     .string()
-    .min(10, "Message must be at least 10 characters"),
+    .min(10, "contactUs.errors.message"),
 })
 
 type ContactFormValues = z.infer<typeof contactSchema>
 
 const ContactUs = () => {
-  // const { i18n } = useTranslation()
+  const { t } = useTranslation()
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -64,7 +64,7 @@ const ContactUs = () => {
                        md:text-[60px] md:leading-20 
                        lg:text-[90px] lg:leading-25 
                        text-black">
-          Get in touch with us. We're here to assist you.
+          {t("contactUs.title", "Get in touch with us. We're here to assist you.")}
         </h1>
 
         {/* Form */}
@@ -82,8 +82,8 @@ const ContactUs = () => {
                 name="fullName"
                 render={({ field }) => (
                   <FormItem className="w-full lg:max-w-103">
-                    <FormLabel className="text-[18px] font-medium text-[#333]">
-                      Full Name
+                    <FormLabel className="text-lg font-medium text-[#333]">
+                      {t("contactUs.fullName", "Full Name")}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -104,8 +104,8 @@ const ContactUs = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem className="w-full lg:max-w-103">
-                    <FormLabel className="text-[18px] font-medium text-[#333]">
-                      Email
+                    <FormLabel className="text-lg font-medium text-[#333]">
+                      {t("contactUs.email", "Email")}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -127,14 +127,14 @@ const ContactUs = () => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem className="w-full lg:max-w-103">
-                    <FormLabel className="text-[18px] font-medium text-[#333]">
-                      Phone Number
+                    <FormLabel className="text-lg font-medium text-[#333]">
+                      {t("contactUs.phoneNumber", "Phone Number")}
                     </FormLabel>
                     <FormControl>
                       <PhoneInput
                         {...field}
                         defaultCountry="GB"
-                        placeholder="Enter phone number"
+                        placeholder={t("contactUs.phoneNumberPlaceholder", "Enter phone number")}
                         className="h-11.25 bg-[#F6F6F6] border-[#D4D7DE]
                                   rounded-md text-[14px]"
                       />
@@ -152,15 +152,15 @@ const ContactUs = () => {
               name="message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[18px] font-medium text-[#333]">
-                    Message
+                  <FormLabel className="text-lg font-medium text-[#333]">
+                    {t("contactUs.message", "Message")}
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       className="h-23.25 bg-[#F6F6F6] border-[#D4D7DE] 
                                  rounded-md px-3 text-[14px] resize-none"
-                      placeholder="Write your message..."
+                      placeholder={t("contactUs.messagePlaceholder", "Write your message...")}
                     />
                   </FormControl>
                   <FormMessage />
@@ -173,9 +173,9 @@ const ContactUs = () => {
               type="submit"
               className="w-full sm:w-70.5 h-12.75 rounded-xl 
                          bg-[#263859] hover:bg-[#1f2c45] 
-                         text-white text-[18px] font-medium"
+                         text-white text-lg font-medium"
             >
-              Leave Us A Message
+              {t("contactUs.submit", "Leave Us A Message")}
             </Button>
 
           </form>

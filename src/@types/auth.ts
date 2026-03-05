@@ -11,6 +11,7 @@ export type SignInResponse = {
         authority: string[]
         avatar: string
         email: string
+        phone: string
     }
 }
 
@@ -18,6 +19,7 @@ export type SignUpResponse = SignInResponse
 
 export type SignUpCredential = {
     userName: string
+    phone: string
     email: string
     password: string
 }

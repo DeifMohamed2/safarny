@@ -53,7 +53,7 @@ const Quotes = () => {
       <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-2.5">
           <h2 className="text-orange-500 text-2xl sm:text-3xl lg:text-4xl font-semibold font-poppins capitalize">
-            {t("quotes")}
+            {t("home.quotes.title", "Quotes")}
           </h2>
           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="20" viewBox="0 0 28 20" fill="none">
             <path opacity="0.2" d="M11.0526 2.10512V11.5788H2.10524C1.82607 11.5788 1.55833 11.4679 1.36092 11.2705C1.16351 11.0731 1.05261 10.8054 1.05261 10.5262V2.10512C1.05261 1.82595 1.16351 1.55821 1.36092 1.3608C1.55833 1.16339 1.82607 1.05249 2.10524 1.05249H9.99998C10.2792 1.05249 10.5469 1.16339 10.7443 1.3608C10.9417 1.55821 11.0526 1.82595 11.0526 2.10512ZM25.2631 1.05249H17.3684C17.0892 1.05249 16.8215 1.16339 16.6241 1.3608C16.4267 1.55821 16.3158 1.82595 16.3158 2.10512V10.5262C16.3158 10.8054 16.4267 11.0731 16.6241 11.2705C16.8215 11.4679 17.0892 11.5788 17.3684 11.5788H26.3158V2.10512C26.3158 1.82595 26.2049 1.55821 26.0075 1.3608C25.8101 1.16339 25.5423 1.05249 25.2631 1.05249Z" fill="#EF7722"/>
@@ -61,7 +61,7 @@ const Quotes = () => {
           </svg>
         </div>
         <p className="text-center text-sky-950 tetx-sm sm:text-base lg:text-xl font-normal font-poppins capitalize">
-          {t("Experiences shared by travelers who found their trips here")}
+          {t("home.quotes.subtitle","Experiences shared by travelers who found their trips here")}
         </p>
       </div>
 

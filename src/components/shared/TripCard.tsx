@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Link } from "react-router-dom";
 
 interface TripCardData {
   id: string
@@ -12,6 +12,8 @@ interface TripCardData {
   location: string
   frequency: string
   availableSpots: number
+  
+  href: string
 
   price: number
   oldPrice?: number
@@ -19,7 +21,7 @@ interface TripCardData {
 
   isFavorite?: boolean
 
-  onViewDetails?: (id: string) => void
+  onViewDetails?: () => void
   onToggleFavorite?: (id: string) => void
 }
 
@@ -42,6 +44,7 @@ const TripCard = ({ data, className }: Props) => {
     oldPrice,
     discountPercent,
     isFavorite,
+    href,
     onViewDetails,
     onToggleFavorite,
   } = data
@@ -80,7 +83,7 @@ const TripCard = ({ data, className }: Props) => {
             )}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 22 20" fill={isFavorite ? "#EF7722" : "none"}>
-              <path d="M6.02778 0.75C3.11333 0.75 0.75 3.14294 0.75 6.09388C0.75 12 10.75 18.75 10.75 18.75C10.75 18.75 20.75 12 20.75 6.09388C20.75 2.43776 18.3867 0.75 15.4722 0.75C13.4056 0.75 11.6167 1.95282 10.75 3.70412C9.88333 1.95282 8.09444 0.75 6.02778 0.75Z" stroke="#EF7722" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6.02778 0.75C3.11333 0.75 0.75 3.14294 0.75 6.09388C0.75 12 10.75 18.75 10.75 18.75C10.75 18.75 20.75 12 20.75 6.09388C20.75 2.43776 18.3867 0.75 15.4722 0.75C13.4056 0.75 11.6167 1.95282 10.75 3.70412C9.88333 1.95282 8.09444 0.75 6.02778 0.75Z" stroke="#EF7722" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
         </div>
@@ -108,9 +111,9 @@ const TripCard = ({ data, className }: Props) => {
                 <div className="flex items-center gap-1.5">
                   <div className="p-1 rounded-3xl flex items-center gap-2.5">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M10.875 6.75C10.875 7.24728 10.6775 7.72419 10.3258 8.07582C9.97419 8.42746 9.49728 8.625 9 8.625C8.50272 8.625 8.02581 8.42746 7.67417 8.07582C7.32254 7.72419 7.125 7.24728 7.125 6.75C7.125 6.25272 7.32254 5.77581 7.67417 5.42417C8.02581 5.07254 8.50272 4.875 9 4.875C9.49728 4.875 9.97419 5.07254 10.3258 5.42417C10.6775 5.77581 10.875 6.25272 10.875 6.75Z" stroke="#557BEB" stroke-width="1.5"/>
-                      <path d="M9.94274 13.1205C9.68941 13.3642 9.35154 13.5004 8.99999 13.5004C8.64845 13.5004 8.31057 13.3642 8.05724 13.1205C5.74049 10.8757 2.63624 8.3685 4.14974 4.728C4.96949 2.75925 6.93449 1.5 8.99999 1.5C11.0655 1.5 13.0312 2.76 13.8502 4.728C15.3622 8.36325 12.2655 10.8832 9.94274 13.1205Z" stroke="#557BEB" stroke-width="1.5"/>
-                      <path d="M13.5 15C13.5 15.8288 11.4855 16.5 9 16.5C6.5145 16.5 4.5 15.8288 4.5 15" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M10.875 6.75C10.875 7.24728 10.6775 7.72419 10.3258 8.07582C9.97419 8.42746 9.49728 8.625 9 8.625C8.50272 8.625 8.02581 8.42746 7.67417 8.07582C7.32254 7.72419 7.125 7.24728 7.125 6.75C7.125 6.25272 7.32254 5.77581 7.67417 5.42417C8.02581 5.07254 8.50272 4.875 9 4.875C9.49728 4.875 9.97419 5.07254 10.3258 5.42417C10.6775 5.77581 10.875 6.25272 10.875 6.75Z" stroke="#557BEB" strokeWidth="1.5"/>
+                      <path d="M9.94274 13.1205C9.68941 13.3642 9.35154 13.5004 8.99999 13.5004C8.64845 13.5004 8.31057 13.3642 8.05724 13.1205C5.74049 10.8757 2.63624 8.3685 4.14974 4.728C4.96949 2.75925 6.93449 1.5 8.99999 1.5C11.0655 1.5 13.0312 2.76 13.8502 4.728C15.3622 8.36325 12.2655 10.8832 9.94274 13.1205Z" stroke="#557BEB" strokeWidth="1.5"/>
+                      <path d="M13.5 15C13.5 15.8288 11.4855 16.5 9 16.5C6.5145 16.5 4.5 15.8288 4.5 15" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
                   </div>
                   <p className="text-neutral-800 text-xs font-normal">{location}</p>
@@ -118,8 +121,8 @@ const TripCard = ({ data, className }: Props) => {
                 <div className="flex items-center gap-1.5">
                   <div className="p-1 rounded-3xl flex items-center gap-2.5">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path d="M15.9375 9C15.9375 10.8399 15.2066 12.6045 13.9056 13.9056C12.6045 15.2066 10.8399 15.9375 9 15.9375C7.16006 15.9375 5.39548 15.2066 4.09445 13.9056C2.79341 12.6045 2.0625 10.8399 2.0625 9C2.0625 7.16006 2.79341 5.39548 4.09445 4.09445C5.39548 2.79341 7.16006 2.0625 9 2.0625C10.8399 2.0625 12.6045 2.79341 13.9056 4.09445C15.2066 5.39548 15.9375 7.16006 15.9375 9Z" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M8.4375 5.0625V9.5625H11.4375" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M15.9375 9C15.9375 10.8399 15.2066 12.6045 13.9056 13.9056C12.6045 15.2066 10.8399 15.9375 9 15.9375C7.16006 15.9375 5.39548 15.2066 4.09445 13.9056C2.79341 12.6045 2.0625 10.8399 2.0625 9C2.0625 7.16006 2.79341 5.39548 4.09445 4.09445C5.39548 2.79341 7.16006 2.0625 9 2.0625C10.8399 2.0625 12.6045 2.79341 13.9056 4.09445C15.2066 5.39548 15.9375 7.16006 15.9375 9Z" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8.4375 5.0625V9.5625H11.4375" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <p className="text-neutral-800 text-xs font-normal">{duration}</p>
@@ -139,7 +142,7 @@ const TripCard = ({ data, className }: Props) => {
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                       <path d="M14.25 4.5H3.75C2.92157 4.5 2.25 5.17157 2.25 6V14.25C2.25 15.0784 2.92157 15.75 3.75 15.75H14.25C15.0784 15.75 15.75 15.0784 15.75 14.25V6C15.75 5.17157 15.0784 4.5 14.25 4.5Z" stroke="#557BEB"/>
                       <path d="M2.25 7.5C2.25 6.0855 2.25 5.379 2.6895 4.9395C3.129 4.5 3.8355 4.5 5.25 4.5H12.75C14.1645 4.5 14.871 4.5 15.3105 4.9395C15.75 5.379 15.75 6.0855 15.75 7.5H2.25Z" fill="#557BEB"/>
-                      <path d="M5.25 2.25V4.5M12.75 2.25V4.5" stroke="#557BEB" stroke-linecap="round"/>
+                      <path d="M5.25 2.25V4.5M12.75 2.25V4.5" stroke="#557BEB" strokeLinecap="round"/>
                       <path d="M7.875 9H5.625C5.41789 9 5.25 9.16789 5.25 9.375V10.125C5.25 10.3321 5.41789 10.5 5.625 10.5H7.875C8.08211 10.5 8.25 10.3321 8.25 10.125V9.375C8.25 9.16789 8.08211 9 7.875 9Z" fill="#557BEB"/>
                       <path d="M7.875 12H5.625C5.41789 12 5.25 12.1679 5.25 12.375V13.125C5.25 13.3321 5.41789 13.5 5.625 13.5H7.875C8.08211 13.5 8.25 13.3321 8.25 13.125V12.375C8.25 12.1679 8.08211 12 7.875 12Z" fill="#557BEB"/>
                       <path d="M12.375 9H10.125C9.91789 9 9.75 9.16789 9.75 9.375V10.125C9.75 10.3321 9.91789 10.5 10.125 10.5H12.375C12.5821 10.5 12.75 10.3321 12.75 10.125V9.375C12.75 9.16789 12.5821 9 12.375 9Z" fill="#557BEB"/>
@@ -155,8 +158,8 @@ const TripCard = ({ data, className }: Props) => {
             <div className="w-full flex items-center gap-1">
               <div className="p-1 rounded-3xl flex items-center gap-2.5">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 6.75C8.17125 6.75 7.5 7.254 7.5 7.875C7.5 8.496 8.17125 9 9 9C9.82875 9 10.5 9.504 10.5 10.125C10.5 10.746 9.82875 11.25 9 11.25M9 6.75C9.6525 6.75 10.209 7.06275 10.4145 7.5M9 6.75V6M9 11.25C8.3475 11.25 7.791 10.9373 7.5855 10.5M9 11.25V12" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round"/>
-                  <path d="M15.75 8.38725V6.21C15.75 4.98 15.75 4.365 15.447 3.96375C15.144 3.5625 14.4585 3.36825 13.0883 2.97825C12.2618 2.74088 11.4526 2.44693 10.6665 2.0985C9.76725 1.6995 9.318 1.5 9 1.5C8.682 1.5 8.23275 1.6995 7.3335 2.0985C6.6735 2.391 5.8485 2.712 4.91175 2.97825C3.5415 3.36825 2.85675 3.56325 2.553 3.96375C2.25 4.365 2.25 4.98 2.25 6.21V8.38725C2.25 12.606 6.04725 15.1372 7.9455 16.1392C8.40075 16.3792 8.628 16.5 9 16.5C9.372 16.5 9.59925 16.38 10.0545 16.14C11.9528 15.1365 15.75 12.606 15.75 8.38725Z" stroke="#557BEB" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M9 6.75C8.17125 6.75 7.5 7.254 7.5 7.875C7.5 8.496 8.17125 9 9 9C9.82875 9 10.5 9.504 10.5 10.125C10.5 10.746 9.82875 11.25 9 11.25M9 6.75C9.6525 6.75 10.209 7.06275 10.4145 7.5M9 6.75V6M9 11.25C8.3475 11.25 7.791 10.9373 7.5855 10.5M9 11.25V12" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M15.75 8.38725V6.21C15.75 4.98 15.75 4.365 15.447 3.96375C15.144 3.5625 14.4585 3.36825 13.0883 2.97825C12.2618 2.74088 11.4526 2.44693 10.6665 2.0985C9.76725 1.6995 9.318 1.5 9 1.5C8.682 1.5 8.23275 1.6995 7.3335 2.0985C6.6735 2.391 5.8485 2.712 4.91175 2.97825C3.5415 3.36825 2.85675 3.56325 2.553 3.96375C2.25 4.365 2.25 4.98 2.25 6.21V8.38725C2.25 12.606 6.04725 15.1372 7.9455 16.1392C8.40075 16.3792 8.628 16.5 9 16.5C9.372 16.5 9.59925 16.38 10.0545 16.14C11.9528 15.1365 15.75 12.606 15.75 8.38725Z" stroke="#557BEB" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
               <div className="flex-1 origin-top-left">
@@ -174,12 +177,13 @@ const TripCard = ({ data, className }: Props) => {
         </div>
 
         {/* ACTION */}
-        <Button
+        <Link
+          to={href}
           className="w-full px-3.5 py-3 bg-slate-700 rounded-xl flex justify-center items-center gap-2.5 text-white text-lg font-medium capitalize"
-          onClick={() => onViewDetails?.(id)}
+          onClick={() => onViewDetails?.()}
         >
           View details
-        </Button>
+        </Link>
       </div>
     </div>
   )

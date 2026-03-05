@@ -136,8 +136,8 @@ const SearchCompanies = () => {
       className="relative min-h-dvh sm:h-full max-w-340 w-full px-4 pt-32.5 mx-auto"
     >
       <div className='w-full flex flex-col gap-2'>
-        <h1 className='font-semibold text-2xl sm:text-3xl lg:text-4xl leading-12.75 capitalize text-[#122445] flex-none order-0 self-stretch grow-0'>{t("company.title", "Companies")}</h1>
-        <p className='font-normal tetx-sm sm:text-base lg:text-xl leading-7.5 capitalize text-[#122445] flex-none order-1 grow-0'>Find the best travel companies offering trips across multiple destinations.</p>
+        <h1 className='font-semibold text-2xl sm:text-3xl lg:text-4xl leading-12.75 capitalize text-[#122445] flex-none order-0 self-stretch grow-0'>{t("companies.title", "Companies")}</h1>
+        <p className='font-normal tetx-sm sm:text-base lg:text-xl leading-7.5 capitalize text-[#122445] flex-none order-1 grow-0'>{t("searchCompanies.subtitle", "Find the best travel companies offering trips across multiple destinations.")}</p>
       </div>
 
       <SearchFilters
@@ -176,8 +176,8 @@ const SearchCompanies = () => {
 
       <div className='w-full flex flex-col gap-7'>
         <h2 className="text-base sm:text-xl lg:text-2xl leading-9 font-semibold capitalize">
-          <span className="text-orange-500">300+  companies</span>
-          <span className="text-sky-950"> that match your search</span>
+          <span className="text-orange-500">+300 {t("searchCompanies.companies", "companies")}</span>
+          <span className="text-sky-950"> {t("searchCompanies.newsletter", "that match your search")}</span>
         </h2>
         <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7 gap-y-6.5'>
           {companies.map(companyItem => (
@@ -195,7 +195,8 @@ const SearchCompanies = () => {
                 reviews: companyItem.reviews,
                 rating: companyItem.rating,
                 badges: companyItem.badges,
-                onViewDetails: id => console.log("view", id),
+                href: `/companies/${companyItem.id}`,
+                onViewDetails: () => console.log("view", companyItem.id),
               }}
             />
           ))}

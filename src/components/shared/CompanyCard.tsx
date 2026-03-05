@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Link } from "react-router-dom"
 
 interface CompanyCardData {
   id: string
@@ -12,7 +12,8 @@ interface CompanyCardData {
   packages: number
   reviews: number
   rating?: number
-  onViewDetails?: (id: string) => void
+  href: string
+  onViewDetails?: () => void
 }
 
 interface Props {
@@ -22,7 +23,6 @@ interface Props {
 
 const CompanyCard = ({ data, className }: Props) => {
   const {
-    id,
     image,
     title,
     location,
@@ -32,6 +32,7 @@ const CompanyCard = ({ data, className }: Props) => {
     packages,
     reviews,
     rating,
+    href,
     onViewDetails,
   } = data
 
@@ -60,9 +61,9 @@ const CompanyCard = ({ data, className }: Props) => {
           
           {/* TOP BADGES */}
           {rating && (
-            <div className={`w-full -left-2.5 top-2.5 absolute flex justify-end items-center`}>
+            <div className={`w-full -start-2.5 top-2.5 absolute flex justify-end items-center`}>
               <div 
-                className="flex items-center px-1.5 py-1 gap-1
+                className="flex rtl:flex-row-reverse items-center px-1.5 py-1 gap-1
                 w-14.75 h-8
                 bg-white/20 border border-white rounded-[23px]"
               >
@@ -81,12 +82,12 @@ const CompanyCard = ({ data, className }: Props) => {
             <div className="w-full flex flex-col gap-3">
               <div className="flex items-center p-0 gap-3">
                 <div className="flex justify-center items-center w-11 h-11 bg-[#263859] border-2 border-[#AAC4F5] rounded-xl">
-                  <p className="font-inter font-bold text-[16px] leading-6 tracking-[-0.3125px] text-white">
+                  <p className="font-inter font-bold text-base leading-6 tracking-[-0.3125px] text-white">
                     {getInitials(title)}
                   </p>
                 </div>
                 <div className="w-[calc(100%-56px)] flex flex-col gap-1 order-1 grow">
-                  <h3 className="font-bold text-[16px] leading-5 tracking-[-0.3125px] text-[#0A0A0A] line-clamp-1">
+                  <h3 className="font-bold text-base leading-5 tracking-[-0.3125px] text-[#0A0A0A] line-clamp-1">
                     {title}
                   </h3>
                   <div className="flex items-center gap-2">
@@ -95,8 +96,8 @@ const CompanyCard = ({ data, className }: Props) => {
                         <path d="M10.1239 10.0246C11.2323 10.0246 12.1308 9.12609 12.1308 8.01769C12.1308 6.90928 11.2323 6.01074 10.1239 6.01074C9.01548 6.01074 8.11694 6.90928 8.11694 8.01769C8.11694 9.12609 9.01548 10.0246 10.1239 10.0246Z" fill="white"/>
                         <path d="M13.4927 8.08627C13.4927 5.49877 11.5113 3.39404 9.07521 3.39404C6.6391 3.39404 4.65771 5.49877 4.65771 8.08738C4.65827 8.21654 4.71966 11.3121 8.25772 16.7665C8.33051 16.9162 8.44093 17.0444 8.57814 17.1386C8.71536 17.2327 8.87467 17.2897 9.04049 17.3038C9.5516 17.3038 9.89994 16.741 9.93383 16.6838C13.4947 11.2263 13.4947 8.20932 13.4927 8.08627ZM9.07521 9.97627C8.68608 9.97627 8.30568 9.86087 7.98213 9.64468C7.65858 9.42849 7.4064 9.12121 7.25748 8.76169C7.10857 8.40218 7.0696 8.00658 7.14552 7.62493C7.22144 7.24327 7.40882 6.89269 7.68398 6.61753C7.95914 6.34237 8.30972 6.15499 8.69137 6.07907C9.07303 6.00315 9.46863 6.04212 9.82814 6.19103C10.1877 6.33995 10.4949 6.59213 10.7111 6.91568C10.9273 7.23923 11.0427 7.61963 11.0427 8.00877C11.0422 8.53042 10.8347 9.03056 10.4659 9.39943C10.097 9.7683 9.59687 9.97575 9.07521 9.97627Z" fill="#D22F27"/>
                         <path d="M13.4923 8.08627C13.4923 5.49877 11.5109 3.39404 9.07483 3.39404C8.71214 3.39572 8.35122 3.44474 8.00122 3.53988C10.3332 3.66488 12.1957 5.71293 12.1957 8.22043C12.1973 8.34349 12.1973 11.3602 8.6365 16.8177C8.58843 16.8958 8.53398 16.9699 8.47372 17.039C8.61817 17.2013 8.82289 17.2968 9.04039 17.304C9.55122 17.304 9.89955 16.741 9.93344 16.6838C13.4943 11.2263 13.4943 8.20932 13.4923 8.08627Z" fill="#EA5A47"/>
-                        <path d="M9.04028 17.304C8.87448 17.2899 8.7152 17.2329 8.57804 17.1386C8.44087 17.0444 8.33052 16.9162 8.25778 16.7665C4.71945 11.3121 4.65806 8.21682 4.65723 8.08738C4.65723 5.49849 6.63889 3.39404 9.075 3.39404C11.5111 3.39404 13.4925 5.49877 13.4925 8.08626C13.4944 8.2096 13.4944 11.2263 9.93362 16.6835C9.89973 16.741 9.55111 17.304 9.04028 17.304Z" stroke="black" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M9.07492 9.9765C8.68579 9.9765 8.30539 9.86111 7.98184 9.64492C7.65828 9.42873 7.40611 9.12145 7.25719 8.76193C7.10827 8.40242 7.06931 8.00682 7.14523 7.62516C7.22114 7.24351 7.40853 6.89293 7.68369 6.61777C7.95885 6.34261 8.30942 6.15523 8.69108 6.07931C9.07274 6.00339 9.46834 6.04236 9.82785 6.19127C10.1874 6.34019 10.4946 6.59237 10.7108 6.91592C10.927 7.23947 11.0424 7.61987 11.0424 8.009C11.0419 8.53066 10.8345 9.0308 10.4656 9.39967C10.0967 9.76853 9.59658 9.97599 9.07492 9.9765Z" stroke="black" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9.04028 17.304C8.87448 17.2899 8.7152 17.2329 8.57804 17.1386C8.44087 17.0444 8.33052 16.9162 8.25778 16.7665C4.71945 11.3121 4.65806 8.21682 4.65723 8.08738C4.65723 5.49849 6.63889 3.39404 9.075 3.39404C11.5111 3.39404 13.4925 5.49877 13.4925 8.08626C13.4944 8.2096 13.4944 11.2263 9.93362 16.6835C9.89973 16.741 9.55111 17.304 9.04028 17.304Z" stroke="black" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M9.07492 9.9765C8.68579 9.9765 8.30539 9.86111 7.98184 9.64492C7.65828 9.42873 7.40611 9.12145 7.25719 8.76193C7.10827 8.40242 7.06931 8.00682 7.14523 7.62516C7.22114 7.24351 7.40853 6.89293 7.68369 6.61777C7.95885 6.34261 8.30942 6.15523 8.69108 6.07931C9.07274 6.00339 9.46834 6.04236 9.82785 6.19127C10.1874 6.34019 10.4946 6.59237 10.7108 6.91592C10.927 7.23947 11.0424 7.61987 11.0424 8.009C11.0419 8.53066 10.8345 9.0308 10.4656 9.39967C10.0967 9.76853 9.59658 9.97599 9.07492 9.9765Z" stroke="black" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                       <p className="text-[12px] font-normal leading-4 text-[#4A5565]">
                         {location}
@@ -157,12 +158,13 @@ const CompanyCard = ({ data, className }: Props) => {
                 </div>
               </div>
               {/* ACTION */}
-              <Button
-                className="flex items-center justify-center gap-2.5 rounded-xl bg-[#263859] px-3.5 py-3"
-                onClick={() => onViewDetails?.(id)}
+              <Link
+                to={href}
+                className="flex items-center justify-center gap-2.5 rounded-xl bg-[#263859] px-3.5 py-3 text-white"
+                onClick={() => onViewDetails?.()}
               >
                 View Profile
-              </Button>
+              </Link>
             </div>
           </div>
         </div>

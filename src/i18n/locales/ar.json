@@ -3,20 +3,105 @@
     "home": "الصفحة الرئيسية",
     "trips": "الرحلات",
     "umrah": "العمرة",
-    "companies": "الشركات"
+    "companies": "الشركات",
+    "profile": "الملف الشخصي",
+    "saved": "المحفوظات",
+    "message": "الرسائل"
   },
   "home": {
     "hero": {
       "title": "اعثر على رحلتك القادمة بأفضل عروض السفر",
       "filter": "تصفية",
       "searchPlaceholder": "بحث"
+    },
+    "exclusive-Travel": {
+      "title1": "عروض",
+      "title2": "سفر",
+      "title3": "حصرية",
+      "subtitle": "استمتع بعروض وخصومات حصرية على أفضل وجهات السفر"
+    },"popular-Trips": {
+      "title1": "الرحلات",
+      "title2": "الأكثر شعبية",
+      "subtitle": "اكتشف الرحلات والوجهات الأكثر شعبية بأسعار رائعة"
+    },"recommended-Umrah": {
+      "title1": "رحلات",
+      "title2": "عمرة",
+      "title3": "موصى بها",
+      "subtitle": "رحلات عمرة موثوقة ومنظمة بعناية إلى مكة والمدينة."
+    },
+    "quotes": {
+      "title": "آراء العملاء",
+      "subtitle": "تجارب شاركها المسافرون الذين حجزوا رحلاتهم من هنا"
     }
   },
-  "exclusive-Travel": {
-    "exclusive": "Exclusive",
-    "travel": "Travel",
-    "deals": "Deals",
-    "subtitle": "Enjoy exclusive offers and discounts on top travel destinations"
+  "trips": {
+    "title": "الرحلات",
+    "subtitle": "تصفح الرحلات المتاحة واختر وجهتك القادمة.",
+    "offers": "العروض",
+    "offerDescription": "عروض لفترة محدودة على الوجهات الأكثر شعبية"
+  },
+  "umrah": {
+    "title": "العمرة",
+    "subtitle": "اكتشف باقات عمرة مختارة بعناية لتجربة روحانية مريحة ومتكاملة."
+  },
+  "companies": {
+    "title": "الشركات",
+    "subtitle": "ابحث عن أفضل شركات السفر التي تقدم رحلات عبر وجهات متعددة.",
+    "topCompanies1": "أعلى الشركات",
+    "topCompanies2": "تقييماً",
+    "description": "اكتشف شركات السفر الأعلى تقييماً على منصتنا.",
+    "all": "كل"
+  },
+  "searchCompanies": {
+    "subtitle": "ابحث عن أفضل شركات السفر التي تقدم رحلات عبر وجهات متعددة.",
+    "companies" :"شركة",
+    "newsletter": "تطابق بحثك"
+  },
+  "companyProfile": {
+    "reviews": "تقييم",
+    "subTitle": "متخصصة في رحلات الشواطئ والاستجمام",
+    "aboutCompany": "عن الشركة",
+    "description": "تقدم واندرلست جورنيز تجارب سفر لا تُنسى منذ عام 2010. نحن متخصصون في الوجهات الشاطئية الفاخرة وباقات السفر الترفيهية عبر منطقة البحر الأحمر. يعمل فريقنا الخبير على تنسيق كل التفاصيل لضمان رحلة مريحة، سلسة، ومليئة بالذكريات الجميلة.",
+    "destinationsCovered": "الوجهات المتاحة",
+    "destinations": {
+      "sharmElSheikh": "شرم الشيخ",
+      "hurghada": "الغردقة",
+      "dahab": "دهب",
+      "marsaAlam": "مرسى علم",
+      "elGouna": "الجونة",
+      "somaBay": "سوما باي"
+    }
+  },
+  "profile": {
+    "title": "ملفي الشخصي",
+    "edit": "تعديل الملف الشخصي",
+    "bookingHistory": "سجل الحجوزات",
+    "contactUs": "تواصل معنا"
+  },
+  "bookingHistory": {
+    "bookingDate": "تاريخ الحجز",
+    "travelDate": "تاريخ السفر",
+    "duration": "المدة",
+    "group": "المجموعة",
+    "adults": "من البالغين",
+    "egpperson": "جنيه / للفرد",
+    "cancelBooking": "إلغاء الحجز"
+  },
+  "contactUs": {
+    "title": "تواصل معنا. نحن هنا لمساعدتك.",
+    "fullName": "الاسم بالكامل",
+    "email": "البريد الإلكتروني",
+    "phoneNumber": "رقم الهاتف",
+    "phoneNumberPlaceholder": "أدخل رقم الهاتف",
+    "message": "الرسالة",
+    "messagePlaceholder": "اكتب رسالتك...",
+    "submit": "اترك لنا رسالة",
+    "errors": {
+      "fullname": "يجب أن يتكون الاسم بالكامل من حرفين على الأقل",
+      "email": "عنوان بريد إلكتروني غير صالح",
+      "phone": "رقم هاتف غير صالح",
+      "message": "يجب أن تتكون الرسالة من 10 أحرف على الأقل"
+    }
   },
   "filter": {
     "search": "بحث",
@@ -31,42 +116,6 @@
     "from": "من",
     "to": "إلى"
   },
-  "destinations": {
-    "sharm": "شرم الشيخ",
-    "hurghada": "الغردقة",
-    "dahab": "دهب",
-    "marsa": "مرسى علم"
-  },
-  "Companies": {
-    "Companies": "الشركات",
-    "subtitle": "ابحث عن أفضل شركات السفر التي تقدم رحلات عبر وجهات متعددة.",
-    "search": "بحث",
-    "filter": "تصفية",
-    "Top rated Companies": "أعلى الشركات تقييماً",
-    "description": "اكتشف شركات السفر الأعلى تقييماً على منصتنا.",
-    "All Companies": "كل الشركات",
-    "newsletter": "اكتشف شركات السفر الأعلى تقييماً على منصتنا."
-  },
-  "search Companies": {
-    "Companies": "الشركات",
-    "subtitle": "ابحث عن أفضل شركات السفر التي تقدم رحلات عبر وجهات متعددة.",
-    "search": "بحث",
-    "filter": "تصفية",
-    "newsletter": "أكثر من 300 شركة تطابق بحثك"
-  },
-  "company-profile": {
-    "Wanderlust Journeys": "واندرلست جورنيز",
-    "newsletter": "4.8 • 2,347 تقييم",
-    "Specializing in beach & leisure trips": "متخصصة في رحلات الشواطئ والاستجمام",
-    "contact company": "تواصل مع الشركة",
-    "About the Company": "عن الشركة",
-    "subtitle": "تقدم واندرلست جورنيز تجارب سفر لا تُنسى منذ عام 2010. نحن متخصصون في الوجهات الشاطئية الفاخرة وباقات السفر الترفيهية عبر منطقة البحر الأحمر. يعمل فريقنا الخبير على تنسيق كل التفاصيل لضمان رحلة مريحة، سلسة، ومليئة بالذكريات الجميلة.",
-    "Destinations Covered": "الوجهات المتاحة",
-    "El Gouna": "الجونة",
-    "Soma Bay": "سوما باي",
-    "Exclusive Travel Deals": "عروض سفر حصرية",
-    "Popular Trips": "الرحلات الشائعة"
-  },
   "footer": {
     "description": "منصة تربط المسافرين بالرحلات وعروض السفر وشركات السفر الموثوقة",
     "email": "أدخل بريدك الإلكتروني",
@@ -78,9 +127,50 @@
     "legal": "القانون",
     "sitemap": "خريطة الموقع"
   },
+  "auth": {
+    "fullName": "الأسم بالكامل",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "resetPassword": "إعادة كتابة كلمة المرور",
+    "resetPasswordSubtitle": "اكتب شيئًا يمكنك تذكره",
+    "signUp": "إنشاء حساب",
+    "haveAccount": "ليس لديك حساب؟",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+    "continueSignIn": "متابعة تسجيل الدخول",
+    "or": "أو",
+    "accountExists": "الحساب موجود بالفعل",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "forgotPasswordSubtitle": "لا تقلق! يحدث ذلك. يرجى إدخال البريد الإلكتروني المرتبط بحسابك.",
+    "forgotPasswordVerify": "يرجى التحقق من بريدك الإلكتروني",
+    "send": "إرسال",
+    "verify": "تأكيد",
+    "confirm": "تأكيد",
+    "subscribeMarketing": "أرغب في تلقي المعلومات والعروض والتوصيات والتحديثات من Safarni.",
+    "acceptTermsPrefix": "من خلال إنشاء حساب، فإنك توافق على",
+    "termsAndConditions": "الشروط والأحكام",
+    "privacyPrefix": "يرجى قراءة",
+    "privacyNotice": "سياسة الخصوصية",
+    "validation": {
+      "fullNameRequired": "يرجى إدخال اسمك بالكامل",
+      "emailRequired": "يرجى إدخال البريد الإلكتروني",
+      "emailInvalid": "يرجى إدخال بريد إلكتروني صحيح",
+      "passwordRequired": "يرجى إدخال كلمة المرور",
+      "OTPRequired": "يرجى إدخال رمز تحقق",
+      "passwordsNotMatch": "كلمات المرور غير متطابقة"
+    }
+  },
   "shared": {
     "seeMore": "رؤية المزيد",
     "close": "إغلاق",
-    "signOut": "تسجيل الخروج"
+    "signIn": "تسجيل الدخول",
+    "contact": "تواصل مع الشركة",
+    "viewDetails": "عرض التفاصيل",
+    "wantLogout": "هل أنت متأكد أنك تريد تسجيل الخروج؟!",
+    "no":"لا",
+    "yes":"نعم",
+    "cancel": "إلغاء",
+    "logOut": "تسجيل الخروج"
   }
 }

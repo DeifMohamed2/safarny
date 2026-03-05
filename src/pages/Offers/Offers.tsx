@@ -108,7 +108,8 @@ const Offers = () => {
                 oldPrice: 9000,
                 discountPercent: 10,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />

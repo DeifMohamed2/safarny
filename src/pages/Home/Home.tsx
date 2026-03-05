@@ -4,12 +4,9 @@ import TripsSection from '../../components/shared/TripsSection'
 import TripCard from '@/components/shared/TripCard'
 import trip from "@assets/trip/trip.jpg"
 import { useState } from 'react'
-
-// import { useTranslation } from 'react-i18next'
 import TripsCarousel from '@/components/shared/TripsCarousel'
 
 const Home = () => {
-  // const { i18n } = useTranslation()
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
 
   const handleToggleFavorite = (id: string) => {
@@ -31,15 +28,12 @@ const Home = () => {
     <>
       <HeroSection />
       <TripsSection
-        title={
-          <>
-            <span className="text-sky-950">Exclusive </span>
-            <span className="text-orange-500">Travel</span>
-            <span className="text-sky-950"> Deals</span>
-          </>
-        } 
-        description='Enjoy exclusive offers and discounts on top travel destinations'
-        actionText='see more'
+        title1='home.exclusive-Travel.title1'
+        title2='home.exclusive-Travel.title2'
+        title3='home.exclusive-Travel.title3'
+        description="home.exclusive-Travel.subtitle"
+        actionText="shared.seeMore"
+        actionLink="/trips"
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -58,7 +52,8 @@ const Home = () => {
                 oldPrice: 9000,
                 discountPercent: 10,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />
@@ -66,14 +61,11 @@ const Home = () => {
         </TripsCarousel>
       </TripsSection>
       <TripsSection
-        title={
-          <>
-            <span className="text-sky-950">Popular </span>
-            <span className="text-orange-500">Trips</span>
-          </>
-        } 
-        description='Discover the most popular trips and destinations at great prices'
-        actionText='see more'
+        title1='home.popular-Trips.title1'
+        title2='home.popular-Trips.title2'
+        description="home.popular-Trips.subtitle"
+        actionText="shared.seeMore"
+        actionLink="/trips"
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -92,7 +84,8 @@ const Home = () => {
                 oldPrice: 9000,
                 discountPercent: 10,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />
@@ -100,15 +93,12 @@ const Home = () => {
         </TripsCarousel>
       </TripsSection>
       <TripsSection
-        title={
-          <>
-            <span className="text-sky-950">Recommended </span>
-            <span className="text-orange-500">Umrah</span>
-            <span className="text-sky-950"> Trips</span>
-          </>
-        } 
-        description='Reliable and well-planned Umrah journeys to Makkah and Madinah.'
-        actionText='see more'
+        title1='home.recommended-Umrah.title1'
+        title2='home.recommended-Umrah.title2'
+        title3='home.recommended-Umrah.title3'
+        description="home.recommended-Umrah.subtitle"
+        actionText="shared.seeMore"
+        actionLink="/umrah"
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -127,7 +117,8 @@ const Home = () => {
                 oldPrice: 9000,
                 discountPercent: 10,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />

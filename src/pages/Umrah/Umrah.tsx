@@ -7,7 +7,7 @@ import ResponsivePagination from "react-responsive-pagination"
 import "react-responsive-pagination/themes/classic.css"
 
 const Umrah = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
   const [searchQuery, setSearchQuery] = useState("");
   const [roomCount, setRoomCount] = useState("");
@@ -51,8 +51,8 @@ const Umrah = () => {
       className="relative min-h-dvh sm:h-full max-w-340 w-full px-4 pt-32.5 mx-auto"
     >
       <div className='w-full flex flex-col gap-2'>
-        <h1 className='font-semibold text-2xl sm:text-3xl lg:text-4xl leading-12.75 capitalize text-[#122445] flex-none order-0 self-stretch grow-0'>Umrah</h1>
-        <p className='font-normal tetx-sm sm:text-base lg:text-xl leading-7.5 capitalize text-[#122445] flex-none order-1 grow-0'>Find carefully curated Umrah packages for a peaceful and fulfilling experience.</p>
+        <h1 className='font-semibold text-2xl sm:text-3xl lg:text-4xl leading-12.75 capitalize text-[#122445] flex-none order-0 self-stretch grow-0'>{t("umrah.title","Umrah")}</h1>
+        <p className='font-normal tetx-sm sm:text-base lg:text-xl leading-7.5 capitalize text-[#122445] flex-none order-1 grow-0'>{t("umrah.subtitle","Find carefully curated Umrah packages for a peaceful and fulfilling experience.")}</p>
       </div>
 
       <SearchFilters
@@ -106,7 +106,8 @@ const Umrah = () => {
                 availableSpots: 12,
                 price: 8500,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />

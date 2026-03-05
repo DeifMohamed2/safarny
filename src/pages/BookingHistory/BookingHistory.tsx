@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import ResponsivePaginationComponent from "react-responsive-pagination";
 
 const BookingHistory = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = 10;
 
@@ -23,7 +23,7 @@ const BookingHistory = () => {
       adults: 2,
       price: 1270,
       image: trip,
-      statusColor: "#008000",
+      statusColor: "#02bb02",
       statusBg: "rgba(19,103,65,0.2)",
       categoryIconColor: "#557BEB"
     },
@@ -65,7 +65,7 @@ const BookingHistory = () => {
     <div className='relative min-h-dvh sm:h-full max-w-340 w-full px-4 pt-32.5 mx-auto'>
       <div className='w-full flex flex-col gap-5 sm:gap-7 md:gap-10'>
         <h1 className='font-medium text-2xl md:text-3xl lg:text-[43px] leading-16 capitalize text-[#122445]'>
-          Booking History
+          {t("profile.bookingHistory","Booking History")}
         </h1>
         <div className="flex flex-col items-center gap-7.5">
           {bookings.map((booking) => (

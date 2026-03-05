@@ -1,16 +1,32 @@
 import { Button } from "@/components/ui/button"
 import user from "@assets/profile/user.png"
+import { Link, useNavigate } from "react-router-dom"
 
-// import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
+import SignOutDialog from "@/components/modals/SignOutDialog"
+import { useState } from "react"
+import { useAuth } from "@/auth"
 
 const Profile = () => {
-  // const { i18n } = useTranslation()
+  const { t } = useTranslation();
+  const [dialogIsOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const openDialog = () => {
+    setIsOpen(true)
+  }
+
+  const onDialogOk = () => {
+    signOut();
+    navigate('/');
+    setIsOpen(false);
+  }
 
   return (
     <div className='relative min-h-dvh sm:h-full max-w-340 w-full px-4 pt-32.5 mb-4 mx-auto'>
       <div className='w-full flex flex-col gap-5 sm:gap-9 md:gap-12.5'>
         <h1 className='font-medium text-2xl md:text-3xl lg:text-[43px] leading-16 capitalize text-[#122445]'>
-          My Profile
+          {t("profile.title","My Profile")}
         </h1>
         <div className='w-full flex flex-col items-center sm:items-start gap-10'>
           <div className='flex flex-col gap-5.5 p-5.5 sm:min-w-131 bg-[#D8E5FD] rounded-[22px]'>
@@ -41,34 +57,42 @@ const Profile = () => {
               transition-all duration-300 active:scale-95
               hover:bg-[#122445] hover:text-white hover:border-[#122445]"
             >
-              Edit Profile
+              {t("profile.edit","Edit Profile")}
             </Button>
-            <Button
+            <Link
+              to='/booking-history'
               className="p-3 bg-white border border-[#D4D7DE] rounded-xl font-medium 
               text-lg sm:text-xl leading-7.5 capitalize text-[#122445]
-              transition-all duration-300 active:scale-95
+              transition-all duration-300 active:scale-95 text-center
               hover:bg-[#122445] hover:text-white hover:border-[#122445]"
             >
-              Booking History
-            </Button>
-            <Button
+              {t("profile.bookingHistory","Booking History")}
+            </Link>
+            <Link
+              to='/contact-us'
               className="p-3 bg-white border border-[#D4D7DE] rounded-xl font-medium 
               text-lg sm:text-xl leading-7.5 capitalize text-[#122445]
-              transition-all duration-300 active:scale-95
+              transition-all duration-300 active:scale-95 text-center
               hover:bg-[#122445] hover:text-white hover:border-[#122445]"
             >
-              Contact Us
-            </Button>
+              {t("profile.contactUs","Contact Us")}
+            </Link>
             <Button
+              onClick={() => openDialog()}
               className="p-3 bg-white border border-[#FF383B] rounded-xl font-medium 
               text-lg sm:text-xl leading-7.5 capitalize text-[#FF383B]
               transition-all duration-300 active:scale-95 hover:bg-[#FF383B]/20 hover:text-[#FF383B]"
             >
-              Log Out
+              {t("shared.logOut","Log Out")}
             </Button>
           </div>
         </div>
       </div>
+      <SignOutDialog
+        isOpen={dialogIsOpen}
+        onClose={() => setIsOpen(false)}
+        onConfirm={onDialogOk}
+      />
     </div>
   )
 }

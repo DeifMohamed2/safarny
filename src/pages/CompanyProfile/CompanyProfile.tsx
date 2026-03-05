@@ -29,33 +29,29 @@ const CompanyProfile = () => {
     { id: "6", title: "Alexandria Weekend", location: "Alexandria, Egypt" },
   ]
   const destinationsCovered = [
-    "Sharm El Sheikh",
-    "Hurghada",
-    "Dahab",
-    "Marsa Alam",
-    "El Gouna",
-    "Soma Bay"
+    "companyProfile.destinations.sharmElSheikh",
+    "companyProfile.destinations.hurghada",
+    "companyProfile.destinations.dahab",
+    "companyProfile.destinations.marsaAlam",
+    "companyProfile.destinations.elGouna",
+    "companyProfile.destinations.somaBay"
   ]
   return (
     <div className='relative min-h-dvh sm:h-full max-w-340 w-full px-4 pt-32.5 mb-4 mx-auto'>
       <Header 
         title='Wanderlust Journeys'
-        subTitle='Specializing in beach & leisure trips'
+        subTitle='companyProfile.subTitle'
         rate={4.8}
         reviews={2347}
         image={company}
-        description='Wanderlust Journeys has been crafting unforgettable travel experiences since 2010. We specialize in luxury beach destinations and leisure travel packages across the Red Sea region. Our expert team curates every detail to ensure your vacation is seamless, relaxing, and truly memorable.'
+        description='companyProfile.description'
         destinationsCovered={destinationsCovered}
         contactNumber='201227375904'
       />
       <TripsSection
-        title={
-          <>
-            <span className="text-sky-950">Exclusive </span>
-            <span className="text-orange-500">Travel</span>
-            <span className="text-sky-950"> Deals</span>
-          </>
-        } 
+        title1='home.exclusive-Travel.title1'
+        title2='home.exclusive-Travel.title2'
+        title3='home.exclusive-Travel.title3'
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -74,7 +70,8 @@ const CompanyProfile = () => {
                 oldPrice: 9000,
                 discountPercent: 10,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />
@@ -82,12 +79,8 @@ const CompanyProfile = () => {
         </TripsCarousel>
       </TripsSection>
       <TripsSection
-        title={
-          <>
-            <span className="text-sky-950">Popular </span>
-            <span className="text-orange-500">Trips</span>
-          </>
-        } 
+        title1='home.popular-Trips.title1'
+        title2='home.popular-Trips.title2'
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -106,7 +99,8 @@ const CompanyProfile = () => {
                 oldPrice: 9000,
                 discountPercent: 10,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />

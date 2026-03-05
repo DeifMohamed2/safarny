@@ -9,7 +9,7 @@ import TripsSection from '@/components/shared/TripsSection';
 import TripsCarousel from '@/components/shared/TripsCarousel';
 
 const Trips = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [favorites, setFavorites] = useState<Record<string, boolean>>({})
   const [searchQuery, setSearchQuery] = useState("");
   const [roomCount, setRoomCount] = useState("");
@@ -53,8 +53,8 @@ const Trips = () => {
       className="relative min-h-dvh sm:h-full max-w-340 w-full px-4 pt-32.5 mb-12 sm:mb-18 lg:mb-25 mx-auto"
     >
       <div className='w-full flex flex-col gap-2'>
-        <h1 className='font-semibold text-2xl sm:text-3xl lg:text-4xl leading-12.75 capitalize text-[#122445] flex-none order-0 self-stretch grow-0'>Trips</h1>
-        <p className='font-normal tetx-sm sm:text-base lg:text-xl leading-7.5 capitalize text-[#122445] flex-none order-1 grow-0'>Browse available trips and choose your next destination.</p>
+        <h1 className='font-semibold text-2xl sm:text-3xl lg:text-4xl leading-12.75 capitalize text-[#122445] flex-none order-0 self-stretch grow-0'>{t("trips.title","Trips")}</h1>
+        <p className='font-normal tetx-sm sm:text-base lg:text-xl leading-7.5 capitalize text-[#122445] flex-none order-1 grow-0'>{t("trips.subtitle","Browse available trips and choose your next destination.")}</p>
       </div>
 
       <SearchFilters
@@ -108,7 +108,8 @@ const Trips = () => {
                 availableSpots: 12,
                 price: 8500,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />
@@ -128,13 +129,10 @@ const Trips = () => {
         </div>
       </div>
       <TripsSection
-        title={
-          <>
-            <span className="text-sky-950">Offers</span>
-          </>
-        } 
-        description='Limited-time offers on popular destinations'
-        actionText='see more'
+        title2='trips.offers'
+        description='trips.offerDescription'
+        actionText="shared.seeMore"
+        actionLink="/trips/offers"
       >
         <TripsCarousel>
           {trips.map(tripItem => (
@@ -153,7 +151,8 @@ const Trips = () => {
                 oldPrice: 9000,
                 discountPercent: 10,
                 isFavorite: favorites[tripItem.id] ?? false,
-                onViewDetails: id => console.log("view", id),
+                href: `/trips/${tripItem.id}`,
+                onViewDetails: () => console.log("view", tripItem.id),
                 onToggleFavorite: handleToggleFavorite,
               }}
             />

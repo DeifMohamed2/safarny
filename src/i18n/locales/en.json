@@ -3,7 +3,10 @@
     "home": "Home",
     "trips": "Trips",
     "umrah": "Umrah",
-    "companies": "Companies"
+    "companies": "Companies",
+    "profile": "profile",
+    "saved": "saved",
+    "message": "message"
   },
   "home": {
     "hero": {
@@ -12,11 +15,95 @@
       "searchPlaceholder": "Search"
     },
     "exclusive-Travel": {
-      "exclusive": "Exclusive",
-      "travel": "Travel",
-      "deals": "Deals",
+      "title1": "Exclusive",
+      "title2": "Travel",
+      "title3": "Deals",
       "subtitle": "Enjoy exclusive offers and discounts on top travel destinations"
+    },
+    "popular-Trips": {
+      "title1": "Popular",
+      "title2": "Trips",
+      "subtitle": "Discover the most popular trips and destinations at great prices"
+    },
+    "recommended-Umrah": {
+      "title1": "Recommended",
+      "title2": "Umrah",
+      "title3": "Trips",
+      "subtitle": "Reliable and well-planned Umrah journeys to Makkah and Madinah."
+    },
+    "quotes": {
+      "title": "Quotes",
+      "subtitle": "Experiences shared by travelers who found their trips here"
     }
+  },
+  "trips": {
+    "title": "Trips",
+    "subtitle": "Browse available trips and choose your next destination.",
+    "offers": "Offers",
+    "offerDescription": "Limited-time offers on popular destinations"
+  },
+  "umrah": {
+    "title": "Umrah",
+    "subtitle": "Find carefully curated Umrah packages for a peaceful and fulfilling experience."
+  },
+  "companies":{
+    "title": "Companies",
+    "subtitle": "Find the best travel companies offering trips across multiple destinations.",
+    "topCompanies1": "Top rated",
+    "topCompanies2": "Companies",
+    "description": "Discover the highest-rated travel companies on our platform.",
+    "all": "All"
+  },
+  "searchCompanies":{
+    "subtitle":"Find the best travel companies offering trips across multiple destinations.",
+    "companies" :"companies",
+    "newsletter" :"that match your search"
+  },
+  "companyProfile":{
+    "reviews":"reviews",
+    "subTitle":"Specializing in beach & leisure trips",
+    "aboutCompany":"About the Company",
+    "description":"Wanderlust Journeys has been crafting unforgettable travel experiences since 2010. We specialize in luxury beach destinations and leisure travel packages across the Red Sea region. Our expert team curates every detail to ensure your vacation is seamless, relaxing, and truly memorable.",
+    "destinationsCovered":"Destinations Covered",
+    "destinations": {
+      "sharmElSheikh": "Sharm El Sheikh",
+      "hurghada": "Hurghada",
+      "dahab": "Dahab",
+      "marsaAlam": "Marsa Alam",
+      "elGouna": "El Gouna",
+      "somaBay": "Soma Bay"
+    }
+  },
+  "profile":{
+    "title":"My Profile",
+    "edit":"Edit Profile",
+    "bookingHistory":"Booking History",
+    "contactUs":"Contact Us"
+  },
+  "bookingHistory":{
+    "bookingDate":"Booking Date",
+    "travelDate":"Travel Date",
+    "duration":"Duration",
+    "group":"Group",
+    "adults":"Adults",
+    "egpperson":"egp / person",
+    "cancelBooking":"Cancel Booking"
+  },
+  "contactUs":{
+    "title": "Get in touch with us. We're here to assist you.",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phoneNumber": "Phone Number",
+    "phoneNumberPlaceholder": "Enter phone number",
+    "message": "Message",
+    "messagePlaceholder": "Write your message...",
+    "submit": "Leave Us A Message",
+    "errors": {
+      "fullname": "Full name must be at least 2 characters",
+      "email": "Invalid email address",
+      "phone": "Invalid phone number",
+      "message": "Message must be at least 10 characters"
+    } 
   },
   "filter": {
     "search": "Search",
@@ -31,42 +118,6 @@
     "from": "From",
     "to": "To"
   },
-  "destinations": {
-    "sharm": "Sharm El Sheikh",
-    "hurghada": "Hurghada",
-    "dahab": "Dahab",
-    "marsa": "Marsa Alam"
-  },
-  "Companies":{
-    "Companies": "Companies",
-    "subtitle": "Find the best travel companies offering trips across multiple destinations.",
-    "search": "Search",
-     "filter": "Filter",
-     "Top rated Companies": "Top rated Companies",
-     "description": "Discover the highest-rated travel companies on our platform.",
-     "All Companies": "All Companies",
-     "newsletter" :"Discover the highest-rated travel companies on our platform."
-  },
-  "search Companies":{
-   "Companies": "Companies",
-    "subtitle":"Find the best travel companies offering trips across multiple destinations.",
-     "search": "Search",
-     "filter": "Filter",
-     "newsletter" :"300+  companies that match your search"
-  },
-  "company-profile":{
-   "Wanderlust Journeys": "Wanderlust Journeys",
-   "newsletter":"4.8 • 2,347 reviews",
-   "Specializing in beach & leisure trips":"Specializing in beach & leisure trips",
-   "contact company":"contact company",
-   "About the Company":"About the Company",
-   "subtitle":"Wanderlust Journeys has been crafting unforgettable travel experiences since 2010. We specialize in luxury beach destinations and leisure travel packages across the Red Sea region. Our expert team curates every detail to ensure your vacation is seamless, relaxing, and truly memorable.",
-   "Destinations Covered":"Destinations Covered",
-   "El Gouna":"El Gouna",
-   "Soma Bay":"Soma Bay",
-   "Exclusive Travel Deals":"Exclusive Travel Deals",
-   "Popular Trips":"Popular Trips"
-  },
   "footer": {
     "description": "A platform that connects travelers with trips, travel deals, and trusted travel companies",
     "email": "Enter your email",
@@ -78,9 +129,50 @@
     "legal": "Legal",
     "sitemap": "Site Map"
   },
+  "auth": {
+    "fullName": "Full Name",
+    "email": "Email",
+    "password": "Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "resetPassword": "Reset Password",
+    "resetPasswordSubtitle": "Type something you will remember",
+    "signUp": "Sign Up",
+    "haveAccount": "Don’t have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "continueSignIn": "continue with signal sign in",
+    "or": "Or",
+    "accountExists": "Account Already Exists",
+    "forgotPassword": "Forget Your Password ?",
+    "forgotPasswordSubtitle": "Don’t worry! It happens. Please enter the email associated with your account.",
+    "forgotPasswordVerify": "Please check your email",
+    "send": "Send",
+    "verify": "Verify",
+    "confirm": "Confirm",
+    "subscribeMarketing": "I want to receive information, offers, recommendations, and updates from Safarni.",
+    "acceptTermsPrefix": "By signing up, you accept our",
+    "termsAndConditions": "Terms and Conditions",
+    "privacyPrefix": "Please read our",
+    "privacyNotice": "Privacy Notice",
+    "validation": {
+      "fullNameRequired": "Please enter your Full Name",
+      "emailRequired": "Please enter your email",
+      "emailInvalid": "Enter a valid email",
+      "passwordRequired": "Please enter your password",
+      "OTPRequired": "Please enter a valid OTP",
+      "passwordsNotMatch": "Passwords do not match"
+    }
+  },
   "shared": {
     "seeMore": "see more",
     "close": "Close",
-    "signOut": "Sign Out"
+    "signIn": "Sign In",
+    "contact":"Contact Company",
+    "viewDetails":"View Details",
+    "wantLogout":"Are you sure you want to log out ?!",
+    "no":"No",
+    "yes":"Yes",
+    "cancel":"Cancel",
+    "logOut": "Log Out"
   }
 }
