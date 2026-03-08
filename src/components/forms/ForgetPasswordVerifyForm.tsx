@@ -28,6 +28,23 @@ const validationSchema: ZodType<ForgotPasswordFormSchema> = z.object({
     .min(OTP_LENGTH, { message: 'auth.validation.OTPRequired' }),
 })
 
+// const otpVerificationNotification = (
+//     <Notification 
+//         className='flex flex-col items-center
+//             gap-5.5 w-101.75! bg-white
+//             border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
+//         safarny
+//         title="Code verified successfully!"
+//     >
+//         You can now proceed to reset your password.
+//     </Notification>
+// )
+
+// function openOTPNotification() {
+//     toast.push(otpVerificationNotification, {
+//         placement: 'top-center',
+//     })
+// }
 
 const ForgetPasswordVerifyForm = (props: ForgetPasswordVerifyFormProps) => {
     const { t } = useTranslation();
@@ -51,6 +68,7 @@ const ForgetPasswordVerifyForm = (props: ForgetPasswordVerifyFormProps) => {
             console.log('result?.status : ', values);
             if (onSuccess) {
                 onSuccess()
+                // openOTPNotification()
             }
         }
         setSubmitting(false)

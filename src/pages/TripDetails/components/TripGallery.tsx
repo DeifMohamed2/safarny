@@ -1,7 +1,8 @@
 import img1 from '@assets/trip/trip.jpg';
 import img2 from '@assets/trip/card1.jpg';
 import img3 from '@assets/trip/card2.jpg';
-import img4 from '@assets/trip/trip.jpg';
+import img4 from '@assets/trip/card3.jpg';
+import img5 from '@assets/trip/card4.jpg';
 import { useState } from 'react';
 
 interface GalleryImage {
@@ -16,8 +17,8 @@ const TripGallery = () => {
     { id: 2, image: img2, mainImage: false },
     { id: 3, image: img3, mainImage: false },
     { id: 4, image: img4, mainImage: false },
-    { id: 5, image: img1, mainImage: false },
-    { id: 6, image: img2, mainImage: false },
+    { id: 5, image: img5, mainImage: false },
+    { id: 6, image: img1, mainImage: false },
     { id: 7, image: img3, mainImage: false },
     { id: 8, image: img4, mainImage: false },
   ]);

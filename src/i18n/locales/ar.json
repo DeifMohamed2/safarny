@@ -72,6 +72,69 @@
       "somaBay": "سوما باي"
     }
   },
+  "tripDetails": {
+    "aboutTrip": "عن الرحلة",
+    "tripOverview": "نظرة عامة على الرحلة",
+    "whatsIncluded": "ما الذي يشمله العرض",
+    "tripItinerary": "برنامج الرحلة",
+    "off": "خصم",
+    "book": "احجز",
+
+    "pricePerNight": "ليلة",
+    "availableSpots": "الأماكن المتاحة",
+    "durationDays": "أيام",
+    "durationNights": "ليالي",
+
+    "tripType": "نوع الرحلة",
+    "tripTypeValue": "استجمام / شاطئ",
+
+    "included": {
+      "hotel": "الإقامة في الفندق",
+      "breakfast": "إفطار يومي",
+      "transport": "وسائل النقل",
+      "activities": "أنشطة بإرشاد"
+    },
+
+    "itinerary": {
+      "day1Title": "اليوم 1 – الوصول",
+      "day1Desc": "الوصول وتسجيل الدخول في الفندق ووقت حر.",
+      "day2Title": "اليوم 2 – الأنشطة",
+      "day2Desc": "رحلة سنوركلينج ووقت على الشاطئ.",
+      "day3Title": "اليوم 3 – يوم حر",
+      "day3Desc": "وقت للراحة أو أنشطة اختيارية.",
+      "day4Title": "اليوم 4 – المغادرة",
+      "day4Desc": "تسجيل الخروج والمغادرة."
+    },
+
+    "recommended": {
+      "title1": "مقترحة",
+      "title2": "لك",
+      "description": "رحلات مختارة بناءً على اهتماماتك",
+      "seeMore": "عرض المزيد"
+    },
+    "sendRequest": "إرسال الطلب",
+    "bookingDialog": {
+      "summary": "ملخص الحجز",
+      "company": "رحلات البحر الأحمر",
+      "route": "شرم الشيخ – الغردقة",
+      "tripSummary": "ملخص الرحلة",
+      "duration": "المدة",
+      "schedule": "الجدول",
+      "location": "الموقع",
+      "pricePerPerson": "السعر لكل شخص",
+      "selectedDateTime": "التاريخ والوقت المختار",
+      "startDate": "تاريخ البدء",
+      "startTime": "وقت البدء",
+      "availableSpots": "الأماكن المتاحة",
+      "importantInfo": "معلومات مهمة",
+      "persons": "أشخاص",
+      "info": {
+        "perPerson": "الأسعار لكل شخص",
+        "availability": "تخضع للتوافر",
+        "confirmation": "يتطلب تأكيد المزود"
+      }
+    }
+  },
   "profile": {
     "title": "ملفي الشخصي",
     "edit": "تعديل الملف الشخصي",
@@ -163,6 +226,7 @@
   },
   "shared": {
     "seeMore": "رؤية المزيد",
+    "see_all": "رؤية جميع الأوقات",
     "close": "إغلاق",
     "signIn": "تسجيل الدخول",
     "contact": "تواصل مع الشركة",
@@ -171,6 +235,8 @@
     "no":"لا",
     "yes":"نعم",
     "cancel": "إلغاء",
+    "egp":"ج.م",
+    "availableDates": "الأوقات المتاحة",
     "logOut": "تسجيل الخروج"
   }
 }

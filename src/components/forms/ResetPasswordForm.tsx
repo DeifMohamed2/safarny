@@ -9,6 +9,8 @@ import type { ZodType } from 'zod'
 import type { CommonProps } from '@/@types/common'
 import Button from '../ui/ButtonSafarny'
 import { useTranslation } from 'react-i18next'
+import toast from '@/components/ui/toastSafarny'
+import Notification from '@/components/ui/Notification'
 
 interface ResetPasswordFormProps extends CommonProps {
     disableSubmit?: boolean
@@ -34,6 +36,24 @@ const validationSchema: ZodType<ResetPasswordFormSchema> = z.object({
     path: ["confirmPassword"],
   });
 
+const resetPasswordNotification = (
+    <Notification 
+        className='flex flex-col items-center
+            gap-5.5 w-101.75! bg-white
+            border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
+        safarny
+        title="Password reset successfully!"
+    >
+        Your new password has been set. You can now sign in with your new password.
+    </Notification>
+)
+
+function openResetPasswordNotification() {
+    toast.push(resetPasswordNotification, {
+        placement: 'top-center',
+    })
+}
+
 const ResetPasswordForm = (props: ResetPasswordFormProps) => {
     const { t } = useTranslation();
     const [isSubmitting, setSubmitting] = useState<boolean>(false)
@@ -57,6 +77,7 @@ const ResetPasswordForm = (props: ResetPasswordFormProps) => {
             setSubmitting(true)
             if (onSuccess) {
                 onSuccess()
+                openResetPasswordNotification()
             }
         }
         setSubmitting(false)

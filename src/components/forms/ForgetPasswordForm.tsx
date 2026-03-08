@@ -28,6 +28,24 @@ const validationSchema: ZodType<ForgetPasswordFormSchema> = z.object({
         .email({ message: "auth.validation.emailInvalid" }),
 })
 
+// const forgetPasswordNotification = (
+//     <Notification 
+//         className='flex flex-col items-center
+//             gap-5.5 w-101.75! bg-white
+//             border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
+//         safarny
+//         title="We've sent a sign-in link to your email address."
+//     >
+//         Please open the email to continue.
+//     </Notification>
+// )
+
+// function openForgetPasswordNotification() {
+//     toast.push(forgetPasswordNotification, {
+//         placement: 'top-center',
+//     })
+// }
+
 const ForgetPasswordForm = (props: ForgetPasswordFormProps) => {
     const { t } = useTranslation();
     const [isSubmitting, setSubmitting] = useState<boolean>(false)
@@ -54,6 +72,7 @@ const ForgetPasswordForm = (props: ForgetPasswordFormProps) => {
             console.log('result?.status : ', values);
             if (onSuccess) {
                 onSuccess()
+                // openForgetPasswordNotification()
             }
         }
         setSubmitting(false)

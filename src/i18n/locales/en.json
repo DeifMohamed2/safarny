@@ -74,6 +74,69 @@
       "somaBay": "Soma Bay"
     }
   },
+  "tripDetails": {
+    "aboutTrip": "About This Trip",
+    "tripOverview": "Trip Overview",
+    "whatsIncluded": "What’s Included",
+    "tripItinerary": "Trip Itinerary",
+    "off": "Off",
+    "book": "Book",
+
+    "pricePerNight": "Night",
+    "availableSpots": "Available spots",
+    "durationDays": "Days",
+    "durationNights": "Nights",
+
+    "tripType": "Trip Type",
+    "tripTypeValue": "Leisure / Beach",
+
+    "included": {
+      "hotel": "Hotel accommodation",
+      "breakfast": "Daily breakfast",
+      "transport": "Transportation",
+      "activities": "Guided activities"
+    },
+
+    "itinerary": {
+      "day1Title": "Day 1 – Arrival",
+      "day1Desc": "Arrival, hotel check-in, and free time.",
+      "day2Title": "Day 2 – Activities",
+      "day2Desc": "Snorkeling trip and beach time.",
+      "day3Title": "Day 3 – Free Day",
+      "day3Desc": "Leisure time or optional activities.",
+      "day4Title": "Day 4 – Departure",
+      "day4Desc": "Check-out and departure."
+    },
+
+    "recommended": {
+      "title1": "Recommended",
+      "title2": "for You",
+      "description": "Trips selected based on what you might like",
+      "seeMore": "See more"
+    },
+    "sendRequest": "Send Request",
+    "bookingDialog": {
+      "summary": "Booking Summary",
+      "company": "Red Sea Getaways",
+      "route": "Sharm El Sheikh – Hurghada",
+      "tripSummary": "Trip Summary",
+      "duration": "Duration",
+      "schedule": "Schedule",
+      "location": "Location",
+      "pricePerPerson": "Price per person",
+      "selectedDateTime": "Selected Date & Time",
+      "startDate": "Start Date",
+      "startTime": "Start Time",
+      "availableSpots": "Available spots",
+      "importantInfo": "Important Info",
+      "persons": "Persons",
+      "info": {
+        "perPerson": "Prices are per person",
+        "availability": "Subject to availability",
+        "confirmation": "Provider confirmation required"
+      }
+    }
+  },
   "profile":{
     "title":"My Profile",
     "edit":"Edit Profile",
@@ -165,6 +228,7 @@
   },
   "shared": {
     "seeMore": "see more",
+    "see_all": "See All",
     "close": "Close",
     "signIn": "Sign In",
     "contact":"Contact Company",
@@ -173,6 +237,8 @@
     "no":"No",
     "yes":"Yes",
     "cancel":"Cancel",
+    "egp":"EGP",
+    "availableDates": "Available Dates",
     "logOut": "Log Out"
   }
 }
