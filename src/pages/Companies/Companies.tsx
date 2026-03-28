@@ -1,4 +1,4 @@
-import SearchFilters from '@/components/shared/SearchFilters';
+import CompanySearchFilters from '@/components/shared/CompanySearchFilters';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next'
 import company from "@assets/companies/company.png"
@@ -17,7 +17,8 @@ const Companies = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [destination, setDestination] = useState("Sharm El Sheikh")
-  const [date, setDate] = useState<Date | undefined>(new Date())
+  const [tripType, setTripType] = useState("beach")
+  const [rate, setRate] = useState(0)
   const navigate = useNavigate()
 
   const resetFilters = () => {
@@ -143,7 +144,7 @@ const Companies = () => {
         </p>
       </div>
 
-      <SearchFilters
+      <CompanySearchFilters
         className='min-h-0 pt-18'
         classNameSearchBar='max-w-282.5'
         classNameFilter='bg-[#F6F6F6]'
@@ -152,27 +153,23 @@ const Companies = () => {
         bgInput='bg-white'
         classNameSearchInput='text-[#4F4F4F] placeholder:text-[#4F4F4F]'
         destination={destination}
-        date={date}
+        tripType={tripType}
+        rate={rate}
         searchQuery={searchQuery}
-        roomCount={roomCount}
-        guestsCount={guestsCount}
         showFilters={showFilters}
 
         setDestination={setDestination}
-        setDate={setDate}
         setSearchQuery={setSearchQuery}
-        setRoomCount={setRoomCount}
-        setGuestsCount={setGuestsCount}
+        setTripType={setTripType}
+        setRate={setRate}
 
         onToggleFilters={() => setShowFilters(prev => !prev)}
         onResetFilters={resetFilters}
         onSearch={() => {
           console.log({
             destination,
-            date,
+            tripType,
             searchQuery,
-            roomCount,
-            guestsCount,
           })
           navigate('/companies/search')
         }}

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router'
 
 interface HeaderProps {
   title: string
@@ -23,6 +24,7 @@ const Header = ({
   reviews,
 }: HeaderProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate()
   const getInitials = (title: string) => {
     if (!title) return ""
     const words = title.trim().split(" ")
@@ -77,6 +79,7 @@ const Header = ({
           </div>
           <Button
             className="w-fit flex items-center justify-center gap-2.5 rounded-xl bg-[#263859] px-3.5 py-3 font-medium text-base sm:text-lg leading-6.75 text-white mx-auto sm:ms-auto sm:me-0"
+            onClick={()=>navigate('/chat')}
           >
             {t("shared.contact", "contact company")}
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

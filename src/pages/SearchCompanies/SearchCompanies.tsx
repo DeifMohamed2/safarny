@@ -1,4 +1,4 @@
-import SearchFilters from '@/components/shared/SearchFilters';
+import CompanySearchFilters from '@/components/shared/CompanySearchFilters';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next'
 import company from "@assets/companies/company.png"
@@ -15,7 +15,8 @@ const SearchCompanies = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [destination, setDestination] = useState("Sharm El Sheikh")
-  const [date, setDate] = useState<Date | undefined>(new Date())
+  const [tripType, setTripType] = useState("beach")
+  const [rate, setRate] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = 10
 
@@ -140,7 +141,7 @@ const SearchCompanies = () => {
         <p className='font-normal tetx-sm sm:text-base lg:text-xl leading-7.5 capitalize text-[#122445] flex-none order-1 grow-0'>{t("searchCompanies.subtitle", "Find the best travel companies offering trips across multiple destinations.")}</p>
       </div>
 
-      <SearchFilters
+      <CompanySearchFilters
         className='min-h-0 pt-18'
         classNameSearchBar='max-w-282.5'
         classNameFilter='bg-[#F6F6F6]'
@@ -149,27 +150,24 @@ const SearchCompanies = () => {
         bgInput='bg-white'
         classNameSearchInput='text-[#4F4F4F] placeholder:text-[#4F4F4F]'
         destination={destination}
-        date={date}
+        tripType={tripType}
+        rate={rate}
         searchQuery={searchQuery}
-        roomCount={roomCount}
-        guestsCount={guestsCount}
         showFilters={showFilters}
 
         setDestination={setDestination}
-        setDate={setDate}
+        setTripType={setTripType}
+        setRate={setRate}
         setSearchQuery={setSearchQuery}
-        setRoomCount={setRoomCount}
-        setGuestsCount={setGuestsCount}
 
         onToggleFilters={() => setShowFilters(prev => !prev)}
         onResetFilters={resetFilters}
         onSearch={() => {
           console.log({
             destination,
-            date,
+            tripType,
+            rate,
             searchQuery,
-            roomCount,
-            guestsCount,
           })
         }}
       />

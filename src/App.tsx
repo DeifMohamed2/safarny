@@ -17,7 +17,8 @@ import Profile from "./pages/Profile";
 import BookingHistory from "./pages/BookingHistory";
 import ContactUs from "./pages/ContactUs";
 import TripDetails from "./pages/TripDetails";
-import Messages from "./pages/Messages";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import Chat from "./pages/Messages/Messages";
 // const Home = lazy(() => import('./pages/Home'))
 const NotFound = lazy(() => import('./pages/not-found'))
 
@@ -39,10 +40,31 @@ const routers = createBrowserRouter([
       { path: "companies", element: <Companies /> },
       { path: "companies/:id", element: <CompanyProfile /> },
       { path: "companies/search", element: <SearchCompanies /> },
-      { path: "profile", element: <Profile /> },
-      { path: "booking-history", element: <BookingHistory /> },
-      { path: "contact-us", element: <ContactUs /> },
-      { path: "chat", element: <Messages /> },
+      { 
+        path: "profile", 
+        element: (
+          <ProtectedRoute isAuthPage={false}>
+            <Profile /> 
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "booking-history", 
+        element: (
+          <ProtectedRoute isAuthPage={false}>
+            <BookingHistory /> 
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "contact-us", 
+        element: (
+          <ProtectedRoute isAuthPage={false}>
+            <ContactUs /> 
+          </ProtectedRoute>
+        )
+      },
+      { path: "chat", element: <Chat /> },
       { path: "*", element: <NotFound /> },
     ],
   },

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import TripGallery from './components/TripGallery';
 import AvailableDatesDialog from '@/components/modals/AvailableDatesDialog';
 import BookingDialog from '@/components/modals/BookingDialog';
+import { useNavigate } from 'react-router'
 
 interface TripData {
   id: string;
@@ -74,6 +75,7 @@ const tripsData = [
 
 const TripDetails = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate()
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [dialogIsOpen, setIsOpen] = useState(false);
   const [dialogBookingIsOpen, setBookingIsOpen] = useState(false);
@@ -138,6 +140,7 @@ const TripDetails = () => {
           </div>
           <Button
             className="w-fit flex items-center justify-center gap-2.5 rounded-xl bg-[#263859] px-3.5 py-3 font-medium text-base sm:text-lg leading-6.75 text-white"
+            onClick={()=>navigate('/chat')}
           >
             <span className='hidden sm:block'>{t("shared.contact", "contact company")}</span>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
