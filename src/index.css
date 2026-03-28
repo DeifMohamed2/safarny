@@ -13,6 +13,8 @@
 @import './components/styles/_input-group.css';
 @import './components/styles/_input.css';
 @import './components/styles/_checkbox.css';
+@import './components/styles/_time-input.css';
+@import './components/styles/_date-picker.css';
 @import './components/styles/_button.css';
 @import './components/styles/_notification.css';
 @import './components/styles/_toast.css';
@@ -32,6 +34,7 @@
   
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-subtle: hsl(var(--primary-subtle));
   
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
@@ -63,6 +66,7 @@
   /* ===== Brand Colors (Matched with Navbar) ===== */
   --primary: 218 41% 25%;          /* #263859 */
   --primary-foreground: 0 0% 100%; /* white */
+  --primary-subtle: 218 41% 25% / 0.1;
 
   --secondary: 218 41% 32%;        /* #2a4d7f */
   --secondary-foreground: 0 0% 100%;

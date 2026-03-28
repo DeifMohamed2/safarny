@@ -10,30 +10,30 @@ interface BookingDialogProps {
   onConfirm: () => void;
 }
 
-const bookingNotification = (
-  <Notification 
-    className='flex flex-col items-center
-        gap-5.5 w-101.75! bg-white
-        border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
-    safarny
-    title="Booking Request Submitted!"
-  >
-    Your booking request has been submitted, and our team will contact you shortly to complete the details.
-  </Notification>
-)
-
-function openBookingNotification() {
-  toast.push(bookingNotification, {
-    placement: 'top-center',
-  })
-}
-
 const BookingDialog= ({
   isOpen,
   onClose,
   onConfirm,
 }: BookingDialogProps) => {
   const { t } = useTranslation();
+
+  const bookingNotification = (
+    <Notification 
+      className='flex flex-col items-center
+          gap-5.5 w-101.75! bg-white
+          border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
+      safarny
+      title={t("notification.bookingDialog.title", "Booking Request Submitted!")}
+    >
+    {t("notification.bookingDialog.description", " Your booking request has been submitted, and our team will contact you shortly to complete the details.")}
+    </Notification>
+  )
+
+  function openBookingNotification() {
+    toast.push(bookingNotification, {
+      placement: 'top-center',
+    })
+  }
 
   return (
     <Dialog overlayClassName='bg-transparent! flex justify-center items-center' isOpen={isOpen} onClose={onClose} onRequestClose={onClose} style={{ content: { marginTop: 0, }, }}>

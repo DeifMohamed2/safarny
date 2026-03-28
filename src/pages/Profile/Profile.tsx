@@ -1,17 +1,21 @@
 import { Button } from "@/components/ui/button"
-import user from "@assets/profile/user.png"
+import defaultAvatar from "@assets/profile/user.png"
 import { Link, useNavigate } from "react-router-dom"
 
 import { useTranslation } from 'react-i18next'
 import SignOutDialog from "@/components/modals/SignOutDialog"
 import { useState } from "react"
 import { useAuth } from "@/auth"
+import EditProfileDialog from "@/components/modals/EditProfileDialog"
+import { useSessionUser } from '@/store/authStore'
 
 const Profile = () => {
   const { t } = useTranslation();
   const [dialogIsOpen, setIsOpen] = useState(false);
+  const [editProfileIsOpen, setIsEditProfileOpen] = useState(false);
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { user, setUser } = useSessionUser();
   const openDialog = () => {
     setIsOpen(true)
   }
@@ -32,19 +36,19 @@ const Profile = () => {
           <div className='flex flex-col gap-5.5 p-5.5 sm:min-w-131 bg-[#D8E5FD] rounded-[22px]'>
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="w-30 h-30 rounded-full border-4 border-white overflow-hidden bg-white">
-                <img src={user} alt="Profile"
+                <img src={user.avatar || defaultAvatar} alt="Profile"
                     className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col items-start gap-1">
                 <h3 className="w-full font-medium text-base sm:text-lg leading-6.75 capitalize text-black">
-                  Sarah Ahmed
+                  {user.userName || ""}
                 </h3>
                 <div className="flex flex-col items-start">
-                  <p className="w-full text-sm sm:text-base leading-6 capitalize text-black">
-                    sarah.ahmed@email.com
+                  <p className="w-full text-sm sm:text-base leading-6 text-black">
+                    {user.email || ""}
                   </p>
                   <p className="w-full text-sm sm:text-base leading-6 capitalize text-black">
-                    0123456789
+                    {(user as any).phone || ""}
                   </p>
                 </div>
               </div>
@@ -52,6 +56,7 @@ const Profile = () => {
           </div>
           <div className='w-full grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <Button
+              onClick={() => setIsEditProfileOpen(true)}
               className="p-3 bg-white border border-[#D4D7DE] rounded-xl font-medium 
               text-lg sm:text-xl leading-7.5 capitalize text-[#122445]
               transition-all duration-300 active:scale-95
@@ -92,6 +97,19 @@ const Profile = () => {
         isOpen={dialogIsOpen}
         onClose={() => setIsOpen(false)}
         onConfirm={onDialogOk}
+      />
+      <EditProfileDialog
+        isOpen={editProfileIsOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        onConfirm={(values) => {
+          setUser({
+            userName: values.fullName,
+            email: values.email,
+            phone: values.phone,
+            avatar: values.avatar ?? user.avatar,
+          });
+          setIsEditProfileOpen(false);
+        }}
       />
     </div>
   )

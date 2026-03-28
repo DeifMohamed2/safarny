@@ -44,6 +44,7 @@ export type User = {
     avatar?: string | null
     userName?: string | null
     email?: string | null
+    phone?: string | null
     authority?: string[]
 }
 

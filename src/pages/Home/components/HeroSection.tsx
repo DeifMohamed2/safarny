@@ -23,7 +23,7 @@ const HeroSection = () => {
   };
   return (<>
       <section
-        className="relative min-h-dvh sm:h-full flex items-center overflow-hidden bg-cover bg-center"
+        className="relative min-h-dvh sm:h-full flex items-center bg-cover bg-center"
         style={{
           backgroundImage: `url('../../../../attached_assets/homePage/bg.jpg')`,
           transition: "background-image 0.5s ease-in-out",

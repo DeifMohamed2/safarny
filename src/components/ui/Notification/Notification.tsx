@@ -13,6 +13,7 @@ export interface NotificationProps extends CommonProps {
     onClose?: (e: MouseEvent<HTMLSpanElement>) => void
     ref?: Ref<HTMLDivElement>
     title?: string
+    subtitle?: string
     triggerByToast?: boolean
     safarny?: boolean
     type?: TypeAttributes.Status
@@ -30,6 +31,7 @@ const Notification = (props: NotificationProps) => {
         style,
         ref,
         title,
+        subtitle,
         triggerByToast,
         safarny = false,
         type,
@@ -69,7 +71,7 @@ const Notification = (props: NotificationProps) => {
             style={{ width: width, ...style }}
         >
             {safarny ? (
-                <div className='flex flex-col items-center font-sans
+                <div className='flex flex-col items-center font-sans rtl:font-arabic
                     py-6.5 px-4 gap-5.5 w-101.75 bg-white border 
                     border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
                 >
@@ -79,6 +81,11 @@ const Notification = (props: NotificationProps) => {
                   {title && (
                     <h2 className='font-medium text-lg leading-6.75 text-center capitalize text-black'>
                         {title}
+                    </h2>
+                  )}
+                  {subtitle && (
+                    <h2 className='text-center font-normal text-lg leading-6.75 capitalize text-black'>
+                        {subtitle}
                     </h2>
                   )}
                   {children && (

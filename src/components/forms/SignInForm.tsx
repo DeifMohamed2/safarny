@@ -39,24 +39,6 @@ const validationSchema: ZodType<SignInFormSchema> = z.object({
         .min(1, { message: 'auth.validation.passwordRequired' }),
 })
 
-const toastNotification = (
-    <Notification 
-        className='flex flex-col items-center
-            gap-5.5 w-101.75! bg-white
-            border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
-        safarny
-        title="You're signed in successfully."
-    >
-        Your booking request has been submitted, and our team will contact you shortly to complete the details.
-    </Notification>
-)
-
-function openNotification() {
-    toast.push(toastNotification, {
-            placement: 'top-center',
-        })
-}
-
 const SignInForm = (props: SignInFormProps) => {
     const { t } = useTranslation();
     const [isSubmitting, setSubmitting] = useState<boolean>(false)
@@ -75,6 +57,24 @@ const SignInForm = (props: SignInFormProps) => {
         },
         resolver: zodResolver(validationSchema),
     })
+       
+    const toastNotification = (
+        <Notification 
+            className='flex flex-col items-center
+                gap-5.5 w-101.75! bg-white
+                border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
+            safarny
+            title={t("notification.signInFrom.title", "You're signed in successfully.")}
+        >
+            {t("notification.signInFrom.description", "Your booking request has been submitted, and our team will contact you shortly to complete the details.")}
+        </Notification>
+    )
+
+    function openNotification() {
+        toast.push(toastNotification, {
+                placement: 'top-center',
+            })
+    }
 
     const { signIn } = useAuth()
 

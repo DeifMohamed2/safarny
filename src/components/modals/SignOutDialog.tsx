@@ -16,7 +16,7 @@ const SignOutDialog= ({
   const { t } = useTranslation();
   
   return (
-    <Dialog closable={false} overlayClassName='bg-transparent!' isOpen={isOpen} onClose={onClose} onRequestClose={onClose} style={{ content: { marginTop: 250, }, }}>
+    <Dialog closable={false} overlayClassName='bg-transparent! flex justify-center items-center' isOpen={isOpen} onClose={onClose} onRequestClose={onClose} style={{ content: { marginTop: 0, }, }}>
       <div className="w-full flex flex-col items-center gap-5.5 px-4 py-6.5">
         <p className="w-full text-center text-lg leading-6.75 font-medium capitalize text-black">
           {t("shared.wantLogout", "Are you sure you want to log out ?!")}

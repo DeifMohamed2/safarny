@@ -36,24 +36,6 @@ const validationSchema: ZodType<ResetPasswordFormSchema> = z.object({
     path: ["confirmPassword"],
   });
 
-const resetPasswordNotification = (
-    <Notification 
-        className='flex flex-col items-center
-            gap-5.5 w-101.75! bg-white
-            border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
-        safarny
-        title="Password reset successfully!"
-    >
-        Your new password has been set. You can now sign in with your new password.
-    </Notification>
-)
-
-function openResetPasswordNotification() {
-    toast.push(resetPasswordNotification, {
-        placement: 'top-center',
-    })
-}
-
 const ResetPasswordForm = (props: ResetPasswordFormProps) => {
     const { t } = useTranslation();
     const [isSubmitting, setSubmitting] = useState<boolean>(false)
@@ -68,6 +50,23 @@ const ResetPasswordForm = (props: ResetPasswordFormProps) => {
         resolver: zodResolver(validationSchema),
     })
 
+    const resetPasswordNotification = (
+        <Notification 
+            className='flex flex-col items-center
+                gap-5.5 w-101.75! bg-white
+                border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
+            safarny
+            title={t("notification.resetPassword.title", "Password reset successfully!")}
+        >
+            {t("notification.resetPassword.description", "Your new password has been set. You can now sign in with your new password.")}
+        </Notification>
+    )
+
+    function openResetPasswordNotification() {
+        toast.push(resetPasswordNotification, {
+            placement: 'top-center',
+        })
+    }
 
     const onResetPassword = async (values: ResetPasswordFormSchema) => {
 

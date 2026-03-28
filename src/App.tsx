@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import BookingHistory from "./pages/BookingHistory";
 import ContactUs from "./pages/ContactUs";
 import TripDetails from "./pages/TripDetails";
+import Messages from "./pages/Messages";
 // const Home = lazy(() => import('./pages/Home'))
 const NotFound = lazy(() => import('./pages/not-found'))
 
@@ -41,6 +42,7 @@ const routers = createBrowserRouter([
       { path: "profile", element: <Profile /> },
       { path: "booking-history", element: <BookingHistory /> },
       { path: "contact-us", element: <ContactUs /> },
+      { path: "chat", element: <Messages /> },
       { path: "*", element: <NotFound /> },
     ],
   },

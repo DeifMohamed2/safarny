@@ -80,6 +80,7 @@
     "whatsIncluded": "What’s Included",
     "tripItinerary": "Trip Itinerary",
     "off": "Off",
+    "save": "save",
     "book": "Book",
 
     "pricePerNight": "Night",
@@ -89,6 +90,7 @@
 
     "tripType": "Trip Type",
     "tripTypeValue": "Leisure / Beach",
+    "person": "person",
 
     "included": {
       "hotel": "Hotel accommodation",
@@ -141,7 +143,9 @@
     "title":"My Profile",
     "edit":"Edit Profile",
     "bookingHistory":"Booking History",
-    "contactUs":"Contact Us"
+    "contactUs":"Contact Us",
+    "upload": "Upload",
+    "phoneNumber": "Phone Number"
   },
   "bookingHistory":{
     "bookingDate":"Booking Date",
@@ -223,7 +227,52 @@
       "emailInvalid": "Enter a valid email",
       "passwordRequired": "Please enter your password",
       "OTPRequired": "Please enter a valid OTP",
-      "passwordsNotMatch": "Passwords do not match"
+      "passwordsNotMatch": "Passwords do not match",
+      "phoneInvalid": "Enter a valid phone number"
+    }
+  },
+  "notifications": {
+    "signInSuccess": {
+      "title": "You're signed in successfully.",
+      "description": "Your booking request has been submitted, and our team will contact you shortly to complete the details."
+    },
+    "signUpSuccess": {
+      "title": "Your account has been created successfully.",
+      "description": "Your booking request has been submitted, and our team will contact you shortly to complete the details."
+    },
+    "forgotPassword": {
+      "title": "We've sent a sign-in link to your email address.",
+      "description": "Please open the email to continue."
+    },
+    "otpVerified": {
+      "title": "Code verified successfully!",
+      "description": "You can now proceed to reset your password."
+    },
+    "passwordReset": {
+      "title": "Password reset successfully!",
+      "description": "Your new password has been set. You can now sign in with your new password."
+    },
+    "bookingSubmitted": {
+      "title": "Booking Request Submitted!",
+      "description": "Your booking request has been submitted, and our team will contact you shortly to complete the details."
+    }
+  },
+  "notification": {
+    "resetPassword": {
+      "title": "Password reset successfully!",
+      "description": " Your new password has been set. You can now sign in with your new password."
+    },
+    "signInFrom": {
+      "title": "You're signed in successfully.",
+      "description": " Your booking request has been submitted, and our team will contact you shortly to complete the details."
+    },
+    "signUpFrom":{
+      "title":"Your account has been created successfully.",
+      "description":"  Your booking request has been submitted, and our team will contact you shortly to complete the details."
+    },
+    "bookingDialog":{
+      "title":"Booking Request Submitted!",
+      "description":"Your booking request has been submitted, and our team will contact you shortly to complete the details."
     }
   },
   "shared": {
@@ -237,6 +286,7 @@
     "no":"No",
     "yes":"Yes",
     "cancel":"Cancel",
+    "saveChanges":"save changes",
     "egp":"EGP",
     "availableDates": "Available Dates",
     "logOut": "Log Out"

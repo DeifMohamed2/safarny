@@ -4,9 +4,10 @@ import { ChevronLeft } from 'lucide-react';
 interface PrevArrowProps {
     onClick: () => void;
     disabled?: boolean;
+    className?: string;
 }
 
-const NextArrow: React.FC<PrevArrowProps> = ({ onClick, disabled }) => {
+const NextArrow: React.FC<PrevArrowProps> = ({ onClick, disabled, className }) => {
     return (
         <button
             aria-label='Next'
@@ -17,7 +18,7 @@ const NextArrow: React.FC<PrevArrowProps> = ({ onClick, disabled }) => {
                         disabled
                             ? "bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed opacity-60"
                             : "text-[#122445] bg-white border-[#122445] hover:text-white hover:bg-[#122445] hover:scale-105 cursor-pointer"
-                        }`}
+                        } ${className || ''}`}
         >
             <ChevronLeft size={22} />
         </button>

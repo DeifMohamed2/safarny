@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import navigationConfig from "@/configs/navigation.config";
 import { useAuth } from "@/auth";
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ export default function Navbar() {
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [dialogIsOpen, setIsOpen] = useState(false);
   const [dialogSignInIsOpen, setSignInIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { authenticated, signOut } = useAuth();
   const openDialog = () => {
@@ -220,6 +222,29 @@ export default function Navbar() {
             </nav>
           </div>
 
+          {/* center search input (only desktop) */}
+          <div className="hidden lg:flex flex-1 justify-center px-2">
+            <div
+              className={cn(
+                "h-13 ps-3 pe-2 py-2 bg-[#F6F6F6] rounded-xl outline -outline-offset-1 outline-black/10 inline-flex justify-start items-center gap-3 w-full max-w-md",
+              )}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+                <path d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M22 22L20 20" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <input
+                type="text"
+                placeholder={t("filter.search", "Search")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn(
+                  "w-[calc(100%-36px)] bg-transparent outline-none text-neutral-600 text-base font-normal font-['Inter'] leading-6",
+                )}
+              />
+            </div>
+          </div>
+
           {/* Right Side - Actions */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
@@ -374,7 +399,7 @@ export default function Navbar() {
                 <Menu />
               </button>
             </div>
-          </div>
+          </div> 
         </div>
       </header>
       <SignOutDialog

@@ -1,8 +1,7 @@
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Swiper as SwiperType } from 'swiper'
-// import { Navigation } from "swiper/modules"
-// import { useTranslation } from "react-i18next"
-import { useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useRef, useState, useEffect } from "react"
 import PrevArrow from "../ui/PrevArrow"
 import NextArrow from "../ui/NextArrow"
 
@@ -11,35 +10,55 @@ interface TripsCarouselProps {
 }
 
 const TripsCarousel = ({ children }: TripsCarouselProps) => {
-  // const { i18n } = useTranslation()
-  // const isRTL = i18n.dir() === "rtl"
-  const [isBeginning, setIsBeginning] = useState(true)
-  const [isEnd, setIsEnd] = useState(false)
+  const { i18n } = useTranslation()
+  const isRTL = i18n.dir() === "rtl"
+
+  const [atStart, setAtStart] = useState(true)
+  const [atEnd, setAtEnd] = useState(false)
   const swiperRef = useRef<SwiperType | null>(null)
 
+  useEffect(() => {
+    const swiper = swiperRef.current;
+    if (!swiper) return;
+    swiper.slideTo(0);
+  }, [isRTL]);
+
   return (
-    <div className="relative w-full">
-      {/* Previous Button */}
-      <div className="absolute top-[50%] -left-2.5 min-[460px]:left-0 min-[1350px]:-left-1 z-10">
-        <NextArrow onClick={() => swiperRef.current?.slidePrev()} disabled={isBeginning}/>
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="relative w-full">
+      {/* Previous Button (logical beginning) */}
+      <div className="absolute top-[50%] -left-2.5 min-[460px]:left-0 min-[1350px]:-left-6.5 z-10">
+        <NextArrow
+          onClick={() => {
+            if (isRTL) swiperRef.current?.slideNext();
+            else swiperRef.current?.slidePrev();
+          }}
+          disabled={atStart}
+        />
       </div>
-      {/* Next Button */}
-      <div className="absolute top-[50%] -right-2.5 min-[460px]:right-0 z-10">
-        <PrevArrow onClick={() => swiperRef.current?.slideNext()} disabled={isEnd}/>
+      {/* Next Button (logical end) */}
+      <div className="absolute top-[50%] -right-2.5 min-[460px]:right-0 min-[1350px]:-right-6 z-10">
+        <PrevArrow
+          onClick={() => {
+            if (isRTL) swiperRef.current?.slidePrev();
+            else swiperRef.current?.slideNext();
+          }}
+          disabled={atEnd}
+        />
       </div>
       <Swiper
+        key={isRTL ? 'rtl' : 'ltr'}
         onSwiper={(swiper) => {
           swiperRef.current = swiper
-          setIsBeginning(swiper.isBeginning)
-          setIsEnd(swiper.isEnd)
+          setAtStart(isRTL ? swiper.isEnd : swiper.isBeginning)
+          setAtEnd(isRTL ? swiper.isBeginning : swiper.isEnd)
         }}
         onSlideChange={(swiper) => {
-          setIsBeginning(swiper.isBeginning)
-          setIsEnd(swiper.isEnd)
+          setAtStart(isRTL ? swiper.isEnd : swiper.isBeginning)
+          setAtEnd(isRTL ? swiper.isBeginning : swiper.isEnd)
         }}
         spaceBetween={12}
         slidesPerView={4}
-        dir='ltr'
+        dir={isRTL ? 'rtl' : 'ltr'}
         breakpoints={{
           0: { slidesPerView: 1 },
           460: { slidesPerView: 1.15 },
@@ -65,7 +84,7 @@ const TripsCarousel = ({ children }: TripsCarouselProps) => {
           1280: { slidesPerView: 3.8 },
           1300: { slidesPerView: 4 },
         }}
-        className="w-full [@media_(min-width:460px)]:w-[calc(100%-80px)]"
+        className="w-full [@media_(min-width:460px)]:w-[calc(100%-32px)]"
       >
         {children.map((child, index) => (
           <SwiperSlide key={index}>

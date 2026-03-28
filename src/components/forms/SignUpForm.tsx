@@ -50,24 +50,6 @@ const validationSchema: ZodType<SignUpFormSchema> = z.object({
     subscribe: z.boolean(),
 })
 
-const signUpNotification = (
-    <Notification 
-        className='flex flex-col items-center
-            gap-5.5 w-101.75! bg-white
-            border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
-        safarny
-        title="Your account has been created successfully."
-    >
-        Your booking request has been submitted, and our team will contact you shortly to complete the details.
-    </Notification>
-)
-
-function openSignUpNotification() {
-    toast.push(signUpNotification, {
-        placement: 'top-center',
-    })
-}
-
 const SignUpForm = (props: SignUpFormProps) => {
     const { t } = useTranslation();
     const [isSubmitting, setSubmitting] = useState<boolean>(false)
@@ -84,6 +66,24 @@ const SignUpForm = (props: SignUpFormProps) => {
         },
         resolver: zodResolver(validationSchema),
     })
+    
+    const signUpNotification = (
+        <Notification 
+            className='flex flex-col items-center
+                gap-5.5 w-101.75! bg-white
+                border border-[#263859] shadow-[0_0_6.3px_rgba(38,56,89,0.24)] rounded-xl' 
+            safarny
+            title={t("notification.signUpFrom.title", "Your account has been created successfully.")}
+        >
+            {t("notification.signUpFrom.description", " Your booking request has been submitted, and our team will contact you shortly to complete the details.")}
+        </Notification>
+    )
+
+    function openSignUpNotification() {
+        toast.push(signUpNotification, {
+            placement: 'top-center',
+        })
+    }
 
     const { signUp } = useAuth()
 
@@ -112,13 +112,6 @@ const SignUpForm = (props: SignUpFormProps) => {
                             className='w-full flex-1 h-11 bg-[#F6F6F6] rounded-lg flex justify-center items-center'
                         >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M21.1663 8.18242C21.0271 8.29043 18.5692 9.67537 18.5692 12.7549C18.5692 16.3168 21.6967 17.577 21.7904 17.6082C21.7759 17.685 21.2935 19.3339 20.1414 21.0141C19.1141 22.4926 18.0412 23.9688 16.409 23.9688C14.7769 23.9688 14.3568 23.0207 12.4726 23.0207C10.6364 23.0207 9.98357 24 8.49062 24C6.99767 24 5.95597 22.6319 4.75825 20.9517C3.37091 18.9787 2.25 15.9136 2.25 13.0045C2.25 8.33843 5.2839 5.86379 8.2698 5.86379C9.85636 5.86379 11.1789 6.90549 12.175 6.90549C13.1231 6.90549 14.6016 5.80138 16.4066 5.80138C17.0907 5.80138 19.5485 5.86379 21.1663 8.18242ZM15.5497 3.82598C16.2962 2.94029 16.8243 1.71137 16.8243 0.482448C16.8243 0.312031 16.8099 0.139214 16.7787 0C15.5641 0.0456046 14.1192 0.808881 13.2479 1.81938C12.5638 2.59706 11.9254 3.82598 11.9254 5.07171C11.9254 5.25893 11.9566 5.44614 11.971 5.50615C12.0478 5.52055 12.1726 5.53735 12.2974 5.53735C13.3871 5.53735 14.7576 4.80768 15.5497 3.82598Z" fill="#0A0B0C"/>
-                            </svg>
-                        </Button>
-                        <Button
-                            className='w-full flex-1 h-11 bg-[#F6F6F6] rounded-lg flex justify-center items-center'
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <g clip-path="url(#clip0_5253_10954)">
                                     <g clip-path="url(#clip1_5253_10954)">
                                         <path d="M23.8154 12.2244C23.8154 11.2412 23.7356 10.5236 23.5629 9.77954H12.335V14.2175H18.9255C18.7927 15.3204 18.0752 16.9813 16.4806 18.0974L16.4583 18.246L20.0084 20.9962L20.2543 21.0207C22.5132 18.9346 23.8154 15.8652 23.8154 12.2244Z" fill="#4285F4"/>
@@ -135,6 +128,13 @@ const SignUpForm = (props: SignUpFormProps) => {
                                         <rect width="23.4528" height="24" fill="white" transform="translate(0.375)"/>
                                     </clipPath>
                                 </defs>
+                            </svg>
+                        </Button>
+                        <Button
+                            className='w-full flex-1 h-11 bg-[#F6F6F6] rounded-lg flex justify-center items-center'
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21.1663 8.18242C21.0271 8.29043 18.5692 9.67537 18.5692 12.7549C18.5692 16.3168 21.6967 17.577 21.7904 17.6082C21.7759 17.685 21.2935 19.3339 20.1414 21.0141C19.1141 22.4926 18.0412 23.9688 16.409 23.9688C14.7769 23.9688 14.3568 23.0207 12.4726 23.0207C10.6364 23.0207 9.98357 24 8.49062 24C6.99767 24 5.95597 22.6319 4.75825 20.9517C3.37091 18.9787 2.25 15.9136 2.25 13.0045C2.25 8.33843 5.2839 5.86379 8.2698 5.86379C9.85636 5.86379 11.1789 6.90549 12.175 6.90549C13.1231 6.90549 14.6016 5.80138 16.4066 5.80138C17.0907 5.80138 19.5485 5.86379 21.1663 8.18242ZM15.5497 3.82598C16.2962 2.94029 16.8243 1.71137 16.8243 0.482448C16.8243 0.312031 16.8099 0.139214 16.7787 0C15.5641 0.0456046 14.1192 0.808881 13.2479 1.81938C12.5638 2.59706 11.9254 3.82598 11.9254 5.07171C11.9254 5.25893 11.9566 5.44614 11.971 5.50615C12.0478 5.52055 12.1726 5.53735 12.2974 5.53735C13.3871 5.53735 14.7576 4.80768 15.5497 3.82598Z" fill="#0A0B0C"/>
                             </svg>
                         </Button>
                     </div>
