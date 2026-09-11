@@ -1,0 +1,94 @@
+<%- include('auth-dialog') %>
+
+<div id="signout-dialog" class="dialog-overlay">
+  <div class="dialog-panel px-4 py-6.5">
+    <p class="text-center text-lg font-medium"><%= t('shared.wantLogout', 'Are you sure you want to log out ?!') %></p>
+    <div class="flex justify-center gap-8 mt-6">
+      <button type="button" data-close-dialog="#signout-dialog" class="flex-1 max-w-43.5 py-3 border border-[#263859] rounded-xl"><%= t('shared.no', 'No') %></button>
+      <form id="sign-out-form" action="/auth/sign-out" method="post" class="flex-1 max-w-43.5">
+        <button type="submit" class="w-full py-3 bg-[#263859] text-white rounded-xl"><%= t('shared.yes', 'Yes') %></button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<% const currentTrip = typeof trip !== 'undefined' && trip ? trip : null; %>
+<div id="booking-dialog" class="dialog-overlay">
+  <div class="dialog-panel wide p-5.5">
+    <h1 class="text-[22px] font-semibold capitalize"><%= t('tripDetails.bookingDialog.summary', 'Booking Summary') %></h1>
+    <% if (currentTrip) { %>
+      <p class="text-[#263859] font-medium mt-1"><%= currentTrip.title %></p>
+      <p class="text-sm text-[#535353] mt-2"><%= currentTrip.location %></p>
+    <% } %>
+    <form id="booking-form" action="<%= currentTrip ? '/trips/' + currentTrip.id + '/book' : '/trips/1/book' %>" method="post" class="mt-6 flex flex-col gap-4">
+      <input type="hidden" name="travelDate" id="booking-travel-date" value="<%= typeof tripDates !== 'undefined' && tripDates[0] ? tripDates[0].date : '' %>" />
+      <div class="bg-[#F6F6F6] rounded-xl p-3 space-y-2 text-sm">
+        <h3><%= t('tripDetails.bookingDialog.tripSummary', 'Trip Summary') %></h3>
+        <div class="flex justify-between"><span class="text-[#535353]"><%= t('tripDetails.bookingDialog.duration', 'Duration') %></span><span id="booking-duration"><%= currentTrip ? currentTrip.days + ' ' + t('tripDetails.durationDays') + ' / ' + currentTrip.nights + ' ' + t('tripDetails.durationNights') : '5 ' + t('tripDetails.durationDays') + ' / 4 ' + t('tripDetails.durationNights') %></span></div>
+        <div class="flex justify-between"><span class="text-[#535353]"><%= t('tripDetails.bookingDialog.selectedDateTime', 'Selected Date') %></span><span id="booking-selected-date"><%= typeof tripDates !== 'undefined' && tripDates[0] ? tripDates[0].date : '—' %></span></div>
+        <div class="flex justify-between"><span class="text-[#535353]"><%= t('tripDetails.bookingDialog.pricePerPerson', 'Price per person') %></span><span><%= currentTrip ? formatPrice(currentTrip.price) : '8,500' %> <%= t('shared.egp') %></span></div>
+      </div>
+      <label class="flex flex-col gap-1 text-sm">
+        <%= t('tripDetails.bookingDialog.persons', 'Persons') %>
+        <input type="number" name="persons" min="1" value="1" class="h-11 px-3 rounded-md bg-[#F6F6F6] border border-[#D4D7DE]" />
+      </label>
+      <p class="text-xs text-[#535353]"><%= t('tripDetails.bookingDialog.info.confirmation', 'Booking confirmation required after request') %></p>
+      <div class="flex gap-3">
+        <button type="button" data-close-dialog="#booking-dialog" class="flex-1 py-3 border border-[#263859] rounded-xl"><%= t('shared.cancel', 'Cancel') %></button>
+        <button type="submit" class="flex-1 py-3 bg-[#263859] text-white rounded-xl"><%= t('tripDetails.sendRequest', 'Send Request') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="dates-dialog" class="dialog-overlay">
+  <div class="dialog-panel wide p-5.5">
+    <h2 class="text-xl font-semibold mb-4"><%= t('shared.availableDates', 'Available Dates') %></h2>
+    <div class="grid md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto">
+      <% if (typeof tripDates !== 'undefined') { %>
+        <% tripDates.forEach(function(date) { %>
+          <button type="button" data-close-dialog="#dates-dialog" class="p-3 border border-[#D8E5FD] rounded-xl text-start">
+            <p class="text-xl pb-2 border-b"><%= date.date %></p>
+            <p class="text-sm mt-2"><%= t('tripDetails.availableSpots') %>: <%= date.availableSpots %></p>
+            <p class="text-sm"><%= date.days %> <%= t('tripDetails.durationDays') %> / <%= date.nights %> <%= t('tripDetails.durationNights') %></p>
+          </button>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% const accountPaths = ['/profile', '/saved', '/settings', '/booking-history', '/contact-us', '/tickets', '/chat'];
+if (authenticated && accountPaths.includes(currentPath)) { %>
+  <div id="edit-profile-dialog" class="dialog-overlay auth-dialog-overlay">
+    <div class="dialog-panel auth-dialog-panel account-dialog-panel">
+      <button type="button" class="auth-dialog-close" data-close-dialog="#edit-profile-dialog" aria-label="<%= t('shared.close', 'Close') %>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="auth-dialog-head">
+        <h2 class="auth-dialog-title"><%= t('profile.edit', 'Edit Profile') %></h2>
+        <p class="auth-dialog-subtitle"><%= t('profile.subtitle', 'Manage your account and quick actions') %></p>
+      </div>
+      <form id="profile-form" action="/auth/profile" method="post" class="account-form">
+        <div class="account-field">
+          <label for="profile-fullname" class="account-label"><%= t('contactUs.fullName', 'Full Name') %></label>
+          <input id="profile-fullname" name="fullName" required value="<%= user.userName %>" class="account-input" />
+        </div>
+        <div class="account-field">
+          <label for="profile-email" class="account-label"><%= t('contactUs.email', 'Email') %></label>
+          <input id="profile-email" name="email" type="email" required value="<%= user.email %>" class="account-input" />
+        </div>
+        <div class="account-field">
+          <label for="profile-phone" class="account-label"><%= t('profile.phoneNumber', 'Phone Number') %></label>
+          <input id="profile-phone" name="phone" value="<%= user.phone || '' %>" class="account-input" />
+        </div>
+        <div class="account-form-actions">
+          <button type="button" data-close-dialog="#edit-profile-dialog" class="account-btn account-btn--secondary account-btn--flex"><%= t('shared.cancel', 'Cancel') %></button>
+          <button type="submit" class="account-btn account-btn--primary account-btn--flex"><%= t('shared.saveChanges', 'Save changes') %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+<% } %>

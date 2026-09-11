@@ -1,0 +1,24 @@
+<%- include('../../partials/admin-shell-start') %>
+<% const editing = typeof isEdit !== 'undefined' && isEdit; %>
+<div class="admin-header admin-header--compact">
+  <div>
+    <a href="/admin/trips" class="admin-back"><%= t('admin.back', 'Back to trips') %></a>
+    <h2 class="admin-title"><%= editing ? t('admin.trips.edit', 'Edit trip') : t('admin.trips.create', 'Create trip') %></h2>
+    <p class="admin-subtitle"><%= t('company.trips.formHint', 'Fill in both English and Arabic details when possible.') %></p>
+  </div>
+</div>
+
+<%- include('../../partials/trip-form-sections', {
+  isAdmin: true,
+  isEdit: editing,
+  formTrip: formTrip || null,
+  formAction: editing ? '/admin/trips/' + trip.id + '/edit' : '/admin/trips/new',
+  cancelHref: '/admin/trips',
+  uploadUrl: editing ? '/admin/trips/media?companyId=' + trip.companyId : '/admin/trips/media',
+  limits: mediaLimits,
+  companies: companies,
+  query: typeof query !== 'undefined' ? query : {},
+  showStatus: true
+}) %>
+
+<%- include('../../partials/admin-shell-end') %>

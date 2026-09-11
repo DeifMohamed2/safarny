@@ -1,0 +1,314 @@
+<%#
+  Shared trip form sections for admin + company dashboards.
+  Required: isAdmin (boolean), isEdit (boolean), formTrip (object|null), formAction, cancelHref, uploadUrl, limits
+  Optional: companies, query, showStatus (default true for company, true for admin)
+%>
+<% const trip = formTrip || null; %>
+<% const initialImages = trip && trip.images ? trip.images : []; %>
+<% const initialVideos = trip && trip.videos ? trip.videos : []; %>
+<% const initialTravelDates = trip && trip.travelDates ? trip.travelDates : []; %>
+<% const initialItinerary = trip && trip.itinerary ? trip.itinerary : []; %>
+<% const initialIncluded = trip && trip.includedList ? trip.includedList.join('\n') : (trip ? trip.includedServices : ''); %>
+<% const initialRoomTypes = trip && trip.roomTypes && trip.roomTypes.length ? trip.roomTypes : [{ type: 'double', occupancy: 2, price: trip ? trip.price : 0, totalRooms: 0, availableRooms: 0 }]; %>
+<% const initialPriceMode = trip && trip.priceMode === 'per-date' ? 'per-date' : 'shared'; %>
+<% const panelClass = isAdmin ? 'admin-form-section' : 'company-form-section company-panel'; %>
+<% const gridClass = isAdmin ? 'admin-form-fields' : 'company-form-grid'; %>
+<% const fieldClass = isAdmin ? 'admin-form-field' : 'company-field'; %>
+<% const inputClass = isAdmin ? 'admin-input' : 'company-input'; %>
+<% const labelTag = isAdmin ? 'label' : 'label'; %>
+<% const textareaClass = isAdmin ? 'admin-textarea' : 'company-input company-textarea'; %>
+<% const sectionHead = isAdmin ? 'admin-form-section-head' : 'company-form-section-head'; %>
+<% const sectionTitle = isAdmin ? 'admin-form-section-title' : ''; %>
+
+<form
+  method="post"
+  action="<%= formAction %>"
+  class="<%= isAdmin ? 'admin-form-layout' : 'company-form company-trip-form' %>"
+  data-trip-form
+  data-form-theme="<%= isAdmin ? 'admin' : 'company' %>"
+  <%= !isAdmin ? 'data-company-trip-form' : '' %>
+>
+  <div class="<%= isAdmin ? 'admin-form-layout-grid admin-form-layout-grid--single' : '' %>">
+    <section class="<%= panelClass %>">
+      <div class="<%= sectionHead %>">
+        <% if (isAdmin) { %>
+          <h3 class="<%= sectionTitle %>"><%= t('company.form.sectionBasics', 'Trip details') %></h3>
+          <p class="admin-form-section-desc"><%= t('company.form.sectionBasicsHint', 'Core information travelers will see on your listing.') %></p>
+        <% } else { %>
+          <h2><%= t('company.form.sectionBasics', 'Trip details') %></h2>
+          <p><%= t('company.form.sectionBasicsHint', 'Core information travelers will see on your listing.') %></p>
+        <% } %>
+      </div>
+      <div class="<%= gridClass %>">
+        <% if (isAdmin && !isEdit) { %>
+          <div class="<%= fieldClass %> <%= isAdmin ? 'admin-form-field--span-2' : 'company-field--full' %>">
+            <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><%= t('admin.table.company', 'Company') %> *</<%= labelTag %>>
+            <select name="companyId" required class="<%= inputClass %>" data-admin-company-select>
+              <option value=""><%= t('admin.selectCompany', 'Select company') %></option>
+              <% (companies || []).forEach(function(c) { %>
+                <option value="<%= c.id %>" <%= (query && query.companyId === c.id) ? 'selected' : '' %>><%= c.title %></option>
+              <% }) %>
+            </select>
+          </div>
+        <% } %>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.title', 'Title (EN)') %> *</span></<%= labelTag %>>
+          <input name="title" required class="<%= inputClass %>" value="<%= trip ? trip.title : '' %>" />
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.titleAr', 'Title (AR)') %></span></<%= labelTag %>>
+          <input name="titleAr" class="<%= inputClass %>" dir="rtl" value="<%= trip ? trip.titleAr : '' %>" />
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.destination', 'Destination') %> *</span></<%= labelTag %>>
+          <input name="destination" required class="<%= inputClass %>" value="<%= trip ? trip.destination : '' %>" data-trip-destination placeholder="<%= t('company.form.destinationPlaceholder', 'e.g. Hurghada') %>" />
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.category', 'Category') %></span></<%= labelTag %>>
+          <input name="category" class="<%= inputClass %>" value="<%= trip ? trip.category : 'Leisure' %>" data-trip-category />
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('filter.tripType', 'Trip type') %></span></<%= labelTag %>>
+          <select name="type" class="<%= inputClass %>" data-trip-type>
+            <option value="leisure" <%= !trip || trip.type === 'leisure' ? 'selected' : '' %>><%= t('filter.leisure', 'Leisure') %></option>
+            <option value="umrah" <%= trip && trip.type === 'umrah' ? 'selected' : '' %>><%= t('filter.umrah', 'Umrah') %></option>
+          </select>
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('tripDetails.schedule', 'Schedule') %></span></<%= labelTag %>>
+          <select name="schedule" class="<%= inputClass %>">
+            <option value="daily" <%= !trip || trip.schedule === 'daily' ? 'selected' : '' %>><%= t('tripDetails.scheduleDaily', 'Daily') %></option>
+            <option value="weekly" <%= trip && trip.schedule === 'weekly' ? 'selected' : '' %>><%= t('tripDetails.scheduleWeekly', 'Weekly') %></option>
+            <option value="custom" <%= trip && trip.schedule === 'custom' ? 'selected' : '' %>><%= t('tripDetails.scheduleCustom', 'Custom') %></option>
+          </select>
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.days', 'Days') %></span></<%= labelTag %>>
+          <input name="days" type="number" min="1" class="<%= inputClass %>" value="<%= trip ? trip.days : '4' %>" />
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.nights', 'Nights') %></span></<%= labelTag %>>
+          <input name="nights" type="number" min="0" class="<%= inputClass %>" value="<%= trip ? trip.nights : '3' %>" />
+        </div>
+        <% if (showStatus !== false) { %>
+          <div class="<%= fieldClass %>">
+            <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.status', 'Status') %></span></<%= labelTag %>>
+            <select name="status" class="<%= inputClass %>">
+              <% ['draft', 'pending', 'active', 'sold-out', 'rejected'].forEach(function(option) { %>
+                <option value="<%= option %>" <%= trip && trip.status === option ? 'selected' : (!trip && option === 'draft' ? 'selected' : '') %>><%= isAdmin ? option : t('company.tripStatus.' + option, option) %></option>
+              <% }) %>
+            </select>
+          </div>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="<%= panelClass %>" data-room-types-section>
+      <div class="<%= sectionHead %>">
+        <% if (isAdmin) { %>
+          <h3 class="<%= sectionTitle %>"><%= t('company.form.sectionRooms', 'Rooms & prices') %></h3>
+          <p class="admin-form-section-desc"><%= t('company.form.sectionRoomsHint', 'Choose the rooms you offer and set a price per person. Use the same price for every date, or set prices on each period.') %></p>
+        <% } else { %>
+          <h2><%= t('company.form.sectionRooms', 'Rooms & prices') %></h2>
+          <p><%= t('company.form.sectionRoomsHint', 'Choose the rooms you offer and set a price per person. Use the same price for every date, or set prices on each period.') %></p>
+        <% } %>
+      </div>
+
+      <input type="hidden" name="priceMode" data-price-mode-input value="<%= initialPriceMode %>" />
+      <textarea name="roomTypes" hidden data-room-types-input class="trip-json-field"><%= JSON.stringify(initialRoomTypes) %></textarea>
+
+      <div class="trip-price-mode" data-price-mode role="radiogroup" aria-label="<%= t('company.form.priceMode', 'Pricing') %>">
+        <label class="<%= initialPriceMode !== 'per-date' ? 'is-on' : '' %>">
+          <input type="radio" name="priceModeUi" value="shared" <%= initialPriceMode !== 'per-date' ? 'checked' : '' %> />
+          <span><%= t('company.form.priceModeShared', 'Same price for all dates') %></span>
+        </label>
+        <label class="<%= initialPriceMode === 'per-date' ? 'is-on' : '' %>">
+          <input type="radio" name="priceModeUi" value="per-date" <%= initialPriceMode === 'per-date' ? 'checked' : '' %> />
+          <span><%= t('company.form.priceModePerDate', 'Different price per date') %></span>
+        </label>
+      </div>
+
+      <div class="trip-room-type-grid" data-room-type-grid></div>
+      <p class="trip-form-field-hint"><%= t('company.form.roomsHint', 'Turn on each room type you have. Price is per person in EGP. Room count is copied onto new travel dates.') %></p>
+    </section>
+
+    <section
+      class="<%= panelClass %>"
+      data-trip-media-picker
+      data-upload-url="<%= uploadUrl %>"
+      data-max-images="<%= limits.maxImages %>"
+      data-max-videos="<%= limits.maxVideos %>"
+      data-max-image-size="<%= limits.imageMaxBytes %>"
+      data-max-video-size="<%= limits.videoMaxBytes %>"
+    >
+      <div class="<%= sectionHead %>">
+        <div>
+          <% if (isAdmin) { %>
+            <h3 class="<%= sectionTitle %>"><%= t('company.form.sectionMedia', 'Photos & videos') %></h3>
+            <p class="admin-form-section-desc"><%= t('company.form.sectionMediaHint', 'Upload high-quality media. First photo becomes the cover image.') %></p>
+          <% } else { %>
+            <h2><%= t('company.form.sectionMedia', 'Photos & videos') %></h2>
+            <p><%= t('company.form.sectionMediaHint', 'Upload high-quality media. First photo becomes the cover image.') %></p>
+          <% } %>
+        </div>
+        <div class="company-media-limits">
+          <span><%= t('company.form.photoLimit', 'Photos up to 5 MB') %></span>
+          <span><%= t('company.form.videoLimit', 'Videos up to 20 MB') %></span>
+        </div>
+      </div>
+
+      <input type="hidden" name="images" data-trip-images-input value="<%= JSON.stringify(initialImages) %>" />
+      <input type="hidden" name="videos" data-trip-videos-input value="<%= JSON.stringify(initialVideos) %>" />
+
+      <div class="company-media-dropzone" data-trip-media-dropzone tabindex="0" role="button">
+        <input type="file" class="company-media-file-input" data-trip-media-input accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" multiple hidden />
+        <div class="company-media-dropzone-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 16V6M8.5 9.5 12 6l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 18h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <p class="company-media-dropzone-title"><%= t('company.form.dropTitle', 'Drag & drop photos or videos here') %></p>
+        <p class="company-media-dropzone-copy"><%= t('company.form.dropCopy', 'or click to browse from your device') %></p>
+        <button type="button" class="<%= isAdmin ? 'adm-btn adm-btn--secondary adm-btn--sm' : 'cp-btn cp-btn--secondary cp-btn--sm' %>" data-trip-media-browse><%= t('company.form.browseFiles', 'Browse files') %></button>
+      </div>
+
+      <p class="company-media-feedback" data-trip-media-feedback hidden role="alert"></p>
+      <div class="company-media-progress" data-trip-media-progress hidden><span data-trip-media-progress-bar></span></div>
+
+      <div class="company-media-block">
+        <div class="company-media-block-head"><h3><%= t('company.form.photos', 'Photos') %></h3><span data-trip-image-count>0/<%= limits.maxImages %></span></div>
+        <div class="company-media-grid" data-trip-image-grid></div>
+        <p class="company-media-empty" data-trip-image-empty><%= t('company.form.noPhotos', 'No photos added yet.') %></p>
+      </div>
+      <div class="company-media-block">
+        <div class="company-media-block-head"><h3><%= t('company.form.videos', 'Videos') %></h3><span data-trip-video-count>0/<%= limits.maxVideos %></span></div>
+        <div class="company-media-list" data-trip-video-list></div>
+        <p class="company-media-empty" data-trip-video-empty><%= t('company.form.noVideos', 'No videos added yet.') %></p>
+      </div>
+    </section>
+
+    <section class="<%= panelClass %>">
+      <div class="<%= sectionHead %>">
+        <% if (isAdmin) { %>
+          <h3 class="<%= sectionTitle %>"><%= t('tripDetails.selectDate', 'Travel dates') %></h3>
+          <p class="admin-form-section-desc"><%= t('company.form.travelDatesHint', 'Add each departure window. Set how many rooms of each type are available — and prices if they change by date.') %></p>
+        <% } else { %>
+          <h2><%= t('tripDetails.selectDate', 'Travel dates') %></h2>
+          <p><%= t('company.form.travelDatesHint', 'Add each departure window. Set how many rooms of each type are available — and prices if they change by date.') %></p>
+        <% } %>
+      </div>
+      <textarea name="travelDates" hidden data-travel-dates-input class="trip-json-field"><%= JSON.stringify(initialTravelDates) %></textarea>
+      <div data-travel-dates-list class="trip-date-editor-list"></div>
+      <button type="button" class="<%= isAdmin ? 'adm-btn adm-btn--secondary adm-btn--sm' : 'cp-btn cp-btn--secondary cp-btn--sm' %>" data-travel-dates-add>+ <%= t('company.form.addTravelDate', 'Add travel date') %></button>
+    </section>
+
+    <section class="<%= panelClass %>">
+      <div class="<%= sectionHead %>">
+        <% if (isAdmin) { %>
+          <h3 class="<%= sectionTitle %>"><%= t('tripDetails.aboutTrip', 'About This Trip') %></h3>
+        <% } else { %>
+          <h2><%= t('tripDetails.aboutTrip', 'About This Trip') %></h2>
+        <% } %>
+      </div>
+      <div class="<%= isAdmin ? 'admin-form-fields admin-form-fields--stack' : 'company-form-grid company-form-grid--stack' %>">
+        <div class="<%= fieldClass %> <%= isAdmin ? '' : 'company-field--full' %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.description', 'Description (EN)') %></span></<%= labelTag %>>
+          <textarea name="description" rows="4" class="<%= textareaClass %>"><%= trip ? trip.description : '' %></textarea>
+        </div>
+        <div class="<%= fieldClass %> <%= isAdmin ? '' : 'company-field--full' %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><span><%= t('company.form.descriptionAr', 'Description (AR)') %></span></<%= labelTag %>>
+          <textarea name="descriptionAr" rows="4" class="<%= textareaClass %>" dir="rtl"><%= trip ? trip.descriptionAr : '' %></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="<%= panelClass %>">
+      <div class="<%= sectionHead %>">
+        <% if (isAdmin) { %>
+          <h3 class="<%= sectionTitle %>"><%= t('tripDetails.whatsIncluded', "What's Included") %></h3>
+          <p class="admin-form-section-desc"><%= t('company.form.includedHint', 'One item per line — shown as checklist on trip page.') %></p>
+        <% } else { %>
+          <h2><%= t('tripDetails.whatsIncluded', "What's Included") %></h2>
+          <p><%= t('company.form.includedHint', 'One item per line — shown as checklist on trip page.') %></p>
+        <% } %>
+      </div>
+      <textarea name="includedList" rows="5" class="<%= textareaClass %>" placeholder="Hotel accommodation&#10;All meals&#10;Transportation"><%= initialIncluded %></textarea>
+    </section>
+
+    <% if (isAdmin) { %>
+    <section class="<%= panelClass %>">
+      <div class="<%= sectionHead %>">
+        <h3 class="<%= sectionTitle %>"><%= t('admin.trips.markupOverride', 'Platform markup override') %></h3>
+        <p class="admin-form-section-desc"><%= t('admin.trips.markupOverrideHint', 'Leave as inherit to use the company markup. Travelers still see a single price.') %></p>
+      </div>
+      <div class="<%= gridClass %>">
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><%= t('admin.companies.markupType', 'Platform markup') %></<%= labelTag %>>
+          <select name="markupType" class="<%= inputClass %>">
+            <option value="inherit" <%= !trip || trip.markupType === 'inherit' || !trip.markupType ? 'selected' : '' %>><%= t('admin.trips.markupInherit', 'Inherit company markup') %></option>
+            <option value="percent" <%= trip && trip.markupType === 'percent' ? 'selected' : '' %>><%= t('admin.companies.markupPercent', 'Percent') %></option>
+            <option value="fixed" <%= trip && trip.markupType === 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupFixed', 'Fixed per person') %></option>
+          </select>
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><%= t('admin.trips.markupPercent', 'Override percent') %></<%= labelTag %>>
+          <input type="number" name="markupPercent" min="0" max="100" step="0.1" class="<%= inputClass %>" value="<%= trip && trip.markupPercent ? trip.markupPercent : 0 %>" />
+        </div>
+        <div class="<%= fieldClass %>">
+          <<%= labelTag %> class="<%= isAdmin ? 'admin-label' : '' %>"><%= t('admin.trips.markupFixed', 'Override fixed (EGP)') %></<%= labelTag %>>
+          <input type="number" name="markupFixed" min="0" step="1" class="<%= inputClass %>" value="<%= trip && trip.markupFixed ? trip.markupFixed : 0 %>" />
+        </div>
+      </div>
+    </section>
+    <% } %>
+
+    <section class="<%= panelClass %>">
+      <div class="<%= sectionHead %>">
+        <div class="<%= isAdmin ? '' : 'trip-itinerary-editor-head-row' %>">
+          <% if (isAdmin) { %>
+            <h3 class="<%= sectionTitle %>"><%= t('tripDetails.tripItinerary', 'Trip Itinerary') %></h3>
+            <p class="admin-form-section-desc"><%= t('company.form.itineraryHint', 'Add day-by-day activities. For Umrah, add stays like 1–5 in Makkah, then drop activities inside those days.') %></p>
+          <% } else { %>
+            <h2><%= t('tripDetails.tripItinerary', 'Trip Itinerary') %></h2>
+            <p><%= t('company.form.itineraryHint', 'Add day-by-day activities. For Umrah, add stays like 1–5 in Makkah, then drop activities inside those days.') %></p>
+          <% } %>
+        </div>
+      </div>
+      <textarea name="itinerary" hidden data-itinerary-input class="trip-json-field"><%= JSON.stringify(initialItinerary) %></textarea>
+      <div class="trip-itinerary-editor" data-itinerary-editor>
+        <p class="trip-itinerary-editor-label"><%= t('company.form.stays', 'Where guests stay') %></p>
+        <div data-itinerary-stays class="trip-itinerary-editor-list"></div>
+        <div class="trip-itinerary-editor-actions">
+          <button type="button" class="<%= isAdmin ? 'adm-btn adm-btn--secondary adm-btn--sm' : 'cp-btn cp-btn--secondary cp-btn--sm' %>" data-itinerary-add-stay>+ <%= t('company.form.addStay', 'Add stay') %></button>
+          <button type="button" class="<%= isAdmin ? 'adm-btn adm-btn--ghost adm-btn--sm' : 'cp-btn cp-btn--ghost cp-btn--sm' %>" data-itinerary-preset data-umrah-only hidden><%= t('company.form.umrahPreset', 'Typical 10-day Umrah') %></button>
+        </div>
+        <p class="trip-itinerary-editor-label"><%= t('company.form.activities', 'Activities in between') %></p>
+        <div data-itinerary-activities class="trip-itinerary-editor-list"></div>
+        <button type="button" class="<%= isAdmin ? 'adm-btn adm-btn--secondary adm-btn--sm' : 'cp-btn cp-btn--secondary cp-btn--sm' %>" data-itinerary-add>+ <%= t('company.form.addActivity', 'Add activity') %></button>
+      </div>
+    </section>
+
+    <section class="<%= panelClass %>">
+      <div class="<%= sectionHead %>">
+        <% if (isAdmin) { %>
+          <h3 class="<%= sectionTitle %>"><%= t('company.form.sectionContent', 'Policies') %></h3>
+        <% } else { %>
+          <h2><%= t('company.form.sectionContent', 'Descriptions & policies') %></h2>
+        <% } %>
+      </div>
+      <textarea name="cancellationPolicy" rows="3" class="<%= textareaClass %>" placeholder="<%= t('company.form.cancel', 'Cancellation policy') %>"><%= trip ? trip.cancellationPolicy : '' %></textarea>
+      <label class="<%= isAdmin ? 'admin-checkbox admin-checkbox--card mt-3' : 'company-check' %>">
+        <input type="checkbox" name="offer" <%= trip && trip.offer ? 'checked' : '' %> />
+        <span><%= t('company.form.offer', 'Mark as offer') %></span>
+      </label>
+    </section>
+  </div>
+
+  <div class="<%= isAdmin ? 'admin-form-actions' : 'company-form-actions company-form-actions--footer' %>">
+    <a href="<%= cancelHref %>" class="<%= isAdmin ? 'adm-btn adm-btn--ghost' : 'cp-btn cp-btn--ghost' %>"><%= t('shared.cancel', 'Cancel') %></a>
+    <button type="submit" class="<%= isAdmin ? 'adm-btn adm-btn--primary' : 'cp-btn cp-btn--primary' %>" data-trip-submit>
+      <%= isEdit ? t('company.form.updateTrip', 'Update trip') : t('company.form.createTrip', 'Create trip') %>
+    </button>
+  </div>
+</form>

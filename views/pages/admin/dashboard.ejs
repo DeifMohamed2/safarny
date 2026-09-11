@@ -1,0 +1,160 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  function deltaClass(v) { return v >= 0 ? 'is-up' : 'is-down'; }
+  function deltaSign(v) { return v >= 0 ? '+' : ''; }
+%>
+<div class="admin-header">
+  <div>
+    <h2 class="admin-title"><%= t('admin.dashboard.title', 'Dashboard') %></h2>
+    <p class="admin-subtitle"><%= t('admin.dashboard.subtitle', 'Platform overview and key metrics') %></p>
+  </div>
+  <a href="/admin/trips/approvals" class="adm-btn adm-btn--primary">
+    <%= t('admin.dashboard.approvals', 'Review approvals') %>
+    <% if (analytics.pendingTrips.length) { %><span class="adm-btn-badge"><%= analytics.pendingTrips.length %></span><% } %>
+  </a>
+</div>
+
+<div class="admin-stats">
+  <% const kpiCards = [
+    { key: 'gmv', label: t('admin.kpi.gmv', 'GMV'), value: formatPrice(analytics.kpis.gmv.value) + ' ' + analytics.currency, delta: analytics.kpis.gmv.delta },
+    { key: 'bookings', label: t('admin.kpi.bookings', 'Bookings'), value: analytics.kpis.bookings.value, delta: analytics.kpis.bookings.delta },
+    { key: 'avgOrder', label: t('admin.kpi.avgOrder', 'Avg. order'), value: formatPrice(analytics.kpis.avgOrder.value) + ' ' + analytics.currency, delta: analytics.kpis.avgOrder.delta },
+    { key: 'companies', label: t('admin.kpi.companies', 'Companies'), value: analytics.kpis.companies.value, delta: analytics.kpis.companies.delta },
+    { key: 'trips', label: t('admin.kpi.trips', 'Trips'), value: analytics.kpis.trips.value, delta: analytics.kpis.trips.delta },
+    { key: 'users', label: t('admin.kpi.users', 'Travelers'), value: analytics.kpis.users.value, delta: analytics.kpis.users.delta },
+  ]; %>
+  <% kpiCards.forEach(function(card, i) { %>
+    <div class="admin-stat-card admin-stat-card--<%= card.key %>" style="--load-delay: <%= i * 0.05 %>s">
+      <p class="admin-stat-label"><%= card.label %></p>
+      <p class="admin-stat-value"><%= card.value %></p>
+      <span class="admin-stat-delta <%= deltaClass(card.delta) %>"><%= deltaSign(card.delta) %><%= card.delta %>%</span>
+    </div>
+  <% }) %>
+</div>
+
+<div class="admin-grid-2 admin-grid-charts">
+  <div class="admin-panel admin-chart-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.charts.revenueBookings', 'Revenue & bookings') %></h3>
+    </div>
+    <div class="admin-chart-wrap">
+      <canvas id="chart-revenue-bookings" data-admin-chart="combo" data-chart-payload='<%- JSON.stringify(chartData.revenueBookings) %>'></canvas>
+    </div>
+  </div>
+  <div class="admin-panel admin-chart-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.charts.bookingStatus', 'Booking status') %></h3>
+    </div>
+    <div class="admin-chart-wrap admin-chart-wrap--doughnut">
+      <canvas id="chart-booking-status" data-admin-chart="doughnut" data-chart-payload='<%- JSON.stringify(chartData.bookingStatus) %>'></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel admin-chart-panel">
+    <div class="admin-panel-head"><h3><%= t('admin.charts.tripTypes', 'Trips by type') %></h3></div>
+    <div class="admin-chart-wrap"><canvas data-admin-chart="bar" data-chart-payload='<%- JSON.stringify(chartData.tripTypes) %>'></canvas></div>
+  </div>
+  <div class="admin-panel admin-chart-panel">
+    <div class="admin-panel-head"><h3><%= t('admin.charts.topCompanies', 'Top companies by revenue') %></h3></div>
+    <div class="admin-chart-wrap"><canvas data-admin-chart="horizontalBar" data-chart-payload='<%- JSON.stringify(chartData.topCompanies) %>'></canvas></div>
+  </div>
+</div>
+
+<div class="admin-panel admin-rank-panel mb-4">
+  <div class="admin-panel-head">
+    <h3><%= t('admin.dashboard.topCompanies', 'Top 5 companies') %></h3>
+    <a href="/admin/companies" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+  </div>
+  <%- include('../../partials/admin-rank-companies', { items: analytics.topCompanies || [] }) %>
+</div>
+
+<div class="admin-panel admin-rank-panel mb-4">
+  <div class="admin-panel-head">
+    <h3><%= t('admin.dashboard.topTrips', 'Top booked trips') %></h3>
+    <a href="/admin/trips" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+  </div>
+  <%- include('../../partials/admin-rank-trips', { items: analytics.topTrips || [] }) %>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.dashboard.approvalQueue', 'Approval queue') %></h3>
+      <a href="/admin/trips/approvals" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+    </div>
+    <% if (!analytics.pendingTrips.length) { %>
+      <p class="admin-muted"><%= t('admin.dashboard.noPending', 'No trips awaiting approval.') %></p>
+    <% } else { %>
+      <div class="admin-queue-list">
+        <% analytics.pendingTrips.forEach(function(trip) { %>
+          <div class="admin-queue-item">
+            <div>
+              <p class="admin-queue-title"><%= trip.title %></p>
+              <p class="admin-muted"><%= trip.destination %> · <%= formatPrice(trip.price) %> EGP</p>
+            </div>
+            <div class="admin-queue-actions">
+              <form method="post" action="/admin/trips/<%= trip.id %>/approve" class="inline">
+                <button type="submit" class="adm-btn adm-btn--sm adm-btn--primary"><%= t('admin.actions.approve', 'Approve') %></button>
+              </form>
+              <a href="/admin/trips/<%= trip.id %>" class="adm-btn adm-btn--sm adm-btn--ghost"><%= t('admin.actions.review', 'Review') %></a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+  <div class="admin-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.dashboard.destinations', 'Top destinations') %></h3>
+    </div>
+    <ul class="admin-dest-list">
+      <% analytics.topDestinations.forEach(function(dest) { %>
+        <li class="admin-dest-item">
+          <span><%= dest.name %></span>
+          <span class="admin-dest-count"><%= dest.count %></span>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.dashboard.recentBookings', 'Recent bookings') %></h3>
+      <a href="/admin/bookings" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>ID</th><th><%= t('admin.table.customer', 'Customer') %></th><th><%= t('admin.table.amount', 'Amount') %></th><th><%= t('admin.table.status', 'Status') %></th></tr></thead>
+        <tbody>
+          <% analytics.recentBookings.forEach(function(b) { %>
+            <tr>
+              <td><a href="/admin/bookings/<%= b.id %>" class="admin-link"><%= b.id %></a></td>
+              <td><%= b.customerName %></td>
+              <td><%= formatPrice(b.totalPrice) %> EGP</td>
+              <td><span class="admin-status admin-status--<%= b.status.toLowerCase() %>"><%= b.status %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="admin-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.dashboard.activity', 'Recent activity') %></h3>
+      <a href="/admin/audit" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+    </div>
+    <ul class="admin-timeline">
+      <% activity.forEach(function(entry) { %>
+        <li class="admin-timeline-item">
+          <p class="admin-timeline-text"><%= entry.summary %></p>
+          <p class="admin-muted"><%= entry.actorName %> · <%= new Date(entry.at).toLocaleString() %></p>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+</div>
+<%- include('../../partials/admin-shell-end') %>

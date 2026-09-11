@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= dir %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= typeof title !== 'undefined' && title ? title + ' | Safarny' : 'Safarny Company' %></title>
+    <meta name="description" content="Safarny company portal — manage trips, bookings, and conversations." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/app.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Poppins", sans-serif;
+        --font-arabic: "Cairo", sans-serif;
+        --color-primary: #263859;
+        --color-navy: #122445;
+        --color-accent: #ef7722;
+      }
+    </style>
+  </head>
+  <body class="company-app antialiased">
+    <div id="toast-stack" class="toast-stack">
+      <% if (flash) { %>
+        <div class="toast">
+          <p class="font-semibold text-[#122445]"><%= flash.message %></p>
+        </div>
+      <% } %>
+    </div>
+    <%- body %>
+    <%- include('../partials/company-dialogs') %>
+    <script src="/js/app.js"></script>
+    <script src="/js/trip-form.js"></script>
+    <%- typeof scripts !== 'undefined' ? scripts : '' %>
+  </body>
+</html>

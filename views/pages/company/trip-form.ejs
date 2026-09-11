@@ -1,0 +1,22 @@
+<%- include('../../partials/company-shell-start', { companyActive: 'trips' }) %>
+<% const editing = typeof mode !== 'undefined' && mode === 'edit'; %>
+<header class="company-header" data-scroll-reveal>
+  <div>
+    <h1 class="company-title"><%= editing ? t('company.trips.editTitle', 'Edit trip') : t('company.trips.createTitle', 'Create trip') %></h1>
+    <p class="company-subtitle"><%= t('company.trips.formHint', 'Fill in both English and Arabic details when possible.') %></p>
+  </div>
+  <a href="<%= editing ? '/company/trips/' + trip.id : '/company/trips' %>" class="cp-btn cp-btn--ghost"><%= t('company.back', 'Back') %></a>
+</header>
+
+<%- include('../../partials/trip-form-sections', {
+  isAdmin: false,
+  isEdit: editing,
+  formTrip: formTrip || null,
+  formAction: editing ? '/company/trips/' + trip.id + '/edit' : '/company/trips/new',
+  cancelHref: editing ? '/company/trips/' + trip.id : '/company/trips',
+  uploadUrl: '/company/trips/media',
+  limits: mediaLimits,
+  showStatus: true
+}) %>
+
+<%- include('../../partials/company-shell-end') %>

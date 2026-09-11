@@ -1,0 +1,19 @@
+<% if (attachments && attachments.length) { %>
+  <div class="support-attachments">
+    <% attachments.forEach(function(att) { %>
+      <% if (att.type === 'image') { %>
+        <a href="<%= att.url %>" target="_blank" rel="noopener" class="support-attach support-attach--image">
+          <img src="<%= att.url %>" alt="<%= att.name %>" loading="lazy" />
+        </a>
+      <% } else { %>
+        <a href="<%= att.url %>" target="_blank" rel="noopener" class="support-attach support-attach--file" download>
+          <span class="support-attach-icon" aria-hidden="true">📎</span>
+          <span class="support-attach-name"><%= att.name %></span>
+          <% if (att.size) { %>
+            <span class="support-attach-size"><%= Math.round(att.size / 1024) %> KB</span>
+          <% } %>
+        </a>
+      <% } %>
+    <% }) %>
+  </div>
+<% } %>

@@ -1,0 +1,100 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header admin-header--compact">
+  <div>
+    <a href="/admin/support" class="admin-back"><%= t('admin.backToSupport', 'Back to support') %></a>
+    <h2 class="admin-title"><%= ticket.ticketNo %></h2>
+    <p class="admin-subtitle"><%= ticket.subject %></p>
+  </div>
+  <div class="admin-ticket-badges">
+    <span class="admin-status admin-status--<%= ticket.status %>"><%= ticket.status %></span>
+    <span class="admin-status admin-status--<%= ticket.priority %>"><%= ticket.priority %></span>
+    <span class="admin-muted"><%= ticket.sourceLabel %></span>
+  </div>
+</div>
+
+<div class="admin-ticket-layout">
+  <aside class="admin-ticket-sidebar admin-panel">
+    <h3 class="admin-panel-title admin-panel-title--sm"><%= t('admin.support.ticketInfo', 'Ticket info') %></h3>
+    <div class="admin-ticket-meta-grid">
+      <div class="admin-ticket-meta-item">
+        <span class="admin-ticket-meta-label"><%= t('admin.table.category', 'Category') %></span>
+        <span><%= ticket.category %></span>
+      </div>
+      <div class="admin-ticket-meta-item">
+        <span class="admin-ticket-meta-label"><%= t('admin.table.created', 'Created') %></span>
+        <span><%= ticket.createdAt %></span>
+      </div>
+      <div class="admin-ticket-meta-item">
+        <span class="admin-ticket-meta-label"><%= t('admin.table.updated', 'Updated') %></span>
+        <span><%= ticket.updatedAt %></span>
+      </div>
+      <div class="admin-ticket-meta-item">
+        <span class="admin-ticket-meta-label"><%= t('admin.table.source', 'Source') %></span>
+        <span><%= ticket.sourceLabel %></span>
+      </div>
+    </div>
+    <form method="post" action="/admin/support/<%= encodeURIComponent(ticket.globalId) %>/status" class="admin-ticket-control" data-adm-support-control>
+      <label class="admin-label admin-label--sm"><%= t('admin.table.status', 'Status') %></label>
+      <div class="admin-ticket-control-row">
+        <select name="status" class="admin-input admin-input--sm">
+          <% ['open','pending','resolved','closed'].forEach(function(s) { %>
+            <option value="<%= s %>" <%= ticket.status === s ? 'selected' : '' %>><%= s %></option>
+          <% }) %>
+        </select>
+        <button type="submit" class="adm-btn adm-btn--sm adm-btn--secondary"><%= t('admin.actions.update', 'Update') %></button>
+      </div>
+    </form>
+    <form method="post" action="/admin/support/<%= encodeURIComponent(ticket.globalId) %>/priority" class="admin-ticket-control" data-adm-support-control>
+      <label class="admin-label admin-label--sm"><%= t('admin.table.priority', 'Priority') %></label>
+      <div class="admin-ticket-control-row">
+        <select name="priority" class="admin-input admin-input--sm">
+          <% ['low','normal','high','urgent'].forEach(function(p) { %>
+            <option value="<%= p %>" <%= ticket.priority === p ? 'selected' : '' %>><%= p %></option>
+          <% }) %>
+        </select>
+        <button type="submit" class="adm-btn adm-btn--sm adm-btn--secondary"><%= t('admin.actions.update', 'Update') %></button>
+      </div>
+    </form>
+  </aside>
+
+  <div class="admin-ticket-main admin-panel adm-support-chat" data-adm-support-chat>
+    <div class="adm-support-messages" data-adm-support-thread>
+      <% thread.forEach(function(item) { %>
+        <% if (item.type === 'date') { %>
+          <div class="adm-support-date"><span><%= item.date %></span></div>
+        <% } else { %>
+          <article class="adm-support-msg <%= item.from === 'admin' ? 'adm-support-msg--outgoing' : 'adm-support-msg--incoming' %>">
+            <header class="adm-support-msg-head">
+              <span class="adm-support-msg-author"><%= item.author %></span>
+              <time class="adm-support-msg-time"><%= item.time %></time>
+            </header>
+            <div class="adm-support-msg-bubble">
+              <% if (item.text) { %><%= item.text %><% } %>
+              <%- include('../../partials/support-message-attachments', { attachments: item.attachments }) %>
+            </div>
+          </article>
+        <% } %>
+      <% }) %>
+    </div>
+    <% if (ticket.status !== 'closed') { %>
+      <form method="post" action="/admin/support/<%= encodeURIComponent(ticket.globalId) %>/reply" class="adm-support-composer" data-adm-support-reply enctype="multipart/form-data">
+        <textarea name="message" rows="2" class="admin-textarea adm-support-input" placeholder="<%= t('admin.support.replyPlaceholder', 'Write your reply...') %>"></textarea>
+        <div class="adm-support-composer-footer">
+          <div class="adm-support-composer-tools">
+            <label class="adm-support-attach-btn" title="<%= t('admin.support.attachFiles', 'Attach files') %>">
+              <input type="file" name="attachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" hidden data-support-file-input />
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><%= t('admin.support.attach', 'Attach') %></span>
+            </label>
+            <div class="support-attach-preview" data-support-file-preview hidden></div>
+          </div>
+          <button type="submit" class="adm-btn adm-btn--solid adm-btn--sm adm-support-send"><%= t('admin.support.send', 'Send reply') %></button>
+        </div>
+        <p class="adm-support-compose-hint"><%= t('admin.support.attachHint', 'Images, PDF, Word, Excel, ZIP — up to 5 files, 10 MB each') %></p>
+      </form>
+    <% } else { %>
+      <p class="admin-muted admin-ticket-closed"><%= t('admin.support.closed', 'This ticket is closed.') %></p>
+    <% } %>
+  </div>
+</div>
+<%- include('../../partials/admin-shell-end') %>

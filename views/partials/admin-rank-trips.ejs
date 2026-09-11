@@ -1,0 +1,21 @@
+<div class="admin-rank-strip">
+  <% items.forEach(function(item) { %>
+    <a href="/admin/trips/<%= item.id %>" class="admin-rank-card">
+      <span class="admin-rank-pos admin-rank-pos--<%= item.rank %>">#<%= item.rank %></span>
+      <% if (item.image || (item.images && item.images[0])) { %>
+        <img src="<%= item.image || item.images[0] %>" alt="" class="admin-rank-card-media admin-rank-card-media--trip" />
+      <% } else { %>
+        <div class="admin-rank-card-media admin-rank-card-media--placeholder admin-rank-card-media--trip">✈</div>
+      <% } %>
+      <div class="admin-rank-card-body">
+        <p class="admin-rank-name"><%= item.title %></p>
+        <p class="admin-rank-sub"><%= item.companyName %></p>
+        <p class="admin-rank-meta-line"><%= item.destination %></p>
+        <div class="admin-rank-stats">
+          <span class="admin-metric-pill"><%= item.bookingCount %> <%= t('admin.kpi.bookings', 'bookings') %></span>
+          <span class="admin-metric-pill admin-metric-pill--profit"><%= formatPrice(item.platformProfit) %> <%= t('admin.profit', 'profit') %></span>
+        </div>
+      </div>
+    </a>
+  <% }) %>
+</div>

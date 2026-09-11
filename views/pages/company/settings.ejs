@@ -1,0 +1,165 @@
+<%
+  const logoUrl = company && company.image ? company.image : '/user.png';
+%>
+<%- include('../../partials/company-shell-start', { companyActive: 'settings' }) %>
+  <div class="company-settings-page" data-company-settings>
+    <header class="company-header company-header--compact" data-scroll-reveal>
+      <div>
+        <h1 class="company-title"><%= t('company.settings.title', 'Settings') %></h1>
+        <p class="company-subtitle"><%= t('company.settings.subtitle', 'Update your public company profile and password.') %></p>
+      </div>
+    </header>
+
+    <section class="company-panel company-settings-profile" data-scroll-reveal>
+      <div class="company-form-section-head">
+        <div>
+          <h2 class="company-panel-title"><%= t('company.settings.profile', 'Company profile') %></h2>
+          <p><%= t('company.settings.profileDesc', 'This information appears on your public marketplace profile.') %></p>
+        </div>
+      </div>
+
+      <form method="post" action="/company/settings" class="company-form company-settings-form">
+        <div class="company-settings-layout">
+          <div class="company-logo-picker" data-company-logo-picker>
+            <input type="hidden" name="image" value="<%= logoUrl %>" data-company-logo-input />
+            <div class="company-logo-picker-preview" data-company-logo-preview>
+              <img src="<%= logoUrl %>" alt="" data-company-logo-img />
+              <div class="company-logo-picker-overlay" data-company-logo-overlay hidden>
+                <span class="company-logo-picker-spinner" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div
+              class="company-logo-picker-dropzone"
+              data-company-logo-dropzone
+              tabindex="0"
+              role="button"
+              aria-label="<%= t('company.settings.uploadLogo', 'Upload company logo') %>"
+            >
+              <input
+                type="file"
+                class="company-media-file-input"
+                data-company-logo-file
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                hidden
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 16V8m0 0-3 3m3-3 3 3M5 20h14a2 2 0 0 0 2-2v-4.5a2 2 0 0 0-.6-1.4l-5.4-4.5a2 2 0 0 0-2.6 0l-5.4 4.5A2 2 0 0 0 3 13.5V18a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p><%= t('company.settings.dropLogo', 'Drop logo here or browse') %></p>
+              <span><%= t('company.settings.logoHint', 'JPG, PNG, WEBP or GIF · max 2 MB') %></span>
+            </div>
+            <div class="company-logo-picker-actions">
+              <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" data-company-logo-browse><%= t('company.form.browseFiles', 'Browse files') %></button>
+              <button type="button" class="cp-btn cp-btn--ghost cp-btn--sm" data-company-logo-remove><%= t('company.settings.removeLogo', 'Remove') %></button>
+            </div>
+            <p class="company-logo-picker-feedback" data-company-logo-feedback hidden role="alert"></p>
+          </div>
+
+          <div class="company-settings-fields">
+            <div class="company-form-grid">
+              <label class="company-field">
+                <span><%= t('company.form.companyName', 'Company name') %></span>
+                <input name="title" required class="company-input" value="<%= company ? company.title : '' %>" />
+              </label>
+              <label class="company-field">
+                <span><%= t('filter.destination', 'Location') %></span>
+                <input name="location" class="company-input" value="<%= company ? company.location : '' %>" placeholder="<%= t('company.settings.locationPlaceholder', 'e.g. Hurghada') %>" />
+              </label>
+              <label class="company-field">
+                <span><%= t('profile.phoneNumber', 'Phone') %></span>
+                <input name="contactNumber" class="company-input" value="<%= company ? company.contactNumber : '' %>" />
+              </label>
+              <label class="company-field company-field--full">
+                <span><%= t('company.settings.about', 'About') %></span>
+                <textarea name="description" rows="5" class="company-input company-textarea" placeholder="<%= t('company.settings.aboutPlaceholder', 'Tell travelers about your company...') %>"><%= company ? company.description : '' %></textarea>
+              </label>
+            </div>
+            <div class="company-form-actions">
+              <button type="submit" class="cp-btn cp-btn--primary"><%= t('shared.saveChanges', 'Save changes') %></button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="company-panel company-settings-docs" data-scroll-reveal style="--reveal-delay: 40ms">
+      <div class="company-form-section-head">
+        <div>
+          <h2 class="company-panel-title"><%= t('company.settings.docs', 'Verification documents') %></h2>
+          <p><%= t('company.settings.docsDesc', 'Commercial register and tax card used to verify your company.') %></p>
+        </div>
+      </div>
+      <% const docs = (company && company.verificationDocs) ? company.verificationDocs : {}; %>
+      <form method="post" action="/company/settings/docs" class="company-form" enctype="multipart/form-data">
+        <div class="company-docs-grid">
+          <% [
+            { key: 'commercialRegister', label: t('partner.commercialRegister', 'Commercial register (سجل تجاري)') },
+            { key: 'taxCard', label: t('partner.taxCard', 'Tax card (بطاقة ضريبية)') }
+          ].forEach(function(item) { %>
+            <% const doc = docs[item.key]; %>
+            <div class="company-doc-card">
+              <p class="company-doc-label"><%= item.label %></p>
+              <% if (doc && doc.url) { %>
+                <div class="company-doc-current">
+                  <% if (doc.mime && String(doc.mime).indexOf('image/') === 0) { %>
+                    <a href="<%= doc.url %>" target="_blank" rel="noopener"><img src="<%= doc.url %>" alt="" /></a>
+                  <% } else { %>
+                    <a href="<%= doc.url %>" target="_blank" rel="noopener" class="company-inline-link"><%= doc.name || t('admin.companies.viewDocument', 'View document') %></a>
+                  <% } %>
+                  <span><%= t('company.settings.uploaded', 'Uploaded') %></span>
+                </div>
+              <% } %>
+              <label class="partner-upload" data-file-field>
+                <input
+                  type="file"
+                  name="<%= item.key %>"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  class="partner-file-input"
+                  <%= doc && doc.url ? '' : 'required' %>
+                />
+                <span class="partner-upload-ui">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                  <em data-file-name><%= doc && doc.url ? t('company.settings.docsReplace', 'Replace file') : t('partner.docsChoose', 'Choose file') %></em>
+                </span>
+              </label>
+              <p class="company-doc-hint"><%= t('company.settings.docsHint', 'JPG, PNG, or PDF · max 10 MB') %></p>
+            </div>
+          <% }) %>
+        </div>
+        <div class="company-form-actions">
+          <button type="submit" class="cp-btn cp-btn--primary"><%= t('company.settings.docsSave', 'Upload documents') %></button>
+        </div>
+      </form>
+    </section>
+
+    <section class="company-panel company-settings-password" data-scroll-reveal style="--reveal-delay: 80ms">
+      <div class="company-form-section-head">
+        <div>
+          <h2 class="company-panel-title"><%= t('settings.passwordTitle', 'Change Password') %></h2>
+          <p><%= t('settings.passwordDesc', 'Use a strong password you do not use elsewhere.') %></p>
+        </div>
+      </div>
+      <form id="password-form" class="company-form company-settings-password-form">
+        <p id="password-error" class="company-settings-alert company-settings-alert--error" role="alert" hidden></p>
+        <p id="password-success" class="company-settings-alert company-settings-alert--success" role="status" hidden></p>
+        <div class="company-form-grid company-form-grid--stack">
+          <label class="company-field">
+            <span><%= t('settings.currentPassword', 'Current password') %></span>
+            <input id="current-password" name="currentPassword" type="password" required autocomplete="current-password" class="company-input" />
+          </label>
+          <label class="company-field">
+            <span><%= t('settings.newPassword', 'New password') %></span>
+            <input id="new-password" name="newPassword" type="password" required minlength="6" autocomplete="new-password" class="company-input" />
+          </label>
+          <label class="company-field">
+            <span><%= t('settings.confirmPassword', 'Confirm new password') %></span>
+            <input id="confirm-password" name="confirmPassword" type="password" required minlength="6" autocomplete="new-password" class="company-input" />
+          </label>
+        </div>
+        <div class="company-form-actions">
+          <button type="submit" class="cp-btn cp-btn--primary"><%= t('settings.updatePassword', 'Update Password') %></button>
+        </div>
+      </form>
+    </section>
+  </div>
+<%- include('../../partials/company-shell-end') %>

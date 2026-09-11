@@ -1,0 +1,61 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header admin-header--compact">
+  <div>
+    <a href="/admin/admins/<%= admin.id %>" class="admin-back"><%= t('admin.admins.back', 'Back to admins') %></a>
+    <h2 class="admin-title"><%= t('admin.admins.edit', 'Edit admin') %></h2>
+    <p class="admin-subtitle"><%= t('admin.admins.editDesc', 'Update administrator account and access status') %></p>
+  </div>
+</div>
+
+<% if (formError) { %>
+  <div class="adm-form-alert adm-form-alert--error" role="alert">
+    <%= formError === 'email_taken' ? t('admin.admins.errorEmail', 'This email is already used by another account.') : t('admin.admins.errorSave', 'Could not save admin. Check required fields.') %>
+  </div>
+<% } %>
+
+<form method="post" action="/admin/admins/<%= admin.id %>/edit" class="admin-form-layout">
+  <div class="admin-form-layout-grid admin-form-layout-grid--single">
+    <div class="admin-form-section">
+      <div class="admin-form-section-head">
+        <h3 class="admin-form-section-title"><%= t('admin.admins.accountDetails', 'Account details') %></h3>
+        <p class="admin-form-section-desc"><%= t('admin.admins.editAccountDesc', 'Login credentials and profile for this administrator') %></p>
+      </div>
+      <div class="admin-form-fields">
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="admin-name"><%= t('admin.table.name', 'Name') %> <span class="admin-required">*</span></label>
+          <input id="admin-name" type="text" name="userName" required class="admin-input" value="<%= admin.userName %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="admin-email"><%= t('admin.table.email', 'Email') %> <span class="admin-required">*</span></label>
+          <input id="admin-email" type="email" name="email" required class="admin-input" value="<%= admin.email %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="admin-phone"><%= t('admin.table.phone', 'Phone') %></label>
+          <input id="admin-phone" type="tel" name="phone" class="admin-input" value="<%= admin.phone || '' %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="admin-status"><%= t('admin.table.status', 'Status') %></label>
+          <select id="admin-status" name="status" class="admin-input">
+            <option value="active" <%= (admin.status || 'active') === 'active' ? 'selected' : '' %>><%= t('admin.status.active', 'Active') %></option>
+            <option value="suspended" <%= admin.status === 'suspended' ? 'selected' : '' %>><%= t('admin.status.suspended', 'Suspended') %></option>
+          </select>
+        </div>
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="admin-avatar"><%= t('admin.travelers.avatarUrl', 'Avatar URL') %></label>
+          <input id="admin-avatar" type="text" name="avatar" class="admin-input" value="<%= admin.avatar || '/user.png' %>" />
+        </div>
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="admin-password"><%= t('admin.travelers.newPassword', 'New password') %></label>
+          <input id="admin-password" type="password" name="password" minlength="6" class="admin-input" placeholder="<%= t('admin.travelers.passwordHint', 'Leave blank to keep current password') %>" autocomplete="new-password" />
+          <span class="admin-field-hint"><%= t('admin.travelers.passwordHint', 'Leave blank to keep current password') %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-form-actions">
+    <a href="/admin/admins/<%= admin.id %>" class="adm-btn adm-btn--ghost"><%= t('admin.actions.cancel', 'Cancel') %></a>
+    <button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.save', 'Save changes') %></button>
+  </div>
+</form>
+<%- include('../../partials/admin-shell-end') %>

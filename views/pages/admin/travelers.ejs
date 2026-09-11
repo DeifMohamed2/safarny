@@ -1,0 +1,94 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header admin-header--compact adm-people-header">
+  <div>
+    <h2 class="admin-title"><%= t('admin.travelers.title', 'Travelers') %></h2>
+    <p class="admin-subtitle"><%= t('admin.travelers.subtitle', 'Browse traveler accounts, activity, and booking history') %></p>
+  </div>
+  <a href="/admin/admins" class="adm-btn adm-btn--secondary"><%= t('admin.admins.title', 'Admins') %></a>
+</div>
+
+<div class="adm-people-kpis">
+  <article class="adm-people-kpi">
+    <p class="adm-people-kpi-label"><%= t('admin.travelers.total', 'Total travelers') %></p>
+    <p class="adm-people-kpi-value"><%= stats.total %></p>
+  </article>
+  <article class="adm-people-kpi">
+    <p class="adm-people-kpi-label"><%= t('admin.status.active', 'Active') %></p>
+    <p class="adm-people-kpi-value"><%= stats.active %></p>
+  </article>
+  <article class="adm-people-kpi adm-people-kpi--warn">
+    <p class="adm-people-kpi-label"><%= t('admin.status.suspended', 'Suspended') %></p>
+    <p class="adm-people-kpi-value"><%= stats.suspended %></p>
+  </article>
+  <article class="adm-people-kpi">
+    <p class="adm-people-kpi-label"><%= t('admin.travelers.totalBookings', 'Total bookings') %></p>
+    <p class="adm-people-kpi-value"><%= stats.totalBookings %></p>
+  </article>
+</div>
+
+<form method="get" class="admin-filters adm-people-filters" data-admin-filters>
+  <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.travelers.searchPlaceholder', 'Search travelers...') %>" class="admin-input" />
+  <select name="status" class="admin-input">
+    <option value="all"><%= t('admin.filter.allStatus', 'All status') %></option>
+    <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>><%= t('admin.status.active', 'Active') %></option>
+    <option value="suspended" <%= filters.status === 'suspended' ? 'selected' : '' %>><%= t('admin.status.suspended', 'Suspended') %></option>
+  </select>
+  <select name="sort" class="admin-input">
+    <option value="active" <%= filters.sort === 'active' ? 'selected' : '' %>><%= t('admin.travelers.sortActive', 'Recently active') %></option>
+    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('admin.sort.newest', 'Newest') %></option>
+    <option value="name" <%= filters.sort === 'name' ? 'selected' : '' %>><%= t('admin.travelers.sortName', 'Name A–Z') %></option>
+  </select>
+  <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
+  <% if (hasActiveFilters) { %>
+    <a href="/admin/travelers" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.filter.clear', 'Clear') %></a>
+  <% } %>
+</form>
+
+<% if (!travelers.length) { %>
+  <%- include('../../partials/admin-empty') %>
+<% } else { %>
+  <div class="admin-table-wrap admin-panel">
+    <table class="admin-table admin-table--people">
+      <thead>
+        <tr>
+          <th><%= t('admin.travelers.traveler', 'Traveler') %></th>
+          <th><%= t('admin.kpi.bookings', 'Bookings') %></th>
+          <th><%= t('admin.travelers.totalSpent', 'Total spent') %></th>
+          <th><%= t('admin.travelers.favorites', 'Favorites') %></th>
+          <th><%= t('admin.travelers.lastActive', 'Last active') %></th>
+          <th><%= t('admin.table.status', 'Status') %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% travelers.forEach(function(traveler) { %>
+          <tr class="adm-people-row" data-href="/admin/travelers/<%= traveler.id %>">
+            <td>
+              <div class="adm-people-cell-user">
+                <img src="<%= traveler.avatar || '/user.png' %>" alt="" class="adm-people-avatar" width="40" height="40" />
+                <div>
+                  <a href="/admin/travelers/<%= traveler.id %>" class="adm-people-name"><%= traveler.userName %></a>
+                  <p class="adm-people-email"><%= traveler.email %></p>
+                  <% if (traveler.city) { %><p class="adm-people-meta"><%= traveler.city %>, <%= traveler.country || 'Egypt' %></p><% } %>
+                </div>
+              </div>
+            </td>
+            <td><strong><%= traveler.bookingCount %></strong><% if (traveler.confirmedBookings) { %> <span class="admin-muted-sm">(<%= traveler.confirmedBookings %> <%= t('admin.travelers.confirmed', 'confirmed') %>)</span><% } %></td>
+            <td><%= formatPrice(traveler.totalSpent) %> EGP</td>
+            <td><%= traveler.favoriteCount %></td>
+            <td class="admin-muted-sm"><%= traveler.lastActiveAt || traveler.createdAt %></td>
+            <td><span class="admin-status admin-status--<%= traveler.status || 'active' %>"><%= traveler.status || 'active' %></span></td>
+            <td>
+              <div class="adm-people-actions">
+                <a href="/admin/travelers/<%= traveler.id %>" class="adm-btn adm-btn--sm adm-btn--ghost"><%= t('admin.actions.view', 'View') %></a>
+                <a href="/admin/travelers/<%= traveler.id %>/edit" class="adm-btn adm-btn--sm adm-btn--secondary"><%= t('admin.actions.edit', 'Edit') %></a>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
+<% } %>
+<%- include('../../partials/admin-shell-end') %>

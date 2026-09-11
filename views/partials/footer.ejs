@@ -1,0 +1,63 @@
+<footer class="self-stretch pt-11 pb-5 bg-[#122445] rounded-tl-[43px] rounded-tr-[43px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] flex flex-col items-center gap-6">
+  <div class="w-full flex flex-col items-center gap-12">
+    <div class="w-full px-4 sm:px-20 flex justify-center">
+      <div class="w-full max-w-324 flex justify-center lg:justify-between items-center flex-wrap gap-8">
+        <div class="w-full sm:w-80 flex flex-col gap-8">
+          <div class="flex flex-col gap-4">
+            <a href="/" class="w-36 h-14 overflow-hidden">
+              <img src="/assets/white-logo.svg" alt="Safarny" class="w-full h-full object-contain" />
+            </a>
+            <p class="text-white text-sm leading-6">
+              <%= t('footer.description', 'A platform that connects travelers with trips, travel deals, and trusted travel companies') %>
+            </p>
+          </div>
+          <div class="flex items-center gap-2 text-white/80 text-sm">
+            <span class="w-5 h-5 rounded bg-[#1976D2]"></span>
+            <span class="w-5 h-5 rounded bg-white"></span>
+            <span class="w-5 h-5 rounded bg-[#117EB8]"></span>
+            <span class="w-5 h-5 rounded bg-gradient-to-tr from-[#FED576] to-[#4C63D2]"></span>
+          </div>
+        </div>
+
+        <nav class="flex gap-10">
+          <% ['home','trips','umrah'].forEach(function(item) { %>
+            <a
+              href="<%= item === 'home' ? '/' : '/' + item %>"
+              class="text-white text-lg font-bold <%= isActive(item === 'home' ? '/' : '/' + item) ? 'border-b-[1.5px] border-orange-400' : 'hover:border-b-[1.5px] hover:border-orange-400' %>"
+            >
+              <%= t('nav.' + item, item) %>
+            </a>
+          <% }) %>
+        </nav>
+
+        <form action="/newsletter" method="post" class="w-full sm:w-80 flex flex-col gap-3">
+          <div class="flex items-center justify-between bg-white rounded-xl px-4 py-2 outline outline-1 outline-[#122445] gap-2">
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="<%= t('footer.email', 'Enter your email') %>"
+              class="flex-1 min-w-0 outline-none text-[#122445] text-sm"
+            />
+            <button type="submit" class="px-4 py-3 bg-[#263859] rounded-xl text-white text-lg capitalize shrink-0">
+              <%= t('footer.send', 'send') %>
+            </button>
+          </div>
+          <p class="text-white text-sm leading-5">
+            <%= t('footer.newsletter', 'Stay ahead with the latest updates, insights, and events from Macat Megatrons.') %>
+          </p>
+        </form>
+      </div>
+    </div>
+    <div class="w-full h-px bg-indigo-300"></div>
+  </div>
+
+  <div class="max-w-300 w-full px-4 flex justify-between items-center flex-wrap gap-4">
+    <span class="text-white text-sm font-light">© 2026 Safarny. <%= t('footer.rights', 'All rights reserved.') %></span>
+    <div class="flex gap-8">
+      <% ['privacy','terms','legal','sitemap'].forEach(function(item) { %>
+        <a href="/<%= item %>" class="text-white text-sm font-medium"><%= t('footer.' + item, item) %></a>
+      <% }) %>
+    </div>
+  </div>
+</footer>

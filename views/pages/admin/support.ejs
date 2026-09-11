@@ -1,0 +1,75 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  function filterQuery(overrides) {
+    const q = Object.assign({}, filters, overrides || {});
+    return Object.keys(q).filter(function(k) { return q[k] && q[k] !== 'all'; }).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+%>
+<div class="admin-header admin-header--compact">
+  <div>
+    <h2 class="admin-title"><%= t('admin.support.title', 'Support') %></h2>
+    <p class="admin-subtitle"><%= meta.open %> <%= t('admin.support.open', 'open') %> · <%= meta.unread %> <%= t('admin.support.unread', 'unread') %></p>
+  </div>
+</div>
+<form method="get" class="admin-filters" data-admin-filters>
+  <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.search', 'Search...') %>" class="admin-input" />
+  <select name="status" class="admin-input">
+    <option value="all"><%= t('admin.filter.allStatus', 'All status') %></option>
+    <% ['open','pending','resolved','closed'].forEach(function(s) { %>
+      <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+    <% }) %>
+  </select>
+  <select name="priority" class="admin-input">
+    <option value="all"><%= t('admin.filter.allPriority', 'All priority') %></option>
+    <% ['low','normal','high','urgent'].forEach(function(p) { %>
+      <option value="<%= p %>" <%= filters.priority === p ? 'selected' : '' %>><%= p %></option>
+    <% }) %>
+  </select>
+  <select name="source" class="admin-input">
+    <option value="all"><%= t('admin.filter.allSources', 'All sources') %></option>
+    <option value="company" <%= filters.source === 'company' ? 'selected' : '' %>><%= t('admin.source.company', 'Company') %></option>
+    <option value="traveler" <%= filters.source === 'traveler' ? 'selected' : '' %>><%= t('admin.source.traveler', 'Traveler') %></option>
+  </select>
+  <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
+</form>
+<% if (!tickets.length) { %>
+  <%- include('../../partials/admin-empty') %>
+<% } else { %>
+  <div class="admin-table-wrap admin-panel">
+    <table class="admin-table admin-table--support">
+      <thead>
+        <tr>
+          <th><%= t('admin.table.ticket', 'Ticket') %></th>
+          <th><%= t('admin.table.subject', 'Subject') %></th>
+          <th><%= t('admin.table.source', 'Source') %></th>
+          <th><%= t('admin.table.priority', 'Priority') %></th>
+          <th><%= t('admin.table.status', 'Status') %></th>
+          <th><%= t('admin.table.updated', 'Updated') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% tickets.forEach(function(ticket) { %>
+          <tr class="<%= ticket.unread ? 'has-unread' : '' %> admin-support-row" data-href="/admin/support/<%= encodeURIComponent(ticket.globalId) %>">
+            <td>
+              <a href="/admin/support/<%= encodeURIComponent(ticket.globalId) %>" class="admin-link admin-support-ticket-no">
+                <% if (ticket.unread) { %><span class="admin-support-unread-dot" aria-hidden="true"></span><% } %>
+                <%= ticket.ticketNo %>
+              </a>
+            </td>
+            <td class="admin-support-subject">
+              <a href="/admin/support/<%= encodeURIComponent(ticket.globalId) %>" class="admin-support-subject-link"><%= ticket.subject %></a>
+            </td>
+            <td>
+              <span class="admin-status admin-status--<%= ticket.source %>"><%= ticket.sourceLabel %></span>
+            </td>
+            <td><span class="admin-status admin-status--<%= ticket.priority %>"><%= ticket.priority %></span></td>
+            <td><span class="admin-status admin-status--<%= ticket.status %>"><%= ticket.status %></span></td>
+            <td class="admin-muted-sm admin-support-updated"><%= ticket.updatedAt %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
+<% } %>
+<%- include('../../partials/admin-shell-end') %>

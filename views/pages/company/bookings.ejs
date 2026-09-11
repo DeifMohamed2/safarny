@@ -1,0 +1,215 @@
+<%
+  const statusOptions = [
+    { id: 'all', label: t('company.tripStatus.all', 'All') },
+    { id: 'pending', label: t('company.bookingStatus.pending', 'Pending') },
+    { id: 'confirmed', label: t('company.bookingStatus.confirmed', 'Confirmed') },
+    { id: 'cancelled', label: t('company.bookingStatus.cancelled', 'Cancelled') },
+  ];
+  const filterQuery = function(overrides) {
+    const next = Object.assign({}, filters, overrides || {});
+    return Object.keys(next)
+      .filter(function(key) { return next[key] !== '' && next[key] !== null && next[key] !== undefined; })
+      .map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(next[key]); })
+      .join('&');
+  };
+  const pageNumbers = [];
+  const currentPage = pagination.page;
+  const totalPages = pagination.totalPages;
+  for (let page = 1; page <= totalPages; page += 1) {
+    if (page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1) pageNumbers.push(page);
+  }
+%>
+<%- include('../../partials/company-shell-start', { companyActive: 'bookings' }) %>
+  <header class="company-header company-header--compact" data-scroll-reveal>
+    <div>
+      <h1 class="company-title"><%= t('company.bookings.title', 'Bookings') %></h1>
+      <p class="company-subtitle"><%= t('company.bookings.subtitle', 'Review and update traveler reservations.') %></p>
+    </div>
+    <div class="company-header-meta">
+      <span class="company-header-pill"><%= formatPrice(meta.earningsBase || meta.revenue) %> <%= t('shared.egp', 'EGP') %></span>
+      <span class="company-header-pill company-header-pill--muted"><%= formatPrice(meta.unsettledBase || 0) %> <%= t('company.stats.unsettled', 'Awaiting settlement') %></span>
+      <span class="company-header-pill company-header-pill--muted"><%= meta.total %> <%= t('company.bookings.results', 'bookings') %></span>
+    </div>
+  </header>
+
+  <div class="company-booking-tabs company-booking-tabs--compact" data-scroll-reveal>
+    <% statusOptions.forEach(function(option) { %>
+      <a href="/company/bookings?<%= filterQuery({ status: option.id, page: 1 }) %>" class="company-booking-tab <%= filters.status === option.id ? 'is-active' : '' %>">
+        <span><%= option.label %></span>
+        <strong><%= meta.statusCounts[option.id] || 0 %></strong>
+      </a>
+    <% }) %>
+  </div>
+
+  <section class="company-filters company-booking-filters company-booking-filters--compact" data-company-booking-filters data-scroll-reveal>
+    <form class="company-filters-form" method="get" action="/company/bookings" data-company-booking-form>
+      <input type="hidden" name="status" value="<%= filters.status %>" data-booking-status-input />
+      <input type="hidden" name="page" value="1" data-booking-page-input />
+
+      <div class="company-booking-filter-toolbar">
+        <label class="company-search-field company-search-field--compact">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M16.5 16.5 20 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          <input type="search" name="q" value="<%= filters.q %>" placeholder="<%= t('company.bookings.search', 'Search bookings') %>" class="company-input company-input--search" data-booking-search />
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.bookings.filterTrip', 'Trip') %></span>
+          <select name="tripId" class="company-input company-input--sm" data-booking-auto-submit>
+            <option value="all" <%= filters.tripId === 'all' ? 'selected' : '' %>><%= t('company.tripStatus.all', 'All') %></option>
+            <% meta.trips.forEach(function(trip) { %>
+              <option value="<%= trip.id %>" <%= filters.tripId === trip.id ? 'selected' : '' %>><%= trip.name %></option>
+            <% }) %>
+          </select>
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.bookings.filterSort', 'Sort by') %></span>
+          <select name="sort" class="company-input company-input--sm" data-booking-auto-submit>
+            <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('company.bookings.sortNewest', 'Newest booking') %></option>
+            <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>><%= t('company.bookings.sortOldest', 'Oldest booking') %></option>
+            <option value="trip-soon" <%= filters.sort === 'trip-soon' ? 'selected' : '' %>><%= t('company.bookings.sortTripSoon', 'Trip date: soonest') %></option>
+            <option value="amount-desc" <%= filters.sort === 'amount-desc' ? 'selected' : '' %>><%= t('company.bookings.sortAmountDesc', 'Amount: high to low') %></option>
+            <option value="amount-asc" <%= filters.sort === 'amount-asc' ? 'selected' : '' %>><%= t('company.bookings.sortAmountAsc', 'Amount: low to high') %></option>
+          </select>
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.bookings.perPage', 'Per page') %></span>
+          <select name="perPage" class="company-input company-input--sm" data-booking-auto-submit>
+            <% [10, 20, 50].forEach(function(size) { %>
+              <option value="<%= size %>" <%= Number(filters.perPage) === size ? 'selected' : '' %>><%= size %></option>
+            <% }) %>
+          </select>
+        </label>
+
+        <div class="company-filters-actions company-filters-actions--inline">
+          <button type="submit" class="cp-btn cp-btn--primary cp-btn--sm"><%= t('filter.search', 'Search') %></button>
+          <% if (hasActiveFilters) { %>
+            <a href="/company/bookings" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('company.trips.clearFilters', 'Clear') %></a>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="company-booking-filter-dates">
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.bookings.filterDateType', 'Date type') %></span>
+          <select name="dateField" class="company-input company-input--sm" data-booking-auto-submit>
+            <option value="booked" <%= filters.dateField === 'booked' ? 'selected' : '' %>><%= t('company.bookings.bookedOn', 'Booked on') %></option>
+            <option value="trip" <%= filters.dateField === 'trip' ? 'selected' : '' %>><%= t('company.bookings.date', 'Trip date') %></option>
+          </select>
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.bookings.filterFrom', 'From') %></span>
+          <input type="date" name="dateFrom" value="<%= filters.dateFrom %>" class="company-input company-input--sm" data-booking-date />
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.bookings.filterTo', 'To') %></span>
+          <input type="date" name="dateTo" value="<%= filters.dateTo %>" class="company-input company-input--sm" data-booking-date />
+        </label>
+
+        <div class="company-booking-presets company-booking-presets--inline" data-booking-presets>
+          <button type="button" class="company-preset-btn" data-preset="all"><%= t('company.bookings.presetAll', 'All time') %></button>
+          <button type="button" class="company-preset-btn" data-preset="7d"><%= t('company.bookings.preset7d', '7d') %></button>
+          <button type="button" class="company-preset-btn" data-preset="30d"><%= t('company.bookings.preset30d', '30d') %></button>
+          <button type="button" class="company-preset-btn" data-preset="month"><%= t('company.bookings.presetMonth', 'This month') %></button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <% if (!items.length) { %>
+    <div class="company-empty-state" data-scroll-reveal>
+      <div class="company-empty-state-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2><%= t('company.bookings.emptyTitle', 'No bookings found') %></h2>
+      <p><%= t('company.bookings.emptyFiltered', 'Try adjusting your filters or date range.') %></p>
+      <% if (hasActiveFilters) { %>
+        <div class="company-empty-state-actions">
+          <a href="/company/bookings" class="cp-btn cp-btn--secondary"><%= t('company.trips.clearFilters', 'Clear all') %></a>
+        </div>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="company-table-wrap company-panel company-booking-table" data-scroll-reveal>
+      <div class="company-table-toolbar">
+        <p class="company-results-copy">
+          <%= t('company.bookings.showingRange', 'Showing') %>
+          <strong><%= pagination.start %>–<%= pagination.end %></strong>
+          <%= t('company.bookings.of', 'of') %>
+          <strong><%= pagination.total %></strong>
+          <%= t('company.bookings.results', 'bookings') %>
+        </p>
+      </div>
+      <table class="company-table">
+        <thead>
+          <tr>
+            <th><%= t('company.bookings.id', 'ID') %></th>
+            <th><%= t('company.bookings.customer', 'Customer') %></th>
+            <th><%= t('company.bookings.trip', 'Trip') %></th>
+            <th><%= t('company.bookings.bookedOn', 'Booked on') %></th>
+            <th><%= t('company.bookings.date', 'Trip date') %></th>
+            <th><%= t('company.bookings.seats', 'Seats') %></th>
+            <th><%= t('company.bookings.status', 'Status') %></th>
+            <th><%= t('company.bookings.total', 'Total') %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(function(booking) { %>
+            <tr class="company-booking-row">
+              <td><a href="/company/bookings/<%= booking.id %>" class="company-booking-id"><%= booking.id %></a></td>
+              <td>
+                <div class="company-booking-customer">
+                  <span class="company-booking-avatar"><%= initials(booking.customerName) %></span>
+                  <div>
+                    <strong><%= booking.customerName %></strong>
+                    <span class="company-muted"><%= booking.customerEmail %></span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong><%= booking.tripName %></strong>
+                <% if (booking.daysUntilTrip !== null && booking.isUpcoming) { %>
+                  <span class="company-booking-hint"><%= booking.daysUntilTrip %> <%= t('company.bookings.daysLeft', 'days left') %></span>
+                <% } %>
+              </td>
+              <td><%= booking.bookingDate %></td>
+              <td><%= booking.tripDate %></td>
+              <td><%= booking.seats %></td>
+              <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= t('company.bookingStatus.' + booking.status.toLowerCase(), booking.status) %></span></td>
+              <td><strong><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></strong></td>
+              <td><a href="/company/bookings/<%= booking.id %>" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('shared.viewDetails', 'View') %></a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+
+      <nav class="company-pagination company-pagination--footer" aria-label="<%= t('company.bookings.pagination', 'Bookings pagination') %>">
+        <a href="/company/bookings?<%= filterQuery({ page: pagination.page - 1 }) %>" class="company-page-btn <%= pagination.hasPrev ? '' : 'is-disabled' %>" <%= pagination.hasPrev ? '' : 'aria-disabled="true" tabindex="-1"' %>>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <%= t('company.bookings.prev', 'Previous') %>
+        </a>
+        <div class="company-page-list">
+          <% let lastPage = 0; %>
+          <% pageNumbers.forEach(function(page) { %>
+            <% if (lastPage && page - lastPage > 1) { %><span class="company-page-ellipsis">…</span><% } %>
+            <a href="/company/bookings?<%= filterQuery({ page: page }) %>" class="company-page-btn <%= page === pagination.page ? 'is-active' : '' %>"><%= page %></a>
+            <% lastPage = page; %>
+          <% }) %>
+        </div>
+        <a href="/company/bookings?<%= filterQuery({ page: pagination.page + 1 }) %>" class="company-page-btn <%= pagination.hasNext ? '' : 'is-disabled' %>" <%= pagination.hasNext ? '' : 'aria-disabled="true" tabindex="-1"' %>>
+          <%= t('company.bookings.next', 'Next') %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </nav>
+    </div>
+  <% } %>
+<%- include('../../partials/company-shell-end') %>

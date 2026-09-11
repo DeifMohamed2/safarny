@@ -1,0 +1,167 @@
+<%- include('../../partials/company-shell-start', { companyActive: 'bookings' }) %>
+  <header class="company-header company-booking-detail-head" data-scroll-reveal>
+    <div class="company-booking-detail-intro">
+      <span class="company-booking-avatar company-booking-avatar--lg"><%= initials(booking.customerName) %></span>
+      <div>
+        <p class="company-kicker"><%= booking.id %> · <%= booking.referenceCode %></p>
+        <h1 class="company-title"><%= booking.customerName %></h1>
+        <p class="company-subtitle"><%= booking.tripName %></p>
+      </div>
+    </div>
+    <div class="company-header-actions">
+      <span class="company-status company-status--<%= booking.status.toLowerCase() %> company-status--lg"><%= t('company.bookingStatus.' + booking.status.toLowerCase(), booking.status) %></span>
+      <a href="/company/bookings" class="cp-btn cp-btn--ghost"><%= t('company.back', 'Back') %></a>
+    </div>
+  </header>
+
+  <div class="company-booking-detail-stats" data-scroll-reveal>
+    <article class="company-booking-stat">
+      <strong><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></strong>
+      <span><%= t('company.bookings.total', 'Total') %></span>
+    </article>
+    <article class="company-booking-stat">
+      <strong><%= booking.seats %></strong>
+      <span><%= t('company.bookings.seats', 'Seats') %></span>
+    </article>
+    <article class="company-booking-stat">
+      <strong><%= formatPrice(booking.pricePerSeat) %> <%= t('shared.egp', 'EGP') %></strong>
+      <span><%= t('company.bookings.perSeat', 'Per seat') %></span>
+    </article>
+    <article class="company-booking-stat">
+      <strong><%= booking.daysUntilTrip !== null ? booking.daysUntilTrip : '—' %></strong>
+      <span><%= t('company.bookings.daysUntilTrip', 'Days until trip') %></span>
+    </article>
+  </div>
+
+  <div class="company-booking-detail-grid">
+    <section class="company-panel" data-scroll-reveal>
+      <h2 class="company-panel-title"><%= t('company.bookings.customerInfo', 'Customer information') %></h2>
+      <ul class="company-detail-list">
+        <li>
+          <span><%= t('company.bookings.customer', 'Customer') %></span>
+          <strong><%= booking.customerName %></strong>
+        </li>
+        <li>
+          <span><%= t('auth.email', 'Email') %></span>
+          <strong><a href="mailto:<%= booking.customerEmail %>"><%= booking.customerEmail %></a></strong>
+        </li>
+        <li>
+          <span><%= t('profile.phoneNumber', 'Phone') %></span>
+          <strong><a href="tel:<%= booking.customerPhone %>"><%= booking.customerPhone %></a></strong>
+        </li>
+        <li>
+          <span><%= t('company.bookings.bookedOn', 'Booked on') %></span>
+          <strong><%= booking.bookingDate %></strong>
+        </li>
+      </ul>
+      <div class="company-detail-actions">
+        <a href="mailto:<%= booking.customerEmail %>" class="cp-btn cp-btn--secondary cp-btn--sm"><%= t('company.bookings.emailCustomer', 'Email customer') %></a>
+        <a href="tel:<%= booking.customerPhone %>" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('company.bookings.callCustomer', 'Call customer') %></a>
+      </div>
+    </section>
+
+    <section class="company-panel" data-scroll-reveal>
+      <h2 class="company-panel-title"><%= t('company.bookings.tripInfo', 'Trip information') %></h2>
+      <div class="company-booking-trip-card">
+        <img src="<%= booking.tripImage %>" alt="" />
+        <div>
+          <h3><%= booking.tripName %></h3>
+          <% if (booking.tripDestination) { %><p><%= booking.tripDestination %></p><% } %>
+          <div class="company-booking-trip-meta">
+            <span><%= booking.tripStartDate %></span>
+            <% if (booking.tripEndDate && booking.tripEndDate !== booking.tripStartDate) { %>
+              <span>→ <%= booking.tripEndDate %></span>
+            <% } %>
+            <% if (booking.tripDays) { %>
+              <span><%= booking.tripDays %>d / <%= booking.tripNights %>n</span>
+            <% } %>
+          </div>
+          <% if (trip) { %>
+            <a href="/company/trips/<%= trip.id %>" class="company-inline-link"><%= t('company.bookings.viewTrip', 'View related trip') %></a>
+          <% } %>
+        </div>
+      </div>
+    </section>
+
+    <section class="company-panel" data-scroll-reveal>
+      <h2 class="company-panel-title"><%= t('company.bookings.paymentInfo', 'Payment details') %></h2>
+      <ul class="company-detail-list">
+        <li>
+          <span><%= t('company.bookings.total', 'Total') %></span>
+          <strong><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></strong>
+        </li>
+        <li>
+          <span><%= t('company.bookings.perSeat', 'Per seat') %></span>
+          <strong><%= formatPrice(booking.pricePerSeat) %> <%= t('shared.egp', 'EGP') %></strong>
+        </li>
+        <li>
+          <span><%= t('company.bookings.paymentMethod', 'Payment method') %></span>
+          <strong><%= booking.paymentMethod %></strong>
+        </li>
+        <li>
+          <span><%= t('company.bookings.paymentStatus', 'Payment status') %></span>
+          <strong><span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus %>"><%= booking.paymentStatus %></span></strong>
+        </li>
+        <% if (payment && payment.proof && payment.proof.url) { %>
+          <li>
+            <span><%= t('company.bookings.paymentProof', 'Payment proof') %></span>
+            <strong>
+              <% if (payment.isImageProof) { %>
+                <a href="<%= payment.proof.url %>" target="_blank" rel="noopener" class="company-inline-link"><%= t('company.bookings.viewProof', 'View proof') %></a>
+              <% } else { %>
+                <a href="<%= payment.proof.url %>" target="_blank" rel="noopener" class="company-inline-link"><%= payment.proof.name || 'PDF' %></a>
+              <% } %>
+            </strong>
+          </li>
+        <% } %>
+        <li>
+          <span><%= t('company.bookings.reference', 'Reference') %></span>
+          <strong><%= booking.referenceCode %></strong>
+        </li>
+        <li>
+          <span><%= t('company.bookings.date', 'Trip date') %></span>
+          <strong><%= booking.tripDate %></strong>
+        </li>
+      </ul>
+    </section>
+
+    <section class="company-panel" data-scroll-reveal>
+      <h2 class="company-panel-title"><%= t('company.bookings.updateStatus', 'Update status') %></h2>
+      <form method="post" action="/company/bookings/<%= booking.id %>/status" class="company-status-form company-status-form--stack">
+        <select name="status" class="company-input">
+          <% ['Pending', 'Confirmed', 'Cancelled'].forEach(function(option) { %>
+            <option value="<%= option %>" <%= booking.status === option ? 'selected' : '' %>><%= t('company.bookingStatus.' + option.toLowerCase(), option) %></option>
+          <% }) %>
+        </select>
+        <button type="submit" class="cp-btn cp-btn--primary"><%= t('shared.saveChanges', 'Save') %></button>
+      </form>
+    </section>
+  </div>
+
+  <div class="company-grid-2">
+    <section class="company-panel" data-scroll-reveal>
+      <h2 class="company-panel-title"><%= t('company.bookings.timeline', 'Booking timeline') %></h2>
+      <ol class="company-timeline">
+        <% booking.statusHistory.forEach(function(item, index) { %>
+          <li class="company-timeline-item <%= index === booking.statusHistory.length - 1 ? 'is-latest' : '' %>">
+            <span class="company-timeline-dot" aria-hidden="true"></span>
+            <div>
+              <strong><%= t('company.bookingStatus.' + item.status.toLowerCase(), item.status) %></strong>
+              <p><%= item.label %></p>
+              <em><%= item.date %></em>
+            </div>
+          </li>
+        <% }) %>
+      </ol>
+    </section>
+
+    <section class="company-panel" data-scroll-reveal>
+      <h2 class="company-panel-title"><%= t('company.bookings.notes', 'Notes') %></h2>
+      <% if (booking.notes) { %>
+        <p class="company-copy"><%= booking.notes %></p>
+      <% } else { %>
+        <p class="company-copy muted"><%= t('company.bookings.noNotes', 'No notes for this booking.') %></p>
+      <% } %>
+    </section>
+  </div>
+<%- include('../../partials/company-shell-end') %>

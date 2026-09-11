@@ -1,0 +1,52 @@
+<section class="umrah-page relative min-h-dvh max-w-340 w-full px-4 pt-28 sm:pt-32 mx-auto pb-12">
+  <%
+    const umrahHref = function(extra) {
+      const params = new URLSearchParams();
+      const dest = Object.prototype.hasOwnProperty.call(extra, 'destination') ? extra.destination : filters.destination;
+      const duration = Object.prototype.hasOwnProperty.call(extra, 'duration') ? extra.duration : filters.duration;
+      ['q', 'date', 'guests', 'beds', 'priceFrom', 'priceTo'].forEach(function(key) {
+        if (filters[key] && !(key === 'guests' && String(filters[key]) === '1')) params.set(key, filters[key]);
+      });
+      if (dest) params.set('destination', dest);
+      if (duration) params.set('duration', duration);
+      const qs = params.toString();
+      return qs ? '/umrah?' + qs : '/umrah';
+    };
+  %>
+  <div class="umrah-hero">
+    <p class="umrah-kicker"><%= t('umrah.kicker', 'Sacred journeys') %></p>
+    <h1 class="umrah-title"><%= t('umrah.title', 'Umrah') %></h1>
+    <p class="umrah-lead"><%= t('umrah.subtitle', 'Find carefully curated Umrah packages for a peaceful and fulfilling experience.') %></p>
+    <div class="umrah-chips" role="navigation" aria-label="<%= t('umrah.title', 'Umrah') %>">
+      <a href="<%= umrahHref({ destination: '', duration: '' }) %>" class="umrah-chip <%= !filters.destination && !filters.duration ? 'is-active' : '' %>"><%= t('umrah.chipAll', 'All packages') %></a>
+      <% (umrahDestinations || []).forEach(function(dest) { %>
+        <a href="<%= umrahHref({ destination: dest }) %>" class="umrah-chip <%= filters.destination === dest ? 'is-active' : '' %>"><%= dest %></a>
+      <% }) %>
+      <a href="<%= umrahHref({ duration: '5-7' }) %>" class="umrah-chip <%= filters.duration === '5-7' ? 'is-active' : '' %>"><%= t('umrah.chipWeek', '7 days') %></a>
+      <a href="<%= umrahHref({ duration: '8+' }) %>" class="umrah-chip <%= filters.duration === '8+' ? 'is-active' : '' %>"><%= t('umrah.chipLong', '10+ days') %></a>
+    </div>
+  </div>
+
+  <%- include('../partials/search-filters', { filterAction: '/umrah', filterVariant: 'list', filters: filters }) %>
+
+  <div class="page-results w-full flex flex-col gap-7 mt-8">
+    <h2 class="text-base sm:text-xl lg:text-2xl font-semibold capitalize">
+      <span class="text-orange-500"><%= total %> <%= total === 1 ? t('umrah.packageSingular', 'package') : t('umrah.packagesFound', 'Umrah packages') %></span>
+      <% if (typeof hasActiveFilters !== 'undefined' && hasActiveFilters) { %>
+        <span class="text-sky-950"> <%= t('filter.thatMatch', 'that match your search') %></span>
+      <% } %>
+    </h2>
+    <% if (!items.length) { %>
+      <%- include('../partials/empty-results', { clearUrl: clearUrl, emptyTitle: t('umrah.empty', 'No Umrah packages match your filters') }) %>
+    <% } else { %>
+      <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7 gap-y-6.5">
+        <% items.forEach(function(trip) { %>
+          <%- include('../partials/trip-card', { trip: trip, cardClass: 'w-full' }) %>
+        <% }) %>
+      </div>
+      <div class="mb-12 sm:mb-18 lg:mb-25">
+        <%- include('../partials/pagination') %>
+      </div>
+    <% } %>
+  </div>
+</section>

@@ -1,0 +1,115 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header admin-header--compact">
+  <div>
+    <h2 class="admin-title"><%= t('admin.finance.title', 'Finance') %></h2>
+    <p class="admin-subtitle"><%= t('admin.finance.subtitle', 'Manual transfer payments and GMV tracking') %></p>
+  </div>
+  <a href="/admin/finance/payments" class="adm-btn adm-btn--primary">
+    <%= t('admin.finance.reviewPayments', 'Review payments') %>
+    <% if (summary.awaitingReview) { %><span class="adm-btn-badge"><%= summary.awaitingReview %></span><% } %>
+  </a>
+</div>
+
+<div class="admin-stats admin-stats--compact">
+  <div class="admin-stat-card">
+    <p class="admin-stat-label"><%= t('admin.finance.awaitingReview', 'Awaiting review') %></p>
+    <p class="admin-stat-value"><%= summary.awaitingReview %></p>
+  </div>
+  <div class="admin-stat-card">
+    <p class="admin-stat-label"><%= t('admin.finance.verifiedMonth', 'Verified this month') %></p>
+    <p class="admin-stat-value"><%= formatPrice(summary.verifiedThisMonth) %> <%= t('shared.egp', 'EGP') %></p>
+    <span class="admin-muted-sm"><%= summary.verifiedThisMonthCount %> <%= t('admin.finance.payments', 'payments') %></span>
+  </div>
+  <div class="admin-stat-card">
+    <p class="admin-stat-label"><%= t('admin.finance.rejected', 'Rejected') %></p>
+    <p class="admin-stat-value"><%= summary.rejectedCount %></p>
+  </div>
+  <div class="admin-stat-card">
+    <p class="admin-stat-label"><%= t('admin.finance.pendingGmv', 'Pending GMV') %></p>
+    <p class="admin-stat-value"><%= formatPrice(summary.pendingGmv) %> <%= t('shared.egp', 'EGP') %></p>
+    <span class="admin-muted-sm"><%= summary.pendingCount %> <%= t('admin.finance.submitted', 'submitted') %></span>
+  </div>
+  <div class="admin-stat-card">
+    <p class="admin-stat-label"><%= t('admin.finance.confirmedGmv', 'Confirmed GMV') %></p>
+    <p class="admin-stat-value admin-stat-value--profit"><%= formatPrice(summary.verifiedTotal) %> <%= t('shared.egp', 'EGP') %></p>
+    <span class="admin-muted-sm"><%= summary.verifiedCount %> <%= t('admin.finance.verified', 'verified') %></span>
+  </div>
+</div>
+
+<% if (summary.methodMix && summary.methodMix.length) { %>
+  <div class="admin-panel mt-4">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.finance.methodMix', 'Verified payments by method') %></h3>
+      <a href="/admin/finance/payments?status=verified" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th><%= t('admin.finance.method', 'Method') %></th>
+            <th><%= t('admin.finance.count', 'Count') %></th>
+            <th><%= t('admin.table.amount', 'Amount') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% summary.methodMix.forEach(function(row) { %>
+            <tr>
+              <td><%= row.method %></td>
+              <td><%= row.count %></td>
+              <td><%= formatPrice(row.total) %> <%= t('shared.egp', 'EGP') %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<div class="admin-panel mt-4">
+  <div class="admin-panel-head">
+    <h3><%= t('admin.finance.settlements', 'Settlements') %></h3>
+    <p class="admin-muted"><%= t('admin.finance.settlementsHint', 'Traveler totals collected by the platform. Payable to each company is the company base amount.') %></p>
+  </div>
+  <% if (!settlements || !settlements.length) { %>
+    <p class="admin-muted"><%= t('admin.finance.noSettlements', 'No confirmed bookings to settle yet.') %></p>
+  <% } else { %>
+    <div class="admin-settlement-grid">
+      <% settlements.forEach(function(row) { %>
+        <article class="admin-settlement-card">
+          <h4><%= row.companyName %></h4>
+          <ul class="admin-settlement-list">
+            <li>
+              <span><%= t('admin.finance.collected', 'Collected from travelers') %></span>
+              <strong><%= formatPrice(row.collected) %> <%= t('shared.egp', 'EGP') %></strong>
+            </li>
+            <li>
+              <span><%= t('admin.finance.platformCut', 'Platform markup') %></span>
+              <strong><%= formatPrice(row.platformCut) %> <%= t('shared.egp', 'EGP') %></strong>
+            </li>
+            <li>
+              <span><%= t('admin.finance.payableToCompany', 'Payable to company') %></span>
+              <strong><%= formatPrice(row.payableToCompany) %> <%= t('shared.egp', 'EGP') %></strong>
+            </li>
+            <li>
+              <span><%= t('admin.finance.unsettledPayable', 'Still to settle') %></span>
+              <strong><%= formatPrice(row.unsettledPayable) %> <%= t('shared.egp', 'EGP') %></strong>
+            </li>
+            <li>
+              <span><%= t('admin.finance.unsettledBookings', 'Unsettled bookings') %></span>
+              <strong><%= row.unsettledCount %> / <%= row.bookingCount %></strong>
+            </li>
+          </ul>
+          <% if (row.unsettledCount) { %>
+            <form method="post" action="/admin/finance/companies/<%= row.companyId %>/settle">
+              <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.finance.markSettled', 'Mark settled') %></button>
+            </form>
+          <% } else { %>
+            <p class="admin-muted-sm"><%= t('admin.finance.allSettled', 'All confirmed bookings are settled.') %></p>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../../partials/admin-shell-end') %>

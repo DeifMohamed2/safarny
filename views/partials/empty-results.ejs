@@ -1,0 +1,15 @@
+<div class="empty-results w-full flex flex-col items-center justify-center gap-4 py-16 px-4 text-center animate-on-load">
+  <div class="empty-results-icon w-16 h-16 rounded-full bg-[#F0F4FA] flex items-center justify-center">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#263859" stroke-width="1.5"/>
+      <path d="M21 21L16.65 16.65" stroke="#263859" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <h3 class="text-lg sm:text-xl font-semibold text-[#122445]"><%= typeof emptyTitle !== 'undefined' ? emptyTitle : t('filter.noResults', 'No results match your filters') %></h3>
+  <p class="text-sm sm:text-base text-neutral-500 max-w-md"><%= typeof emptyHint !== 'undefined' ? emptyHint : t('filter.noResultsHint', 'Try adjusting your search or clearing some filters.') %></p>
+  <% if (typeof clearUrl !== 'undefined') { %>
+    <a href="<%= clearUrl %>" class="mt-2 px-6 py-3 bg-[#263859] hover:bg-[#2a4d7f] text-white rounded-xl capitalize transition-colors duration-200">
+      <%= t('filter.clearAll', 'Clear all') %>
+    </a>
+  <% } %>
+</div>

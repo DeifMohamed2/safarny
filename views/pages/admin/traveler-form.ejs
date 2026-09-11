@@ -1,0 +1,117 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  const editing = typeof isEdit !== 'undefined' && isEdit;
+%>
+<div class="admin-header admin-header--compact">
+  <div>
+    <a href="<%= editing ? '/admin/travelers/' + traveler.id : '/admin/travelers' %>" class="admin-back"><%= editing ? t('admin.travelers.back', 'Back to travelers') : t('admin.travelers.title', 'Travelers') %></a>
+    <h2 class="admin-title"><%= editing ? t('admin.travelers.edit', 'Edit traveler') : t('admin.travelers.create', 'Create traveler') %></h2>
+    <p class="admin-subtitle"><%= t('admin.travelers.editDesc', 'Update account details, preferences, and admin notes') %></p>
+  </div>
+</div>
+
+<% if (formError) { %>
+  <div class="adm-form-alert adm-form-alert--error" role="alert">
+    <%= formError === 'email_taken' ? t('admin.travelers.errorEmail', 'This email is already used by another account.') : t('admin.travelers.errorSave', 'Could not save traveler. Check required fields.') %>
+  </div>
+<% } %>
+
+<form method="post" action="/admin/travelers/<%= traveler.id %>/edit" class="admin-form-layout">
+  <div class="admin-form-layout-grid">
+    <div class="admin-form-section">
+      <div class="admin-form-section-head">
+        <h3 class="admin-form-section-title"><%= t('admin.travelers.accountSection', 'Account information') %></h3>
+        <p class="admin-form-section-desc"><%= t('admin.travelers.accountDesc', 'Core login and contact details for this traveler') %></p>
+      </div>
+      <div class="admin-form-fields">
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="traveler-name"><%= t('admin.table.name', 'Name') %> <span class="admin-required">*</span></label>
+          <input id="traveler-name" type="text" name="userName" required class="admin-input" value="<%= traveler.userName %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-email"><%= t('admin.table.email', 'Email') %> <span class="admin-required">*</span></label>
+          <input id="traveler-email" type="email" name="email" required class="admin-input" value="<%= traveler.email %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-phone"><%= t('admin.table.phone', 'Phone') %></label>
+          <input id="traveler-phone" type="tel" name="phone" class="admin-input" value="<%= traveler.phone || '' %>" placeholder="+20 100 000 0000" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-city"><%= t('admin.travelers.city', 'City') %></label>
+          <input id="traveler-city" type="text" name="city" class="admin-input" value="<%= traveler.city || '' %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-country"><%= t('admin.travelers.country', 'Country') %></label>
+          <input id="traveler-country" type="text" name="country" class="admin-input" value="<%= traveler.country || 'Egypt' %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-status"><%= t('admin.table.status', 'Status') %></label>
+          <select id="traveler-status" name="status" class="admin-input">
+            <option value="active" <%= (traveler.status || 'active') === 'active' ? 'selected' : '' %>><%= t('admin.status.active', 'Active') %></option>
+            <option value="suspended" <%= traveler.status === 'suspended' ? 'selected' : '' %>><%= t('admin.status.suspended', 'Suspended') %></option>
+          </select>
+        </div>
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="traveler-avatar"><%= t('admin.travelers.avatarUrl', 'Avatar URL') %></label>
+          <input id="traveler-avatar" type="text" name="avatar" class="admin-input" value="<%= traveler.avatar || '/user.png' %>" />
+        </div>
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="traveler-password"><%= t('admin.travelers.newPassword', 'New password') %></label>
+          <input id="traveler-password" type="password" name="password" minlength="6" class="admin-input" placeholder="<%= t('admin.travelers.passwordHint', 'Leave blank to keep current password') %>" autocomplete="new-password" />
+          <span class="admin-field-hint"><%= t('admin.travelers.passwordHint', 'Leave blank to keep current password') %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-form-section admin-form-section--aside">
+      <div class="admin-form-section-head">
+        <h3 class="admin-form-section-title"><%= t('admin.travelers.preferencesSection', 'Preferences') %></h3>
+        <p class="admin-form-section-desc"><%= t('admin.travelers.preferencesDesc', 'Language, destinations, and notification settings') %></p>
+      </div>
+      <div class="admin-form-fields admin-form-fields--stack">
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-language"><%= t('admin.travelers.language', 'Language') %></label>
+          <select id="traveler-language" name="language" class="admin-input">
+            <option value="en" <%= profile.language !== 'ar' ? 'selected' : '' %>>English</option>
+            <option value="ar" <%= profile.language === 'ar' ? 'selected' : '' %>>العربية</option>
+          </select>
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-destinations"><%= t('admin.travelers.destinations', 'Preferred destinations') %></label>
+          <input id="traveler-destinations" type="text" name="preferredDestinations" class="admin-input" value="<%= (profile.preferredDestinations || []).join(', ') %>" placeholder="Sharm El Sheikh, Luxor" />
+          <span class="admin-field-hint"><%= t('admin.companies.badgesHint', 'Comma separated') %></span>
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-favorites"><%= t('admin.travelers.favoriteTripIds', 'Favorite trip IDs') %></label>
+          <input id="traveler-favorites" type="text" name="favoriteTripIds" class="admin-input" value="<%= (profile.favoriteTripIds || []).join(', ') %>" placeholder="1, 3, 5" />
+          <span class="admin-field-hint"><%= t('admin.travelers.favoriteTripIdsHint', 'Trip IDs separated by commas') %></span>
+        </div>
+        <fieldset class="admin-form-field">
+          <legend class="admin-label"><%= t('admin.travelers.notifications', 'Notifications') %></legend>
+          <label class="admin-checkbox admin-checkbox--inline">
+            <input type="checkbox" name="notifyEmail" value="on" <%= profile.notifications && profile.notifications.email ? 'checked' : '' %> />
+            <span>Email</span>
+          </label>
+          <label class="admin-checkbox admin-checkbox--inline">
+            <input type="checkbox" name="notifySms" value="on" <%= profile.notifications && profile.notifications.sms ? 'checked' : '' %> />
+            <span>SMS</span>
+          </label>
+          <label class="admin-checkbox admin-checkbox--inline">
+            <input type="checkbox" name="notifyPush" value="on" <%= profile.notifications && profile.notifications.push ? 'checked' : '' %> />
+            <span>Push</span>
+          </label>
+        </fieldset>
+        <div class="admin-form-field">
+          <label class="admin-label" for="traveler-notes"><%= t('admin.travelers.adminNotes', 'Admin notes') %></label>
+          <textarea id="traveler-notes" name="notes" rows="4" class="admin-textarea" placeholder="<%= t('admin.travelers.notesPlaceholder', 'Internal notes about this traveler...') %>"><%= profile.notes || '' %></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-form-actions">
+    <a href="/admin/travelers/<%= traveler.id %>" class="adm-btn adm-btn--ghost"><%= t('admin.actions.cancel', 'Cancel') %></a>
+    <button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.save', 'Save changes') %></button>
+  </div>
+</form>
+<%- include('../../partials/admin-shell-end') %>

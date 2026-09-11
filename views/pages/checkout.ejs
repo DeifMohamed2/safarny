@@ -1,0 +1,175 @@
+<%
+  const payoutJson = JSON.stringify(payoutAccounts || {});
+  const methodsJson = JSON.stringify(paymentMethods.map(function(m) {
+    return { id: m.id, label: t(m.labelKey, m.label) };
+  }));
+  const datesJson = JSON.stringify(tripDates.map(function(date) {
+    return {
+      id: date.id,
+      label: date.date,
+      spots: date.availableSpots,
+      rooms: (date.rooms || []).map(function(room) {
+        return {
+          type: room.type,
+          occupancy: room.occupancy,
+          price: room.price,
+          maxRooms: room.maxRooms,
+          availableRooms: room.availableRooms
+        };
+      })
+    };
+  }));
+  const roomLabel = roomTypeLabel(roomType) || bedTypeLabel(trip.beds);
+%>
+<section class="checkout-page" data-checkout data-payouts='<%- payoutJson %>' data-dates='<%- datesJson %>' data-room-type="<%= roomType %>" data-occupancy="<%= occupancy %>" data-room-label="<%= roomLabel %>" data-per-person="<%= perPerson %>">
+  <div class="checkout-shell max-w-340 w-full px-4 pt-28 sm:pt-32 pb-12 mx-auto">
+    <a href="/trips/<%= trip.id %>" class="trip-details-back animate-on-load">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <%= t('checkout.backToTrip', 'Back to trip') %>
+    </a>
+
+    <header class="checkout-header" data-scroll-reveal>
+      <p class="checkout-kicker"><%= t('checkout.kicker', 'Secure checkout') %></p>
+      <h1 class="checkout-title"><%= t('checkout.title', 'Complete your booking') %></h1>
+      <p class="checkout-subtitle"><%= trip.title %></p>
+    </header>
+
+    <form method="post" action="/trips/<%= trip.id %>/checkout" enctype="multipart/form-data" class="checkout-layout" id="checkout-form">
+      <input type="hidden" name="dateId" value="<%= dateId %>" id="checkout-date-id" />
+      <div class="checkout-main">
+        <article class="checkout-card" data-scroll-reveal style="--reveal-delay: 60ms">
+          <div class="checkout-trip-head">
+            <img src="<%= trip.image || trip.gallery[0] %>" alt="" class="checkout-trip-image" />
+            <div>
+              <h2 class="checkout-card-title"><%= trip.title %></h2>
+              <p class="checkout-trip-meta"><%= trip.location %></p>
+              <p class="checkout-trip-meta"><%= trip.category %> · <%= trip.days %> <%= t('tripDetails.durationDays', 'Days') %> / <%= trip.nights %> <%= t('tripDetails.durationNights', 'Nights') %></p>
+            </div>
+          </div>
+        </article>
+
+        <article class="checkout-card" data-scroll-reveal style="--reveal-delay: 120ms">
+          <h2 class="checkout-card-title"><%= t('checkout.travelDetails', 'Travel details') %></h2>
+          <div class="checkout-field-grid">
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.travelDate', 'Travel date') %></span>
+              <select name="dateIdDisplay" class="checkout-input" id="checkout-date-select" data-sync-date-id>
+                <% tripDates.forEach(function(date) { %>
+                  <option value="<%= date.id %>" <%= date.id === dateId ? 'selected' : '' %>><%= date.date %> — <%= date.availableSpots %> <%= t('tripDetails.guestSpotsLeft', 'guest spots left') %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.roomType', 'Room type') %></span>
+              <select name="roomType" class="checkout-input" id="checkout-room-type">
+                <% (selectedDate.rooms && selectedDate.rooms.length ? selectedDate.rooms : roomTypes).forEach(function(room) { %>
+                  <option value="<%= room.type %>" <%= room.type === roomType ? 'selected' : '' %>><%= roomTypeLabel(room.type) %> · <%= formatPrice(room.price || perPerson) %> <%= currency %> / <%= t('tripDetails.person', 'person') %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.rooms', 'Rooms') %></span>
+              <div class="checkout-stepper">
+                <button type="button" class="checkout-stepper-btn" data-step="-1" aria-label="Decrease">−</button>
+                <input type="number" name="rooms" id="checkout-rooms" class="checkout-stepper-input" min="1" max="<%= maxRooms || 1 %>" value="<%= rooms %>" data-max-rooms="<%= maxRooms %>" <%= !canBook ? 'disabled' : '' %> />
+                <button type="button" class="checkout-stepper-btn" data-step="1" aria-label="Increase" id="checkout-rooms-plus" <%= !canBook || rooms >= maxRooms ? 'disabled' : '' %>>+</button>
+              </div>
+              <p class="checkout-field-hint" id="checkout-room-hint"><%= roomHint %></p>
+              <% if (!canBook) { %>
+                <p class="checkout-field-error"><%= t('checkout.soldOut', 'This date is sold out') %></p>
+              <% } %>
+            </label>
+          </div>
+        </article>
+
+        <% const checkoutDays = typeof groupItinerary === 'function' ? groupItinerary(trip) : []; %>
+        <% if (checkoutDays.length) { %>
+        <article class="checkout-card checkout-itinerary-card" data-scroll-reveal style="--reveal-delay: 180ms">
+          <h2 class="checkout-card-title"><%= t('tripDetails.tripItinerary', 'Trip Itinerary') %></h2>
+          <ol class="trip-itinerary-list checkout-itinerary-list">
+            <% checkoutDays.slice(0, 6).forEach(function(day, index) { %>
+              <li class="trip-itinerary-item is-revealed" style="--item-delay: <%= index * 70 %>ms">
+                <span class="trip-itinerary-marker"><%= day.day || (index + 1) %></span>
+                <div class="trip-itinerary-content">
+                  <h3><%= day.title %></h3>
+                  <p><%= day.description %></p>
+                </div>
+              </li>
+            <% }) %>
+          </ol>
+        </article>
+        <% } %>
+      </div>
+
+      <aside class="checkout-aside">
+        <div class="checkout-aside-sticky">
+          <article class="checkout-card checkout-summary-card" data-scroll-reveal style="--reveal-delay: 100ms">
+            <h2 class="checkout-card-title"><%= t('checkout.orderSummary', 'Order summary') %></h2>
+            <dl class="checkout-summary-lines">
+              <div><dt><%= t('checkout.pricePerPerson', 'Price per person') %></dt><dd><span id="checkout-summary-price"><%= formatPrice(perPerson) %></span> <%= currency %></dd></div>
+              <div><dt><%= t('checkout.roomType', 'Room type') %></dt><dd id="checkout-summary-type"><%= roomLabel %></dd></div>
+              <div><dt><%= t('checkout.rooms', 'Rooms') %></dt><dd id="checkout-summary-rooms"><%= rooms %></dd></div>
+              <div><dt><%= t('checkout.guests', 'Guests') %></dt><dd id="checkout-summary-guests"><%= guestCount %></dd></div>
+              <div class="checkout-summary-total"><dt><%= t('checkout.total', 'Total') %></dt><dd><span id="checkout-summary-total"><%= formatPrice(total) %></span> <%= currency %></dd></div>
+            </dl>
+          </article>
+
+          <article class="checkout-card" data-scroll-reveal style="--reveal-delay: 160ms">
+            <h2 class="checkout-card-title"><%= t('checkout.paymentMethod', 'Payment method') %></h2>
+            <div class="checkout-methods" role="radiogroup">
+              <% paymentMethods.forEach(function(method, index) { %>
+                <label class="checkout-method <%= index === 0 ? 'is-selected' : '' %>">
+                  <input type="radio" name="paymentMethod" value="<%= method.id %>" <%= index === 0 ? 'checked' : '' %> />
+                  <span class="checkout-method-label"><%= t(method.labelKey, method.label) %></span>
+                </label>
+              <% }) %>
+            </div>
+            <div class="checkout-payout-panel" id="checkout-payout-panel" data-scroll-reveal style="--reveal-delay: 200ms">
+              <p class="checkout-payout-title" id="checkout-payout-title"></p>
+              <ul class="checkout-payout-lines" id="checkout-payout-lines"></ul>
+              <p class="checkout-payout-note" id="checkout-payout-note"></p>
+            </div>
+          </article>
+
+          <article class="checkout-card" data-scroll-reveal style="--reveal-delay: 220ms">
+            <h2 class="checkout-card-title"><%= t('checkout.transferDetails', 'Your transfer details') %></h2>
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.senderName', 'Sender name') %></span>
+              <input type="text" name="senderName" class="checkout-input" value="<%= user.userName %>" required />
+            </label>
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.senderPhone', 'Sender phone / wallet number') %></span>
+              <input type="tel" name="senderPhone" class="checkout-input" value="<%= user.phone || '' %>" required />
+            </label>
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.transferRef', 'Transfer reference (optional)') %></span>
+              <input type="text" name="transferRef" class="checkout-input" placeholder="<%= t('checkout.transferRefHint', 'InstaPay txn ID or receipt number') %>" />
+            </label>
+            <label class="checkout-field checkout-dropzone" id="checkout-dropzone">
+              <span class="checkout-label"><%= t('checkout.proof', 'Payment proof') %></span>
+              <input type="file" name="proof" id="checkout-proof" accept="image/jpeg,image/png,image/webp,application/pdf" required class="checkout-file-input" />
+              <span class="checkout-dropzone-ui">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                <span id="checkout-proof-label"><%= t('checkout.proofHint', 'Upload screenshot or PDF (max 10MB)') %></span>
+              </span>
+            </label>
+            <label class="checkout-checkbox">
+              <input type="checkbox" name="terms" value="1" required />
+              <span><%= t('checkout.terms', 'I confirm I transferred the exact total and uploaded a valid proof.') %></span>
+            </label>
+            <button type="submit" class="trip-details-book-btn checkout-submit" <%= !canBook ? 'disabled' : '' %>>
+              <%= t('checkout.submit', 'Pay & submit') %>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </article>
+        </div>
+      </aside>
+    </form>
+  </div>
+</section>
+
+<script>
+  window.__checkoutMethods = <%- methodsJson %>;
+</script>

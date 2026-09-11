@@ -1,0 +1,112 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/trips" class="admin-back"><%= t('admin.back', 'Back to trips') %></a>
+    <h2 class="admin-title"><%= trip.title %></h2>
+    <p class="admin-subtitle"><%= company ? company.title : '' %> · <%= trip.destination %> · <%= trip.startDate %> – <%= trip.endDate %></p>
+  </div>
+  <div class="admin-header-actions">
+    <a href="/admin/trips/<%= trip.id %>/edit" class="adm-btn adm-btn--secondary"><%= t('admin.actions.edit', 'Edit') %></a>
+    <% if (trip.status === 'pending') { %>
+      <form method="post" action="/admin/trips/<%= trip.id %>/approve"><button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.approve', 'Approve') %></button></form>
+    <% } %>
+    <button type="button" class="adm-btn adm-btn--danger" data-admin-confirm data-action="/admin/trips/<%= trip.id %>/delete" data-message="<%= t('admin.trips.deleteConfirm', 'Delete this trip permanently?') %>"><%= t('admin.actions.delete', 'Delete') %></button>
+  </div>
+</div>
+
+<div class="admin-stats admin-stats--compact">
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.kpi.bookings', 'Bookings') %></p><p class="admin-stat-value"><%= stats.totalBookings %></p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.kpi.revenue', 'Revenue') %></p><p class="admin-stat-value"><%= formatPrice(stats.revenue) %> EGP</p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.profit', 'Platform profit') %></p><p class="admin-stat-value admin-stat-value--profit"><%= formatPrice(stats.platformProfit) %> EGP</p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.companyProfit', 'Company profit') %></p><p class="admin-stat-value"><%= formatPrice(stats.companyProfit) %> EGP</p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.fillRate', 'Fill rate') %></p><p class="admin-stat-value"><%= stats.fillRate %>%</p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.avgBooking', 'Avg. booking') %></p><p class="admin-stat-value"><%= formatPrice(stats.avgBookingValue) %> EGP</p></div>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <% if (trip.images && trip.images.length) { %>
+      <img src="<%= trip.images[0] %>" alt="" class="admin-trip-hero" />
+    <% } %>
+    <p class="admin-muted mt-3"><%= trip.description %></p>
+    <dl class="admin-dl mt-4">
+      <dt><%= t('admin.table.price', 'Price') %></dt><dd><%= formatPrice(trip.price) %> EGP / <%= t('admin.table.seats', 'seat') %></dd>
+      <dt><%= t('admin.table.status', 'Status') %></dt><dd><span class="admin-status admin-status--<%= trip.status %>"><%= trip.status %></span></dd>
+      <dt><%= t('admin.table.seats', 'Seats') %></dt><dd><%= stats.bookedSeats %> / <%= trip.totalSeats %> (<%= trip.availableSeats %> <%= t('admin.available', 'available') %>)</dd>
+      <dt><%= t('admin.bookingBreakdown', 'Booking breakdown') %></dt>
+      <dd><%= stats.confirmedBookings %> <%= t('admin.confirmed', 'confirmed') %> · <%= stats.pendingBookings %> <%= t('admin.status.pending', 'pending') %> · <%= stats.cancelledBookings %> <%= t('admin.cancelled', 'cancelled') %></dd>
+    </dl>
+    <% if (trip.status === 'pending' || trip.status === 'rejected') { %>
+      <form method="post" action="/admin/trips/<%= trip.id %>/reject" class="admin-form mt-4">
+        <label class="admin-label"><%= t('admin.trips.rejectReason', 'Rejection reason') %></label>
+        <textarea name="reason" class="admin-textarea" rows="2"><%= trip.rejectionReason || '' %></textarea>
+        <button type="submit" class="adm-btn adm-btn--danger adm-btn--sm mt-2"><%= t('admin.actions.reject', 'Reject') %></button>
+      </form>
+    <% } %>
+  </div>
+  <div class="admin-panel admin-chart-panel">
+    <div class="admin-panel-head"><h3><%= t('admin.tripAnalytics', 'Trip performance') %></h3></div>
+    <div class="admin-analytics-bars">
+      <div class="admin-analytics-bar">
+        <div class="admin-analytics-bar-label"><%= t('admin.confirmed', 'Confirmed') %></div>
+        <div class="admin-analytics-bar-track"><div class="admin-analytics-bar-fill admin-analytics-bar-fill--confirmed" style="width: <%= stats.totalBookings ? Math.round((stats.confirmedBookings / stats.totalBookings) * 100) : 0 %>%"></div></div>
+        <span><%= stats.confirmedBookings %></span>
+      </div>
+      <div class="admin-analytics-bar">
+        <div class="admin-analytics-bar-label"><%= t('admin.status.pending', 'Pending') %></div>
+        <div class="admin-analytics-bar-track"><div class="admin-analytics-bar-fill admin-analytics-bar-fill--pending" style="width: <%= stats.totalBookings ? Math.round((stats.pendingBookings / stats.totalBookings) * 100) : 0 %>%"></div></div>
+        <span><%= stats.pendingBookings %></span>
+      </div>
+      <div class="admin-analytics-bar">
+        <div class="admin-analytics-bar-label"><%= t('admin.fillRate', 'Capacity filled') %></div>
+        <div class="admin-analytics-bar-track"><div class="admin-analytics-bar-fill admin-analytics-bar-fill--profit" style="width: <%= stats.fillRate %>%"></div></div>
+        <span><%= stats.fillRate %>%</span>
+      </div>
+    </div>
+    <div class="admin-profit-split mt-4">
+      <div class="admin-profit-item"><span><%= t('admin.kpi.revenue', 'Revenue') %></span><strong><%= formatPrice(stats.revenue) %> EGP</strong></div>
+      <div class="admin-profit-item admin-profit-item--platform"><span><%= t('admin.profit', 'Platform') %> (<%= stats.commissionRate %>%)</span><strong><%= formatPrice(stats.platformProfit) %> EGP</strong></div>
+      <div class="admin-profit-item"><span><%= t('admin.companyProfit', 'Company') %></span><strong><%= formatPrice(stats.companyProfit) %> EGP</strong></div>
+    </div>
+  </div>
+</div>
+
+<div class="admin-panel mt-4">
+  <div class="admin-panel-head">
+    <h3><%= t('admin.customers', 'Customers & bookings') %></h3>
+    <span class="admin-muted"><%= customers.length %> <%= t('admin.total', 'total') %></span>
+  </div>
+  <% if (!customers.length) { %>
+    <p class="admin-muted"><%= t('admin.noCustomers', 'No bookings for this trip yet.') %></p>
+  <% } else { %>
+    <div class="admin-table-wrap">
+      <table class="admin-table admin-table--compact">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th><%= t('admin.table.customer', 'Customer') %></th>
+            <th><%= t('admin.table.phone', 'Phone') %></th>
+            <th><%= t('admin.table.seats', 'Seats') %></th>
+            <th><%= t('admin.table.amount', 'Amount') %></th>
+            <th><%= t('admin.table.status', 'Status') %></th>
+            <th><%= t('admin.bookings.travel', 'Travel date') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% customers.forEach(function(c) { %>
+            <tr>
+              <td><a href="/admin/bookings/<%= c.id %>" class="admin-link"><%= c.id %></a></td>
+              <td><%= c.name %><br/><span class="admin-muted-sm"><%= c.email %></span></td>
+              <td><%= c.phone %></td>
+              <td><%= c.seats %></td>
+              <td><%= formatPrice(c.amount) %> EGP</td>
+              <td><span class="admin-status admin-status--<%= c.status.toLowerCase() %> admin-status--sm"><%= c.status %></span></td>
+              <td><%= c.tripDate %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+<%- include('../../partials/admin-shell-end') %>

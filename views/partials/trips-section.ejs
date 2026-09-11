@@ -1,0 +1,21 @@
+<div class="trips-section max-w-340 w-full px-4 flex flex-col items-center gap-7 pt-15 mx-auto">
+  <div class="trips-section-head w-full flex justify-between items-end gap-3 flex-wrap sm:flex-nowrap" data-scroll-reveal>
+    <div class="flex flex-col items-start gap-2">
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-semibold capitalize">
+        <% if (typeof title1 !== 'undefined' && title1) { %><span class="text-sky-950"><%= t(title1) %> </span><% } %>
+        <% if (typeof title2 !== 'undefined' && title2) { %><span class="text-orange-500"><%= t(title2) %></span><% } %>
+        <% if (typeof title3 !== 'undefined' && title3) { %><span class="text-sky-950"> <%= t(title3) %></span><% } %>
+      </h2>
+      <% if (typeof description !== 'undefined' && description) { %>
+        <p class="text-sky-950 text-sm sm:text-base lg:text-xl font-normal capitalize"><%= t(description) %></p>
+      <% } %>
+    </div>
+    <% if (typeof actionText !== 'undefined' && actionLink) { %>
+      <a href="<%= actionLink %>" class="text-sky-950 text-sm sm:text-base lg:text-xl font-normal underline capitalize"><%= t(actionText) %></a>
+    <% } %>
+  </div>
+
+  <% if (typeof trips !== 'undefined') { %>
+    <%- include('trips-carousel', { items: trips }) %>
+  <% } %>
+</div>

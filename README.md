@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# Safarny
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Travel marketplace built with **Express.js**, **Node.js**, **EJS**, and **MongoDB**.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+A local `mongod` instance on port **27017**. No Docker.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+mongod --dbpath /data/db
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Run
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env
+npm install
+npm run seed
+npm run dev
 ```
+
+Open [http://localhost:5170](http://localhost:5170).
+
+`npm run seed` upserts demo data by `_id` and is safe to re-run. `npm run seed:reset` drops app collections first (keeps sessions unless you pass `--all`).
+
+`GET /health` returns `{ ok, db }`.
+
+## Demo accounts
+
+Password for all accounts: `123Qwe`
+
+| Role | Email | Lands on |
+| --- | --- | --- |
+| Traveler | `ahmedali@email.com` | `/` |
+| Company | `company@redsea.com` | `/company/dashboard` |
+| Company | `company@nileheritage.com` | `/company/dashboard` |
+| Company | `company@haramain.com` | `/company/dashboard` |
+| Admin | `admin@safarny.com` | `/admin/dashboard` |
+
+## Stack
+
+- Express 5 server-rendered pages
+- MongoDB via Mongoose (`mongodb://127.0.0.1:27017/safarny`)
+- Session auth stored in MongoDB (`connect-mongo`)
+- English / Arabic via `/lang/en` and `/lang/ar`
+- Tailwind CSS (browser runtime) plus Swiper for carousels
+
+## Routes
+
+| Path | Notes |
+| --- | --- |
+| `/` | Home |
+| `/search` | Trip search |
+| `/trips`, `/trips/:id`, `/trips/offers` | Catalog, details, offers |
+| `/umrah` | Umrah packages |
+| `/register/company` | Public company signup |
+| `/profile`, `/booking-history`, `/contact-us`, `/tickets` | Signed-in traveler account |
+| `/company/dashboard` | Company portal |
+| `/admin/dashboard` | Admin portal |

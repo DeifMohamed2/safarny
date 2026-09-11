@@ -1,0 +1,25 @@
+<div id="admin-signout-dialog" class="dialog-overlay">
+  <div class="dialog-panel px-4 py-6.5">
+    <h3 class="text-lg font-semibold text-[#122445] mb-2"><%= t('shared.logOut', 'Log Out') %></h3>
+    <p class="text-sm text-[#64748b] mb-5"><%= t('admin.signOutConfirm', 'Are you sure you want to sign out of the admin portal?') %></p>
+    <div class="flex gap-3 justify-end">
+      <button type="button" data-close-dialog="#admin-signout-dialog" class="adm-btn adm-btn--ghost"><%= t('shared.cancel', 'Cancel') %></button>
+      <form id="admin-sign-out-form" action="/auth/sign-out" method="post">
+        <button type="submit" class="adm-btn adm-btn--danger"><%= t('shared.logOut', 'Log Out') %></button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="admin-confirm-dialog" class="dialog-overlay">
+  <div class="dialog-panel px-4 py-6.5">
+    <h3 class="text-lg font-semibold text-[#122445] mb-2" data-confirm-title><%= t('admin.confirm.title', 'Confirm action') %></h3>
+    <p class="text-sm text-[#64748b] mb-5" data-confirm-message></p>
+    <div class="flex gap-3 justify-end">
+      <button type="button" data-close-dialog="#admin-confirm-dialog" class="adm-btn adm-btn--ghost"><%= t('shared.cancel', 'Cancel') %></button>
+      <form data-confirm-form method="post">
+        <button type="submit" class="adm-btn adm-btn--danger" data-confirm-submit><%= t('admin.confirm.submit', 'Confirm') %></button>
+      </form>
+    </div>
+  </div>
+</div>

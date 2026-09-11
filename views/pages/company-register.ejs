@@ -1,0 +1,125 @@
+<section class="partner-page">
+  <div class="partner-shell max-w-340 w-full px-4 pt-28 sm:pt-32 pb-16 mx-auto">
+    <div class="partner-layout">
+      <aside class="partner-aside">
+        <p class="partner-kicker"><%= t('partner.kicker', 'For travel companies') %></p>
+        <h1 class="partner-title"><%= t('partner.title', 'Create your company account') %></h1>
+        <p class="partner-lead"><%= t('partner.lead', 'List your trips, manage bookings, and reach travelers across Egypt — all from one dashboard.') %></p>
+        <ul class="partner-points">
+          <li>
+            <span aria-hidden="true">✓</span>
+            <%= t('partner.point1', 'Publish leisure and Umrah packages with photos, dates, and room prices.') %>
+          </li>
+          <li>
+            <span aria-hidden="true">✓</span>
+            <%= t('partner.point2', 'Receive bookings and payment proofs in one place.') %>
+          </li>
+          <li>
+            <span aria-hidden="true">✓</span>
+            <%= t('partner.point3', 'Get verified by Safarny, then go live on the marketplace.') %>
+          </li>
+        </ul>
+        <p class="partner-signin">
+          <%= t('auth.alreadyHaveAccount', 'Already have an account?') %>
+          <button type="button" data-open-dialog="#signin-dialog" class="partner-link"><%= t('shared.signIn', 'Sign In') %></button>
+        </p>
+      </aside>
+
+      <article class="partner-card">
+        <h2 class="partner-card-title"><%= t('partner.formTitle', 'Company details') %></h2>
+        <p class="partner-card-copy"><%= t('partner.formHint', 'Tell us about your company. You can finish your public profile after you sign in.') %></p>
+
+        <form method="post" action="/auth/company-sign-up" class="partner-form" autocomplete="on" enctype="multipart/form-data">
+          <div class="partner-grid">
+            <label class="partner-field partner-field--full">
+              <span><%= t('partner.companyName', 'Company name') %> *</span>
+              <input name="title" type="text" required class="partner-input" value="<%= formDraft ? formDraft.title : '' %>" placeholder="<%= t('admin.companies.namePlaceholder', 'e.g. Red Sea Adventures') %>" />
+            </label>
+            <label class="partner-field">
+              <span><%= t('partner.location', 'City / location') %> *</span>
+              <input name="location" type="text" required class="partner-input" value="<%= formDraft ? formDraft.location : '' %>" placeholder="<%= t('admin.companies.locationPlaceholder', 'e.g. Hurghada') %>" />
+            </label>
+            <label class="partner-field">
+              <span><%= t('partner.phone', 'Company phone') %></span>
+              <input name="contactNumber" type="tel" class="partner-input" value="<%= formDraft ? formDraft.contactNumber : '' %>" placeholder="+20 100 000 0000" />
+            </label>
+            <label class="partner-field partner-field--full">
+              <span><%= t('partner.about', 'About your company') %></span>
+              <textarea name="description" rows="3" class="partner-input partner-textarea" placeholder="<%= t('partner.aboutPlaceholder', 'Destinations, specialties, and what travelers can expect...') %>"><%= formDraft ? formDraft.description : '' %></textarea>
+            </label>
+          </div>
+
+          <div class="partner-divider">
+            <span><%= t('partner.docsSection', 'Verification documents') %></span>
+          </div>
+          <p class="partner-docs-hint"><%= t('partner.docsHint', 'Upload clear copies of your commercial register and tax card. JPG, PNG, or PDF · max 10 MB each.') %></p>
+          <div class="partner-grid">
+            <label class="partner-field partner-upload" data-file-field>
+              <span><%= t('partner.commercialRegister', 'Commercial register (سجل تجاري)') %> *</span>
+              <input
+                type="file"
+                name="commercialRegister"
+                required
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                class="partner-file-input"
+              />
+              <span class="partner-upload-ui">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                <em data-file-name><%= t('partner.docsChoose', 'Choose file') %></em>
+              </span>
+            </label>
+            <label class="partner-field partner-upload" data-file-field>
+              <span><%= t('partner.taxCard', 'Tax card (بطاقة ضريبية)') %> *</span>
+              <input
+                type="file"
+                name="taxCard"
+                required
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                class="partner-file-input"
+              />
+              <span class="partner-upload-ui">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                <em data-file-name><%= t('partner.docsChoose', 'Choose file') %></em>
+              </span>
+            </label>
+          </div>
+
+          <div class="partner-divider">
+            <span><%= t('partner.accountSection', 'Your login') %></span>
+          </div>
+
+          <div class="partner-grid">
+            <label class="partner-field">
+              <span><%= t('partner.contactName', 'Contact name') %> *</span>
+              <input name="userName" type="text" required autocomplete="name" class="partner-input" value="<%= formDraft ? formDraft.userName : '' %>" placeholder="<%= t('auth.fullName', 'Full Name') %>" />
+            </label>
+            <label class="partner-field">
+              <span><%= t('auth.email', 'Email') %> *</span>
+              <input name="email" type="email" required autocomplete="email" class="partner-input" value="<%= formDraft ? formDraft.email : '' %>" placeholder="company@example.com" />
+            </label>
+            <label class="partner-field partner-field--full">
+              <span><%= t('auth.password', 'Password') %> *</span>
+              <div class="partner-password">
+                <input name="password" type="password" required minlength="6" autocomplete="new-password" class="partner-input" data-password-input placeholder="<%= t('partner.passwordHint', 'At least 6 characters') %>" />
+                <button type="button" class="auth-password-toggle" data-password-toggle aria-label="<%= t('auth.showPassword', 'Show password') %>">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" class="auth-eye-open"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" class="auth-eye-closed"><path d="M3 3l18 18M10.6 10.6A2.5 2.5 0 0 0 12 15a2.5 2.5 0 0 0 2.4-1.8M6.7 6.7C4.6 8.1 3 10 2 12s3.5 6 10 6c1.8 0 3.4-.4 4.8-1M17.3 17.3C19.4 15.9 21 14 22 12s-3.5-6-10-6c-1.8 0-3.4.4-4.8 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </label>
+          </div>
+
+          <label class="partner-check">
+            <input type="checkbox" required />
+            <span><%= t('auth.acceptTermsPrefix', 'By signing up, you accept our') %> <a href="/terms"><%= t('auth.termsAndConditions', 'Terms and Conditions') %></a></span>
+          </label>
+
+          <button type="submit" class="partner-submit">
+            <%= t('partner.submit', 'Create company account') %>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+      </article>
+    </div>
+  </div>
+</section>

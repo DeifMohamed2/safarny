@@ -1,0 +1,22 @@
+<div class="trips-carousel" data-scroll-reveal>
+  <button type="button" data-carousel-prev class="trips-carousel-nav trips-carousel-nav--prev" aria-label="<%= t('shared.previous', 'Previous') %>">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <button type="button" data-carousel-next class="trips-carousel-nav trips-carousel-nav--next" aria-label="<%= t('shared.next', 'Next') %>">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <div class="swiper trips-carousel-swiper" data-carousel>
+    <div class="swiper-wrapper">
+      <% items.forEach(function(item, index) { %>
+        <div class="swiper-slide" data-reveal-delay="<%= (index % 4) * 90 %>">
+          <%- include('trip-card', { trip: item, cardClass: 'trip-card--carousel' }) %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</div>

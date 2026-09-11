@@ -1,0 +1,25 @@
+<%- include('../partials/account-shell-start', { accountActive: 'saved' }) %>
+  <header class="account-header account-header--compact" data-scroll-reveal>
+    <h1 class="account-title"><%= t('saved.title', 'Saved Trips') %></h1>
+    <p class="account-subtitle">
+      <%= t('saved.subtitle', 'Trips you marked as favorites') %>
+      <% if (items.length) { %> · <span class="account-subtitle-count"><%= items.length %> <%= t('saved.count', 'saved') %></span><% } %>
+    </p>
+  </header>
+
+  <% if (items.length) { %>
+    <div class="saved-trip-list">
+      <% items.forEach(function(trip, index) { %>
+        <div data-scroll-reveal style="--reveal-delay: <%= (index % 6) * 50 %>ms">
+          <%- include('../partials/saved-trip-card', { trip: trip }) %>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="account-empty" data-scroll-reveal>
+      <p class="account-empty-title"><%= t('saved.emptyTitle', 'No saved trips yet') %></p>
+      <p class="account-empty-text"><%= t('saved.emptyText', 'Browse trips and tap the heart icon to save them here.') %></p>
+      <a href="/trips" class="account-btn account-btn--primary"><%= t('saved.browseTrips', 'Browse trips') %></a>
+    </div>
+  <% } %>
+<%- include('../partials/account-shell-end') %>

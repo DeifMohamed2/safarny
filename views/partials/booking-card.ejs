@@ -1,0 +1,58 @@
+<article class="account-booking-card">
+  <a href="/bookings/<%= booking.code || booking.id %>" class="account-booking-card-media">
+    <img src="<%= booking.image %>" alt="" class="account-booking-card-img" />
+    <span class="account-booking-status account-booking-status--<%= booking.status %>"><%= booking.status %></span>
+  </a>
+  <div class="account-booking-card-body">
+    <div class="account-booking-card-head">
+      <div>
+        <h3 class="account-booking-card-title"><%= booking.title %></h3>
+        <p class="account-booking-card-category"><%= booking.category %></p>
+        <div class="account-booking-payment">
+          <span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus || 'unpaid' %>"><%= booking.paymentStatus || 'unpaid' %></span>
+          <% if (booking.paymentMethod) { %>
+            <span class="account-booking-detail-value"><%= booking.paymentMethod %></span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="account-booking-card-details">
+      <div class="account-booking-detail">
+        <span class="account-booking-detail-label"><%= t('bookingHistory.location', 'Location') %></span>
+        <span class="account-booking-detail-value"><%= booking.location %></span>
+      </div>
+      <div class="account-booking-detail">
+        <span class="account-booking-detail-label"><%= t('bookingHistory.bookingDate', 'Booking Date') %></span>
+        <span class="account-booking-detail-value"><%= booking.bookingDate %></span>
+      </div>
+      <div class="account-booking-detail">
+        <span class="account-booking-detail-label"><%= t('bookingHistory.travelDate', 'Travel Date') %></span>
+        <span class="account-booking-detail-value"><%= booking.travelDate %></span>
+      </div>
+      <div class="account-booking-detail">
+        <span class="account-booking-detail-label"><%= t('bookingHistory.duration', 'Duration') %></span>
+        <span class="account-booking-detail-value"><%= booking.duration %></span>
+      </div>
+      <div class="account-booking-detail">
+        <span class="account-booking-detail-label"><%= t('bookingHistory.group', 'Group') %></span>
+        <span class="account-booking-detail-value"><%= booking.adults %> <%= t('bookingHistory.adults', 'Adults') %></span>
+      </div>
+    </div>
+
+    <div class="account-booking-card-foot">
+      <p class="account-booking-price">
+        <span class="account-booking-price-value"><%= typeof formatPrice !== 'undefined' ? formatPrice(booking.totalPrice || booking.price * booking.adults) : (booking.totalPrice || booking.price) %></span>
+        <span class="account-booking-price-unit"><%= t('shared.egp', 'EGP') %> <%= t('checkout.total', 'total') %></span>
+      </p>
+      <div class="account-booking-actions">
+        <a href="/bookings/<%= booking.code || booking.id %>" class="account-btn account-btn--secondary account-btn--sm">
+          <%= t('checkout.viewBooking', 'View booking') %>
+        </a>
+        <a href="/trips/<%= booking.tripId %>" class="account-btn account-btn--ghost account-btn--sm">
+          <%= t('shared.viewDetails', 'View Details') %>
+        </a>
+      </div>
+    </div>
+  </div>
+</article>

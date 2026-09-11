@@ -1,0 +1,39 @@
+<%
+  const activeSection = typeof accountActive !== 'undefined' ? accountActive : '';
+  const accountLinks = [
+    { id: 'profile', href: '/profile', label: t('nav.profile', 'Profile') },
+    { id: 'saved', href: '/saved', label: t('nav.saved', 'Saved') },
+    { id: 'tickets', href: '/tickets', label: t('nav.tickets', 'Support') },
+    { id: 'settings', href: '/settings', label: t('nav.settings', 'Settings') },
+    { id: 'bookings', href: '/booking-history', label: t('profile.bookingHistory', 'Booking History') },
+    { id: 'contact', href: '/contact-us', label: t('profile.contactUs', 'Contact Us') },
+  ];
+%>
+<section class="account-page <%= activeSection === 'tickets' ? 'account-page--tickets' : '' %>">
+  <div class="account-shell max-w-340 w-full px-4 pt-28 sm:pt-32 pb-12 mx-auto <%= activeSection === 'tickets' ? 'account-shell--tickets' : '' %>">
+    <div class="account-layout account-layout--scroll <%= activeSection === 'tickets' ? 'account-layout--tickets' : '' %>">
+      <aside class="account-sidebar" data-scroll-reveal>
+        <div class="account-sidebar-card">
+          <div class="account-sidebar-user">
+            <span class="account-sidebar-avatar-wrap">
+              <img src="<%= user.avatar || '/user.png' %>" alt="" class="account-sidebar-avatar" id="account-nav-avatar" />
+            </span>
+            <div class="account-sidebar-meta">
+              <p class="account-sidebar-name"><%= user.userName %></p>
+              <p class="account-sidebar-email"><%= user.email %></p>
+            </div>
+          </div>
+          <nav class="account-nav" aria-label="Account">
+            <% accountLinks.forEach(function(link) { %>
+              <a href="<%= link.href %>" class="account-nav-link <%= activeSection === link.id ? 'is-active' : '' %>">
+                <%= link.label %>
+              </a>
+            <% }) %>
+            <button type="button" data-open-dialog="#signout-dialog" class="account-nav-link account-nav-link--danger">
+              <%= t('shared.logOut', 'Log Out') %>
+            </button>
+          </nav>
+        </div>
+      </aside>
+      <div class="account-main">
+        <div class="account-main-scroll <%= activeSection === 'tickets' ? 'account-main-scroll--embedded' : '' %>" data-account-main-scroll>

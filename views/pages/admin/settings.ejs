@@ -1,0 +1,132 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header admin-header--compact">
+  <div>
+    <h2 class="admin-title"><%= t('admin.settings.title', 'Settings') %></h2>
+    <p class="admin-subtitle"><%= t('admin.settings.subtitle', 'Platform configuration and admin profile') %></p>
+  </div>
+</div>
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.settings.platform', 'Platform settings') %></h3>
+    <form method="post" action="/admin/settings" class="admin-form">
+      <label class="admin-label"><%= t('admin.settings.commission', 'Default commission (%)') %></label>
+      <input type="number" name="commissionRate" value="<%= settings.commissionRate %>" class="admin-input" min="0" max="50" />
+      <label class="admin-label"><%= t('admin.settings.currency', 'Currency') %></label>
+      <input type="text" name="currency" value="<%= settings.currency %>" class="admin-input" />
+      <label class="admin-label"><%= t('admin.settings.locale', 'Default locale') %></label>
+      <select name="defaultLocale" class="admin-input">
+        <option value="en" <%= settings.defaultLocale === 'en' ? 'selected' : '' %>>English</option>
+        <option value="ar" <%= settings.defaultLocale === 'ar' ? 'selected' : '' %>>العربية</option>
+      </select>
+      <label class="admin-checkbox"><input type="checkbox" name="autoApproveTrips" value="on" <%= settings.autoApproveTrips ? 'checked' : '' %> /> <%= t('admin.settings.autoApprove', 'Auto-approve trips') %></label>
+      <label class="admin-checkbox"><input type="checkbox" name="maintenanceMode" value="on" <%= settings.maintenanceMode ? 'checked' : '' %> /> <%= t('admin.settings.maintenance', 'Maintenance mode') %></label>
+      <button type="submit" class="adm-btn adm-btn--primary mt-4"><%= t('admin.actions.save', 'Save settings') %></button>
+    </form>
+  </div>
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.settings.profile', 'Admin profile') %></h3>
+    <form method="post" action="/admin/settings/profile" class="admin-form">
+      <label class="admin-label"><%= t('admin.table.name', 'Name') %></label>
+      <input type="text" name="userName" value="<%= user.userName %>" class="admin-input" />
+      <label class="admin-label"><%= t('admin.table.email', 'Email') %></label>
+      <input type="email" name="email" value="<%= user.email %>" class="admin-input" />
+      <label class="admin-label"><%= t('admin.table.phone', 'Phone') %></label>
+      <input type="tel" name="phone" value="<%= user.phone || '' %>" class="admin-input" />
+      <button type="submit" class="adm-btn adm-btn--primary mt-4"><%= t('admin.actions.save', 'Save profile') %></button>
+    </form>
+    <div class="admin-settings-section mt-6">
+      <h4><%= t('admin.settings.password', 'Change password') %></h4>
+      <form id="password-form" class="admin-form mt-2">
+        <input type="password" name="currentPassword" placeholder="<%= t('admin.settings.currentPassword', 'Current password') %>" class="admin-input" required />
+        <input type="password" name="newPassword" placeholder="<%= t('admin.settings.newPassword', 'New password') %>" class="admin-input mt-2" required minlength="6" />
+        <input type="password" name="confirmPassword" placeholder="<%= t('admin.settings.confirmPassword', 'Confirm password') %>" class="admin-input mt-2" required />
+        <button type="submit" class="adm-btn adm-btn--secondary mt-2"><%= t('admin.settings.updatePassword', 'Update password') %></button>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="admin-grid-2 mt-4">
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.settings.destinations', 'Destinations') %></h3>
+    <ul class="admin-tag-list">
+      <% settings.destinations.forEach(function(dest) { %>
+        <li class="admin-tag">
+          <%= dest %>
+          <form method="post" action="/admin/settings/destinations" class="inline"><input type="hidden" name="action" value="remove" /><input type="hidden" name="name" value="<%= dest %>" /><button type="submit" class="admin-tag-remove">×</button></form>
+        </li>
+      <% }) %>
+    </ul>
+    <form method="post" action="/admin/settings/destinations" class="admin-form-inline mt-3">
+      <input type="hidden" name="action" value="add" />
+      <input type="text" name="name" placeholder="<%= t('admin.settings.addDestination', 'Add destination') %>" class="admin-input admin-input--sm" />
+      <button type="submit" class="adm-btn adm-btn--sm adm-btn--secondary"><%= t('admin.actions.add', 'Add') %></button>
+    </form>
+  </div>
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.settings.categories', 'Categories') %></h3>
+    <ul class="admin-tag-list">
+      <% settings.categories.forEach(function(cat) { %>
+        <li class="admin-tag">
+          <%= cat %>
+          <form method="post" action="/admin/settings/categories" class="inline"><input type="hidden" name="action" value="remove" /><input type="hidden" name="name" value="<%= cat %>" /><button type="submit" class="admin-tag-remove">×</button></form>
+        </li>
+      <% }) %>
+    </ul>
+    <form method="post" action="/admin/settings/categories" class="admin-form-inline mt-3">
+      <input type="hidden" name="action" value="add" />
+      <input type="text" name="name" placeholder="<%= t('admin.settings.addCategory', 'Add category') %>" class="admin-input admin-input--sm" />
+      <button type="submit" class="adm-btn adm-btn--sm adm-btn--secondary"><%= t('admin.actions.add', 'Add') %></button>
+    </form>
+  </div>
+</div>
+<div class="admin-panel mt-4">
+  <h3 class="admin-panel-title"><%= t('admin.finance.payoutAccounts', 'Payout accounts') %></h3>
+  <p class="admin-muted mb-4"><%= t('admin.finance.payoutHint', 'These details appear on checkout so travelers know where to transfer.') %></p>
+  <% const payouts = settings.payoutAccounts || {}; %>
+  <form method="post" action="/admin/settings/payouts" class="admin-form">
+    <div class="admin-grid-2">
+      <div>
+        <label class="admin-label"><%= t('admin.finance.instapayIpa', 'InstaPay IPA') %></label>
+        <input type="text" name="instapayIpa" value="<%= payouts.instapayIpa || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.instapayMobile', 'InstaPay mobile') %></label>
+        <input type="text" name="instapayMobile" value="<%= payouts.instapayMobile || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.vodafoneCash', 'Vodafone Cash') %></label>
+        <input type="text" name="vodafoneCash" value="<%= payouts.vodafoneCash || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.orangeCash', 'Orange Cash') %></label>
+        <input type="text" name="orangeCash" value="<%= payouts.orangeCash || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.etisalatCash', 'Etisalat Cash') %></label>
+        <input type="text" name="etisalatCash" value="<%= payouts.etisalatCash || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.bankName', 'Bank name') %></label>
+        <input type="text" name="bankName" value="<%= payouts.bankName || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.bankAccountName', 'Account name') %></label>
+        <input type="text" name="bankAccountName" value="<%= payouts.bankAccountName || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.bankAccountNumber', 'Account number') %></label>
+        <input type="text" name="bankAccountNumber" value="<%= payouts.bankAccountNumber || '' %>" class="admin-input" />
+      </div>
+      <div>
+        <label class="admin-label"><%= t('admin.finance.bankIban', 'IBAN') %></label>
+        <input type="text" name="bankIban" value="<%= payouts.bankIban || '' %>" class="admin-input" />
+      </div>
+    </div>
+    <label class="admin-label mt-3"><%= t('admin.finance.instructionsEn', 'Transfer instructions (English)') %></label>
+    <textarea name="instructionsEn" class="admin-textarea" rows="2"><%= payouts.instructionsEn || '' %></textarea>
+    <label class="admin-label mt-3"><%= t('admin.finance.instructionsAr', 'Transfer instructions (Arabic)') %></label>
+    <textarea name="instructionsAr" class="admin-textarea" rows="2"><%= payouts.instructionsAr || '' %></textarea>
+    <button type="submit" class="adm-btn adm-btn--primary mt-4"><%= t('admin.actions.save', 'Save payout accounts') %></button>
+  </form>
+</div>
+<%- include('../../partials/admin-shell-end') %>

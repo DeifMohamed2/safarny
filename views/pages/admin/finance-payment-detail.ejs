@@ -1,0 +1,73 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/finance/payments" class="admin-back"><%= t('admin.finance.payments', 'Payments') %></a>
+    <h2 class="admin-title"><%= payment.id %></h2>
+    <p class="admin-subtitle"><%= payment.customerName %> · <%= payment.tripName %></p>
+  </div>
+  <span class="admin-status admin-status--<%= payment.status %> admin-status--lg"><%= payment.status %></span>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.finance.paymentDetails', 'Payment details') %></h3>
+    <dl class="admin-dl">
+      <dt><%= t('admin.finance.paymentId', 'Payment ID') %></dt><dd><%= payment.id %></dd>
+      <dt><%= t('admin.finance.booking', 'Booking') %></dt><dd><a href="/admin/bookings/<%= payment.bookingId %>" class="admin-link"><%= payment.bookingCode %></a><% if (payment.referenceCode) { %> · <%= payment.referenceCode %><% } %></dd>
+      <dt><%= t('admin.finance.method', 'Method') %></dt><dd><%= payment.methodLabel %></dd>
+      <dt><%= t('admin.table.amount', 'Amount') %></dt><dd><%= formatPrice(payment.amount) %> <%= payment.currency %></dd>
+      <dt><%= t('admin.finance.senderName', 'Sender name') %></dt><dd><%= payment.senderName || '—' %></dd>
+      <dt><%= t('admin.finance.senderPhone', 'Sender phone') %></dt><dd><%= payment.senderPhone || '—' %></dd>
+      <dt><%= t('admin.finance.transferRef', 'Transfer reference') %></dt><dd><%= payment.transferRef || '—' %></dd>
+      <dt><%= t('admin.finance.submitted', 'Submitted') %></dt><dd><%= payment.submittedAt %></dd>
+      <% if (payment.reviewedAtLabel) { %>
+        <dt><%= t('admin.finance.reviewed', 'Reviewed') %></dt><dd><%= payment.reviewedAtLabel %></dd>
+      <% } %>
+      <% if (payment.reviewNote) { %>
+        <dt><%= t('admin.finance.reviewNote', 'Review note') %></dt><dd><%= payment.reviewNote %></dd>
+      <% } %>
+    </dl>
+  </div>
+
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.finance.proof', 'Payment proof') %></h3>
+    <% if (payment.proof && payment.proof.viewUrl) { %>
+      <div class="admin-finance-proof-actions admin-finance-proof-actions--detail">
+        <a href="<%= payment.proof.viewUrl %>" target="_blank" rel="noopener" class="adm-btn adm-btn--secondary adm-btn--sm"><%= t('admin.finance.viewProof', 'View') %></a>
+        <a href="<%= payment.proof.downloadUrl %>" download="<%= payment.proof.downloadName %>" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.finance.downloadProof', 'Download') %></a>
+      </div>
+      <% if (payment.isImageProof) { %>
+        <a href="<%= payment.proof.viewUrl %>" target="_blank" rel="noopener" class="admin-finance-proof-preview-link">
+          <img src="<%= payment.proof.viewUrl %>" alt="" class="admin-finance-proof-preview" onerror="this.closest('.admin-finance-proof-preview-link').hidden=true" />
+        </a>
+        <p class="admin-muted-sm mt-2"><%= payment.proof.name || payment.proof.downloadName %></p>
+      <% } else { %>
+        <p class="admin-muted mt-2"><%= payment.proof.name || payment.proof.downloadName %></p>
+      <% } %>
+    <% } else { %>
+      <p class="admin-muted"><%= t('admin.finance.noProof', 'No proof uploaded.') %></p>
+    <% } %>
+  </div>
+</div>
+
+<% if (payment.status !== 'verified') { %>
+  <div class="admin-grid-2 mt-4">
+    <div class="admin-panel">
+      <h3 class="admin-panel-title"><%= t('admin.actions.verify', 'Verify') %></h3>
+      <p class="admin-muted mb-3"><%= t('admin.finance.verifyHint', 'Verifying confirms the booking and marks this payment as settled.') %></p>
+      <form method="post" action="/admin/finance/payments/<%= payment.id %>/verify">
+        <button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.finance.verifyPayment', 'Verify payment') %></button>
+      </form>
+    </div>
+    <div class="admin-panel">
+      <h3 class="admin-panel-title"><%= t('admin.actions.reject', 'Reject') %></h3>
+      <form method="post" action="/admin/finance/payments/<%= payment.id %>/reject" class="admin-form">
+        <label class="admin-label"><%= t('admin.finance.rejectNote', 'Rejection reason (required)') %></label>
+        <textarea name="reviewNote" class="admin-textarea" rows="3" required placeholder="<%= t('admin.finance.rejectPlaceholder', 'Explain what is wrong with the proof...') %>"></textarea>
+        <button type="submit" class="adm-btn adm-btn--danger mt-3"><%= t('admin.finance.rejectPayment', 'Reject payment') %></button>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../../partials/admin-shell-end') %>

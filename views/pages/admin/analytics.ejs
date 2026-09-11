@@ -1,0 +1,248 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  function deltaClass(v) { return v >= 0 ? 'is-up' : 'is-down'; }
+  function deltaSign(v) { return v >= 0 ? '+' : ''; }
+  const rangeOptions = [
+    { id: '7d', label: t('admin.range.7d', 'Last 7 days') },
+    { id: '30d', label: t('admin.range.30d', 'Last 30 days') },
+    { id: '90d', label: t('admin.range.90d', 'Last 90 days') },
+    { id: '12m', label: t('admin.range.12m', 'Last 12 months') },
+    { id: 'all', label: t('admin.range.all', 'All time') },
+  ];
+  const kpiCards = [
+    { key: 'gmv', label: t('admin.kpi.gmv', 'GMV'), value: formatPrice(analytics.kpis.gmv.value) + ' ' + analytics.currency, delta: analytics.kpis.gmv.delta, hint: t('admin.analytics.kpiGmvHint', 'Gross booking value') },
+    { key: 'profit', label: t('admin.analytics.platformProfit', 'Platform profit'), value: formatPrice(analytics.kpis.platformProfit.value) + ' ' + analytics.currency, delta: analytics.kpis.platformProfit.delta, hint: t('admin.analytics.kpiProfitHint', 'Commission earned') },
+    { key: 'bookings', label: t('admin.kpi.bookings', 'Bookings'), value: analytics.kpis.bookings.value, delta: analytics.kpis.bookings.delta, hint: t('admin.analytics.kpiBookingsHint', 'In selected period') },
+    { key: 'avgOrder', label: t('admin.kpi.avgOrder', 'Avg. order'), value: formatPrice(analytics.kpis.avgOrder.value) + ' ' + analytics.currency, delta: analytics.kpis.avgOrder.delta, hint: t('admin.analytics.kpiAvgHint', 'Per confirmed booking') },
+    { key: 'conversion', label: t('admin.analytics.conversion', 'Conversion'), value: analytics.kpis.conversion.value + '%', delta: analytics.kpis.conversion.delta, hint: t('admin.analytics.kpiConversionHint', 'Confirmed vs total') },
+    { key: 'users', label: t('admin.kpi.users', 'Travelers'), value: analytics.kpis.users.value, delta: analytics.kpis.users.delta, hint: t('admin.analytics.kpiUsersHint', 'Registered accounts') },
+    { key: 'rating', label: t('admin.analytics.avgRating', 'Avg. rating'), value: analytics.kpis.avgRating.value + ' ★', delta: analytics.kpis.avgRating.delta, hint: t('admin.analytics.kpiRatingHint', 'Across all reviews') },
+    { key: 'tickets', label: t('admin.analytics.openTickets', 'Open tickets'), value: analytics.kpis.openTickets.value, delta: analytics.kpis.openTickets.delta, hint: t('admin.analytics.kpiTicketsHint', 'Needs attention') },
+  ];
+  const funnel = analytics.bookingFunnel || {};
+  const funnelTotal = funnel.total || 1;
+  const health = analytics.health || {};
+%>
+
+<section class="adm-analytics-page">
+  <header class="adm-analytics-hero">
+    <div class="adm-analytics-hero-main">
+      <h2 class="admin-title"><%= t('admin.analytics.title', 'Analytics') %></h2>
+      <p class="admin-subtitle"><%= t('admin.analytics.subtitle', 'Deep-dive platform analytics') %></p>
+      <div class="adm-analytics-range" role="tablist" aria-label="<%= t('admin.analytics.rangeLabel', 'Time range') %>">
+        <% rangeOptions.forEach(function(opt) { %>
+          <a href="/admin/analytics?range=<%= opt.id %>" class="adm-analytics-range-pill <%= range === opt.id ? 'is-active' : '' %>" role="tab" aria-selected="<%= range === opt.id %>"><%= opt.label %></a>
+        <% }) %>
+      </div>
+    </div>
+    <div class="adm-analytics-hero-actions">
+      <details class="adm-analytics-export">
+        <summary class="adm-btn adm-btn--secondary adm-analytics-export-trigger">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <%= t('admin.analytics.export', 'Export data') %>
+        </summary>
+        <div class="adm-analytics-export-menu">
+          <a href="/admin/analytics/export.csv?type=revenue&range=<%= range %>" class="adm-analytics-export-item" data-admin-export><%= t('admin.analytics.exportRevenue', 'Export revenue') %></a>
+          <a href="/admin/analytics/export.csv?type=bookings&range=<%= range %>" class="adm-analytics-export-item" data-admin-export><%= t('admin.analytics.exportBookings', 'Export bookings') %></a>
+          <a href="/admin/analytics/export.csv?type=companies&range=<%= range %>" class="adm-analytics-export-item" data-admin-export><%= t('admin.analytics.exportCompanies', 'Export companies') %></a>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <div class="adm-analytics-kpis">
+    <% kpiCards.forEach(function(card, i) { %>
+      <article class="adm-analytics-kpi adm-analytics-kpi--<%= card.key %>" style="--load-delay: <%= i * 0.04 %>s">
+        <div class="adm-analytics-kpi-top">
+          <span class="adm-analytics-kpi-label"><%= card.label %></span>
+          <% if (card.delta !== 0) { %>
+            <span class="admin-stat-delta <%= deltaClass(card.delta) %>"><%= deltaSign(card.delta) %><%= card.delta %>%</span>
+          <% } %>
+        </div>
+        <p class="adm-analytics-kpi-value"><%= card.value %></p>
+        <p class="adm-analytics-kpi-hint"><%= card.hint %></p>
+      </article>
+    <% }) %>
+  </div>
+
+  <div class="adm-analytics-health">
+    <article class="adm-analytics-health-card">
+      <span class="adm-analytics-health-label"><%= t('admin.analytics.activeCompanies', 'Active companies') %></span>
+      <strong><%= health.activeCompanies %></strong>
+      <span class="adm-analytics-health-sub"><%= health.verifiedCompanies %> <%= t('admin.analytics.verified', 'verified') %></span>
+    </article>
+    <article class="adm-analytics-health-card">
+      <span class="adm-analytics-health-label"><%= t('admin.analytics.activeTrips', 'Active trips') %></span>
+      <strong><%= health.activeTrips %></strong>
+      <span class="adm-analytics-health-sub"><%= health.pendingTrips %> <%= t('admin.analytics.pendingApproval', 'pending approval') %></span>
+    </article>
+    <article class="adm-analytics-health-card">
+      <span class="adm-analytics-health-label"><%= t('admin.analytics.reviews', 'Reviews') %></span>
+      <strong><%= health.publishedReviews %></strong>
+      <span class="adm-analytics-health-sub"><%= health.flaggedReviews %> <%= t('admin.analytics.flagged', 'flagged') %></span>
+    </article>
+    <article class="adm-analytics-health-card">
+      <span class="adm-analytics-health-label"><%= t('admin.analytics.support', 'Support') %></span>
+      <strong><%= health.openTickets %></strong>
+      <span class="adm-analytics-health-sub"><%= health.resolvedTickets %> <%= t('admin.analytics.resolved', 'resolved') %></span>
+    </article>
+  </div>
+
+  <div class="adm-analytics-charts adm-analytics-charts--primary">
+    <div class="admin-panel admin-chart-panel adm-analytics-chart-panel adm-analytics-chart-panel--wide">
+      <div class="admin-panel-head adm-analytics-chart-head">
+        <div>
+          <h3><%= t('admin.charts.revenueBookings', 'Revenue & bookings') %></h3>
+          <p class="adm-analytics-chart-sub"><%= t('admin.analytics.revenueTrend', 'Monthly performance in selected range') %></p>
+        </div>
+        <div class="adm-analytics-chart-badges">
+          <span class="adm-analytics-badge adm-analytics-badge--revenue"><%= formatPrice(chartData.revenueBookings.summary?.revenue || 0) %> <%= analytics.currency %></span>
+          <span class="adm-analytics-badge adm-analytics-badge--bookings"><%= chartData.revenueBookings.summary?.bookings || 0 %> <%= t('admin.kpi.bookings', 'bookings') %></span>
+        </div>
+      </div>
+      <div class="admin-chart-wrap adm-analytics-chart-wrap--tall"><canvas data-admin-chart="combo" data-chart-payload='<%- JSON.stringify(chartData.revenueBookings) %>'></canvas></div>
+    </div>
+    <div class="admin-panel admin-chart-panel adm-analytics-chart-panel">
+      <div class="admin-panel-head adm-analytics-chart-head">
+        <div>
+          <h3><%= t('admin.charts.bookingStatus', 'Booking status') %></h3>
+          <p class="adm-analytics-chart-sub"><%= t('admin.analytics.statusMix', 'Distribution in period') %></p>
+        </div>
+      </div>
+      <div class="adm-analytics-doughnut-wrap">
+        <div class="admin-chart-wrap admin-chart-wrap--doughnut"><canvas data-admin-chart="doughnut" data-chart-payload='<%- JSON.stringify(chartData.bookingStatus) %>'></canvas></div>
+        <div class="adm-analytics-doughnut-center">
+          <strong><%= chartData.bookingStatus.confirmed || 0 %></strong>
+          <span><%= t('admin.analytics.confirmed', 'confirmed') %></span>
+          <small><%= chartData.bookingStatus.total || 0 %> <%= t('admin.analytics.total', 'total') %></small>
+        </div>
+      </div>
+      <ul class="adm-analytics-status-legend">
+        <% (chartData.bookingStatus.labels || []).forEach(function(label, i) { %>
+          <li><span class="adm-analytics-status-dot" style="--dot-color: <%= ['#6366f1','#22d3ee','#22c55e','#f59e0b'][i] %>"></span><%= label %><strong><%= chartData.bookingStatus.data[i] %></strong></li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+
+  <div class="adm-analytics-charts adm-analytics-charts--secondary">
+    <div class="admin-panel admin-chart-panel adm-analytics-chart-panel">
+      <div class="admin-panel-head"><h3><%= t('admin.analytics.commissionTrend', 'Platform commission') %></h3></div>
+      <div class="admin-chart-wrap"><canvas data-admin-chart="line" data-chart-payload='<%- JSON.stringify(chartData.commission) %>'></canvas></div>
+    </div>
+    <div class="admin-panel admin-chart-panel adm-analytics-chart-panel">
+      <div class="admin-panel-head"><h3><%= t('admin.analytics.bookingsByCategory', 'Bookings by category') %></h3></div>
+      <div class="admin-chart-wrap"><canvas data-admin-chart="bar" data-chart-payload='<%- JSON.stringify(chartData.categories) %>'></canvas></div>
+    </div>
+    <div class="admin-panel admin-chart-panel adm-analytics-chart-panel">
+      <div class="admin-panel-head"><h3><%= t('admin.charts.tripTypes', 'Trips by type') %></h3></div>
+      <div class="admin-chart-wrap"><canvas data-admin-chart="bar" data-chart-payload='<%- JSON.stringify(chartData.tripTypes) %>'></canvas></div>
+    </div>
+    <div class="admin-panel admin-chart-panel adm-analytics-chart-panel">
+      <div class="admin-panel-head"><h3><%= t('admin.charts.topCompanies', 'Top companies by revenue') %></h3></div>
+      <div class="admin-chart-wrap"><canvas data-admin-chart="horizontalBar" data-chart-payload='<%- JSON.stringify(chartData.topCompanies) %>'></canvas></div>
+    </div>
+  </div>
+
+  <div class="adm-analytics-grid">
+    <div class="admin-panel adm-analytics-panel">
+      <div class="admin-panel-head">
+        <h3><%= t('admin.analytics.bookingFunnel', 'Booking funnel') %></h3>
+      </div>
+      <div class="adm-analytics-funnel">
+        <div class="adm-analytics-funnel-step adm-analytics-funnel-step--total" style="--step-width: 100%">
+          <span><%= t('admin.analytics.funnelTotal', 'All bookings') %></span>
+          <strong><%= funnel.total || 0 %></strong>
+        </div>
+        <div class="adm-analytics-funnel-step adm-analytics-funnel-step--confirmed" style="--step-width: <%= Math.max(12, Math.round((funnel.confirmed / funnelTotal) * 100)) %>%">
+          <span><%= t('admin.analytics.funnelConfirmed', 'Confirmed') %></span>
+          <strong><%= funnel.confirmed || 0 %></strong>
+        </div>
+        <div class="adm-analytics-funnel-step adm-analytics-funnel-step--pending" style="--step-width: <%= Math.max(12, Math.round((funnel.pending / funnelTotal) * 100)) %>%">
+          <span><%= t('admin.analytics.funnelPending', 'Pending') %></span>
+          <strong><%= funnel.pending || 0 %></strong>
+        </div>
+        <div class="adm-analytics-funnel-step adm-analytics-funnel-step--lost" style="--step-width: <%= Math.max(12, Math.round((funnel.lost / funnelTotal) * 100)) %>%">
+          <span><%= t('admin.analytics.funnelLost', 'Cancelled / refunded') %></span>
+          <strong><%= funnel.lost || 0 %></strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-panel adm-analytics-panel">
+      <div class="admin-panel-head">
+        <h3><%= t('admin.dashboard.destinations', 'Top destinations') %></h3>
+      </div>
+      <% if (!analytics.topDestinations.length) { %>
+        <p class="admin-muted"><%= t('admin.analytics.noDestinations', 'No destination data in this period.') %></p>
+      <% } else { %>
+        <ul class="adm-analytics-dest-list">
+          <% analytics.topDestinations.forEach(function(dest, i) { %>
+            <li class="adm-analytics-dest-item">
+              <div class="adm-analytics-dest-meta">
+                <span class="adm-analytics-dest-rank">#<%= i + 1 %></span>
+                <span class="adm-analytics-dest-name"><%= dest.name %></span>
+                <span class="adm-analytics-dest-count"><%= dest.count %> <%= t('admin.kpi.bookings', 'bookings') %></span>
+              </div>
+              <div class="adm-analytics-dest-track">
+                <div class="adm-analytics-dest-fill" style="width: <%= Math.round((dest.count / analytics.maxDestinationCount) * 100) %>%"></div>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="admin-panel admin-rank-panel adm-analytics-rank-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.dashboard.topCompanies', 'Top 5 companies') %></h3>
+      <a href="/admin/companies" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+    </div>
+    <%- include('../../partials/admin-rank-companies', { items: analytics.topCompanies || [] }) %>
+  </div>
+
+  <div class="admin-panel admin-rank-panel adm-analytics-rank-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.dashboard.topTrips', 'Top booked trips') %></h3>
+      <a href="/admin/trips" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+    </div>
+    <%- include('../../partials/admin-rank-trips', { items: analytics.topTrips || [] }) %>
+  </div>
+
+  <div class="admin-panel adm-analytics-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.dashboard.recentBookings', 'Recent bookings') %></h3>
+      <a href="/admin/bookings" class="admin-link"><%= t('admin.viewAll', 'View all') %></a>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table adm-analytics-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th><%= t('admin.table.customer', 'Customer') %></th>
+            <th><%= t('admin.table.trip', 'Trip') %></th>
+            <th><%= t('admin.table.company', 'Company') %></th>
+            <th><%= t('admin.table.amount', 'Amount') %></th>
+            <th><%= t('admin.table.status', 'Status') %></th>
+            <th><%= t('admin.table.created', 'Created') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% analytics.recentBookings.forEach(function(b) { %>
+            <tr>
+              <td><a href="/admin/bookings/<%= b.id %>" class="admin-link"><%= b.id %></a></td>
+              <td><%= b.customerName %></td>
+              <td><%= b.tripName %></td>
+              <td><%= b.companyName || b.companyId %></td>
+              <td><%= formatPrice(b.totalPrice) %> <%= analytics.currency %></td>
+              <td><span class="admin-status admin-status--<%= b.status.toLowerCase() %>"><%= b.status %></span></td>
+              <td class="admin-muted"><%= b.bookingDate %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<%- include('../../partials/admin-shell-end') %>

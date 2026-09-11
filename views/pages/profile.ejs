@@ -1,0 +1,45 @@
+<%- include('../partials/account-shell-start', { accountActive: 'profile' }) %>
+  <header class="account-header" data-scroll-reveal>
+    <h1 class="account-title"><%= t('profile.title', 'My Profile') %></h1>
+    <p class="account-subtitle"><%= t('profile.subtitle', 'Manage your account and quick actions') %></p>
+  </header>
+
+  <div class="account-card account-profile-hero" data-scroll-reveal style="--reveal-delay: 80ms">
+    <div class="account-profile-hero-main">
+      <span class="account-profile-avatar-wrap">
+        <img src="<%= user.avatar || '/user.png' %>" alt="" class="account-profile-avatar" id="profile-page-avatar" />
+      </span>
+      <div>
+        <h2 class="account-profile-name"><%= user.userName %></h2>
+        <p class="account-profile-line"><%= user.email %></p>
+        <% if (user.phone) { %>
+          <p class="account-profile-line"><%= user.phone %></p>
+        <% } %>
+      </div>
+    </div>
+    <div class="account-profile-actions">
+      <button type="button" data-open-dialog="#edit-profile-dialog" class="account-btn account-btn--secondary">
+        <%= t('profile.edit', 'Edit Profile') %>
+      </button>
+      <a href="/settings" class="account-btn account-btn--primary"><%= t('nav.settings', 'Settings') %></a>
+    </div>
+  </div>
+
+  <div class="account-grid account-grid--3" data-scroll-reveal style="--reveal-delay: 140ms">
+    <a href="/booking-history" class="account-stat-card">
+      <span class="account-stat-label"><%= t('profile.bookingHistory', 'Booking History') %></span>
+      <span class="account-stat-value"><%= typeof bookingCount !== 'undefined' ? bookingCount : 0 %></span>
+      <span class="account-stat-hint"><%= t('profile.viewBookings', 'View all bookings') %></span>
+    </a>
+    <a href="/saved" class="account-stat-card">
+      <span class="account-stat-label"><%= t('nav.saved', 'Saved') %></span>
+      <span class="account-stat-value"><%= typeof savedCount !== 'undefined' ? savedCount : 0 %></span>
+      <span class="account-stat-hint"><%= t('profile.viewSaved', 'Your favorite trips') %></span>
+    </a>
+    <a href="/tickets" class="account-stat-card">
+      <span class="account-stat-label"><%= t('nav.tickets', 'Support') %></span>
+      <span class="account-stat-value"><%= typeof ticketCount !== 'undefined' ? ticketCount : 0 %></span>
+      <span class="account-stat-hint"><%= t('profile.viewTickets', 'View support tickets') %></span>
+    </a>
+  </div>
+<%- include('../partials/account-shell-end') %>

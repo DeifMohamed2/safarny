@@ -1,0 +1,50 @@
+<section
+  class="hero-section relative min-h-dvh flex items-start bg-cover bg-center"
+  style="background-image: url('/assets/homePage/bg.jpg');"
+>
+  <div class="hero-overlay" aria-hidden="true"></div>
+  <div class="hero-content max-w-340 w-full px-4 relative z-10 mx-auto pt-28 pb-16 sm:pt-32">
+    <p class="hero-kicker animate-on-load" style="--load-delay: 0.05s">
+      <%= t('home.hero.kicker', 'Trusted travel deals across Egypt') %>
+    </p>
+    <h1 class="hero-title animate-on-load" style="--load-delay: 0.12s">
+      <%= t('home.hero.title', 'Find Your Next Trip with the Best Travel Deals') %>
+    </h1>
+    <p class="hero-subtitle animate-on-load" style="--load-delay: 0.22s">
+      <%= t('home.hero.subtitle', 'Search destinations, compare trusted companies, and book with confidence.') %>
+    </p>
+    <%- include('../partials/search-filters', { filterAction: '/search', filterVariant: 'hero', filters: query }) %>
+  </div>
+</section>
+
+<%- include('../partials/trips-section', {
+  title1: 'home.exclusive-Travel.title1',
+  title2: 'home.exclusive-Travel.title2',
+  title3: 'home.exclusive-Travel.title3',
+  description: 'home.exclusive-Travel.subtitle',
+  actionText: 'shared.seeMore',
+  actionLink: '/trips',
+  trips: featuredTrips
+}) %>
+
+<%- include('../partials/trips-section', {
+  title1: 'home.popular-Trips.title1',
+  title2: 'home.popular-Trips.title2',
+  title3: '',
+  description: 'home.popular-Trips.subtitle',
+  actionText: 'shared.seeMore',
+  actionLink: '/trips',
+  trips: featuredTrips
+}) %>
+
+<%- include('../partials/trips-section', {
+  title1: 'home.recommended-Umrah.title1',
+  title2: 'home.recommended-Umrah.title2',
+  title3: 'home.recommended-Umrah.title3',
+  description: 'home.recommended-Umrah.subtitle',
+  actionText: 'shared.seeMore',
+  actionLink: '/umrah',
+  trips: umrahTrips
+}) %>
+
+<%- include('../partials/quotes') %>

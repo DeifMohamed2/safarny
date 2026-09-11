@@ -1,0 +1,21 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/users" class="admin-back"><%= t('admin.back', 'Back to users') %></a>
+    <h2 class="admin-title"><%= t('admin.users.create', 'Create admin') %></h2>
+  </div>
+</div>
+<div class="admin-panel admin-panel--narrow">
+  <form method="post" action="/admin/users/new" class="admin-form">
+    <label class="admin-label"><%= t('admin.table.name', 'Name') %></label>
+    <input type="text" name="userName" required class="admin-input" />
+    <label class="admin-label"><%= t('admin.table.email', 'Email') %></label>
+    <input type="email" name="email" required class="admin-input" />
+    <label class="admin-label"><%= t('admin.table.phone', 'Phone') %></label>
+    <input type="tel" name="phone" class="admin-input" />
+    <label class="admin-label"><%= t('admin.users.password', 'Password') %></label>
+    <input type="password" name="password" required minlength="6" class="admin-input" />
+    <button type="submit" class="adm-btn adm-btn--primary mt-4"><%= t('admin.users.create', 'Create admin') %></button>
+  </form>
+</div>
+<%- include('../../partials/admin-shell-end') %>

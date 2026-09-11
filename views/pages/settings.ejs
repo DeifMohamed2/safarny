@@ -1,0 +1,49 @@
+<%- include('../partials/account-shell-start', { accountActive: 'settings' }) %>
+  <header class="account-header" data-scroll-reveal>
+    <h1 class="account-title"><%= t('settings.title', 'Settings') %></h1>
+    <p class="account-subtitle"><%= t('settings.subtitle', 'Update your photo and account security') %></p>
+  </header>
+
+  <div class="account-settings-stack">
+    <section class="account-card" data-scroll-reveal style="--reveal-delay: 80ms">
+      <h2 class="account-card-title"><%= t('settings.photoTitle', 'Profile Photo') %></h2>
+      <p class="account-card-desc"><%= t('settings.photoDesc', 'Upload a clear photo. JPG or PNG recommended.') %></p>
+      <form id="avatar-form" class="account-avatar-form">
+        <div class="account-avatar-upload">
+          <label class="account-avatar-preview" for="avatar-input">
+            <img src="<%= user.avatar || '/user.png' %>" alt="" id="avatar-preview" class="account-avatar-preview-img" />
+            <span class="account-avatar-overlay"><%= t('profile.upload', 'Upload') %></span>
+          </label>
+          <div class="account-avatar-body">
+            <input id="avatar-input" type="file" accept="image/png,image/jpeg,image/webp" class="account-avatar-input" />
+            <p class="account-avatar-hint"><%= t('settings.photoHint', 'Max recommended size 2MB. Square images work best.') %></p>
+            <p id="avatar-error" class="auth-form-error" role="alert" hidden></p>
+            <button type="submit" class="account-btn account-btn--primary"><%= t('settings.savePhoto', 'Save Photo') %></button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="account-card" data-scroll-reveal style="--reveal-delay: 140ms">
+      <h2 class="account-card-title"><%= t('settings.passwordTitle', 'Change Password') %></h2>
+      <p class="account-card-desc"><%= t('settings.passwordDesc', 'Use a strong password you do not use elsewhere.') %></p>
+      <form id="password-form" class="account-form">
+        <p id="password-error" class="auth-form-error" role="alert" hidden></p>
+        <p id="password-success" class="account-form-success" role="status" hidden></p>
+        <div class="account-field">
+          <label for="current-password" class="account-label"><%= t('settings.currentPassword', 'Current password') %></label>
+          <input id="current-password" name="currentPassword" type="password" required autocomplete="current-password" class="account-input" />
+        </div>
+        <div class="account-field">
+          <label for="new-password" class="account-label"><%= t('settings.newPassword', 'New password') %></label>
+          <input id="new-password" name="newPassword" type="password" required minlength="6" autocomplete="new-password" class="account-input" />
+        </div>
+        <div class="account-field">
+          <label for="confirm-password" class="account-label"><%= t('settings.confirmPassword', 'Confirm new password') %></label>
+          <input id="confirm-password" name="confirmPassword" type="password" required minlength="6" autocomplete="new-password" class="account-input" />
+        </div>
+        <button type="submit" class="account-btn account-btn--primary"><%= t('settings.updatePassword', 'Update Password') %></button>
+      </form>
+    </section>
+  </div>
+<%- include('../partials/account-shell-end') %>

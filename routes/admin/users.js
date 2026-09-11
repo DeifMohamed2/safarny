@@ -1,0 +1,22 @@
+const express = require('express');
+const c = require('../../controllers/admin/usersController');
+
+const router = express.Router();
+router.get('/users', c.usersRedirect);
+router.get('/travelers', c.travelers);
+router.get('/travelers/:id/edit', c.travelerEditForm);
+router.post('/travelers/:id/edit', c.travelerEdit);
+router.get('/travelers/:id', c.travelerDetail);
+router.post('/travelers/:id/suspend', c.travelerSuspend);
+router.post('/travelers/:id/reactivate', c.travelerReactivate);
+router.post('/travelers/:id/notes', c.travelerNotes);
+router.get('/admins', c.admins);
+router.get('/admins/new', c.adminCreateForm);
+router.post('/admins/new', c.adminCreate);
+router.get('/admins/:id/edit', c.adminEditForm);
+router.post('/admins/:id/edit', c.adminEdit);
+router.get('/admins/:id', c.adminDetail);
+router.get('/users/:id', c.userDetail);
+router.post('/users/:id/suspend', c.userSuspend);
+router.post('/users/:id/reactivate', c.userReactivate);
+module.exports = router;

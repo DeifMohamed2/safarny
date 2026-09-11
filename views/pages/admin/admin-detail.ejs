@@ -1,0 +1,42 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/admins" class="admin-back"><%= t('admin.admins.back', 'Back to admins') %></a>
+    <div class="adm-traveler-identity">
+      <img src="<%= admin.avatar || '/user.png' %>" alt="" class="adm-traveler-avatar adm-people-avatar--admin" width="72" height="72" />
+      <div>
+        <h2 class="admin-title"><%= admin.userName %></h2>
+        <p class="admin-subtitle"><%= admin.email %></p>
+        <div class="adm-traveler-badges">
+          <span class="admin-status admin-status--admin">admin</span>
+          <span class="admin-status admin-status--<%= admin.status || 'active' %>"><%= admin.status || 'active' %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="admin-header-actions">
+    <a href="/admin/admins/<%= admin.id %>/edit" class="adm-btn adm-btn--secondary"><%= t('admin.actions.edit', 'Edit') %></a>
+  </div>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.admins.accountDetails', 'Account details') %></h3>
+    <dl class="admin-dl">
+      <dt><%= t('admin.table.phone', 'Phone') %></dt><dd><%= admin.phone || '—' %></dd>
+      <dt><%= t('admin.table.joined', 'Joined') %></dt><dd><%= admin.createdAt || '—' %></dd>
+      <dt><%= t('admin.admins.lastLogin', 'Last login') %></dt><dd><%= admin.lastLoginAt || '—' %></dd>
+      <dt><%= t('admin.table.role', 'Role') %></dt><dd><span class="admin-status admin-status--admin">Platform admin</span></dd>
+    </dl>
+  </div>
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.admins.access', 'Platform access') %></h3>
+    <ul class="adm-admin-access-list">
+      <li><%= t('admin.admins.accessDashboard', 'Full dashboard & analytics') %></li>
+      <li><%= t('admin.admins.accessMarketplace', 'Companies, trips, bookings moderation') %></li>
+      <li><%= t('admin.admins.accessPeople', 'Travelers, admins & support') %></li>
+      <li><%= t('admin.admins.accessSystem', 'Settings & audit log') %></li>
+    </ul>
+  </div>
+</div>
+<%- include('../../partials/admin-shell-end') %>

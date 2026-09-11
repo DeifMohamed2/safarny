@@ -1,0 +1,140 @@
+<div id="signin-dialog" class="dialog-overlay auth-dialog-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="dialog-panel auth-dialog-panel">
+    <button type="button" class="auth-dialog-close" data-close-dialog="#signin-dialog" aria-label="<%= t('shared.close', 'Close') %>">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <div class="auth-dialog-brand">
+      <img src="/assets/logo.svg" alt="Safarny" class="auth-dialog-logo" />
+    </div>
+
+    <div class="auth-views">
+      <div class="auth-view is-active" data-auth-view="signin">
+        <div class="auth-dialog-head">
+          <h2 id="auth-dialog-title" class="auth-dialog-title"><%= t('shared.signIn', 'Sign In') %></h2>
+          <p class="auth-dialog-subtitle"><%= t('auth.signInSubtitle', 'Welcome back — sign in to continue your journey') %></p>
+        </div>
+        <form id="sign-in-form" action="/auth/sign-in" method="post" class="auth-form">
+          <p id="signin-error" class="auth-form-error" role="alert" hidden></p>
+          <div class="auth-field">
+            <label for="signin-email" class="auth-label"><%= t('auth.email', 'Email') %></label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 7.5 12 13l8.5-5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </span>
+              <input id="signin-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" value="ahmedali@email.com" class="auth-input" />
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="signin-password" class="auth-label"><%= t('auth.password', 'Password') %></label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </span>
+              <input id="signin-password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" value="123Qwe" class="auth-input" data-password-input />
+              <button type="button" class="auth-password-toggle" data-password-toggle aria-label="<%= t('auth.showPassword', 'Show password') %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" class="auth-eye-open"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" class="auth-eye-closed"><path d="M3 3l18 18M10.6 10.6A2.5 2.5 0 0 0 12 15a2.5 2.5 0 0 0 2.4-1.8M6.7 6.7C4.6 8.1 3 10 2 12s3.5 6 10 6c1.8 0 3.4-.4 4.8-1M17.3 17.3C19.4 15.9 21 14 22 12s-3.5-6-10-6c-1.8 0-3.4.4-4.8 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="button" data-auth-view="forgot" class="auth-link auth-link--start"><%= t('auth.forgotPassword', 'Forget Your Password ?') %></button>
+          <button type="submit" class="auth-submit">
+            <%= t('shared.signIn', 'Sign In') %>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="auth-switch">
+            <%= t('auth.haveAccount', "Don't have an account?") %>
+            <button type="button" data-auth-view="signup" class="auth-link"><%= t('auth.signUp', 'Sign Up') %></button>
+          </p>
+          <p class="auth-switch auth-switch--partner">
+            <%= t('partner.areYouCompany', 'Travel company?') %>
+            <a href="/register/company" class="auth-link"><%= t('partner.createAccount', 'Create a company account') %></a>
+          </p>
+        </form>
+      </div>
+
+      <div class="auth-view" data-auth-view="signup">
+        <div class="auth-dialog-head">
+          <h2 class="auth-dialog-title"><%= t('auth.signUp', 'Sign Up') %></h2>
+          <p class="auth-dialog-subtitle"><%= t('auth.signUpSubtitle', 'Create your account and start exploring') %></p>
+        </div>
+        <form id="sign-up-form" action="/auth/sign-up" method="post" class="auth-form">
+          <div class="auth-field"><input name="fullName" required autocomplete="name" placeholder="<%= t('auth.fullName', 'Full Name') %>" class="auth-input auth-input--solo" /></div>
+          <div class="auth-field"><input name="email" type="email" required autocomplete="email" placeholder="<%= t('auth.email', 'Email') %>" class="auth-input auth-input--solo" /></div>
+          <div class="auth-field"><input name="phone" autocomplete="tel" placeholder="<%= t('profile.phoneNumber', 'Phone Number') %>" class="auth-input auth-input--solo" /></div>
+          <div class="auth-field">
+            <div class="auth-input-wrap">
+              <input name="password" type="password" required autocomplete="new-password" placeholder="<%= t('auth.password', 'Password') %>" class="auth-input" data-password-input />
+              <button type="button" class="auth-password-toggle" data-password-toggle aria-label="<%= t('auth.showPassword', 'Show password') %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" class="auth-eye-open"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" class="auth-eye-closed"><path d="M3 3l18 18M10.6 10.6A2.5 2.5 0 0 0 12 15a2.5 2.5 0 0 0 2.4-1.8M6.7 6.7C4.6 8.1 3 10 2 12s3.5 6 10 6c1.8 0 3.4-.4 4.8-1M17.3 17.3C19.4 15.9 21 14 22 12s-3.5-6-10-6c-1.8 0-3.4.4-4.8 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <label class="auth-checkbox">
+            <input type="checkbox" required />
+            <span><%= t('auth.acceptTermsPrefix', 'By signing up, you accept our') %> <%= t('auth.termsAndConditions', 'Terms and Conditions') %></span>
+          </label>
+          <button type="submit" class="auth-submit"><%= t('auth.signUp', 'Sign Up') %></button>
+          <p class="auth-switch">
+            <%= t('auth.alreadyHaveAccount', 'Already have an account?') %>
+            <button type="button" data-auth-view="signin" class="auth-link"><%= t('shared.signIn', 'Sign In') %></button>
+          </p>
+          <p class="auth-switch auth-switch--partner">
+            <%= t('partner.areYouCompany', 'Travel company?') %>
+            <a href="/register/company" class="auth-link"><%= t('partner.createAccount', 'Create a company account') %></a>
+          </p>
+        </form>
+      </div>
+
+      <div class="auth-view" data-auth-view="forgot">
+        <div class="auth-dialog-head">
+          <h2 class="auth-dialog-title"><%= t('auth.forgotPassword', 'Forget Your Password ?') %></h2>
+          <p class="auth-dialog-subtitle"><%= t('auth.forgotPasswordSubtitle') %></p>
+        </div>
+        <form id="forgot-form" action="/auth/forgot-password" method="post" class="auth-form">
+          <div class="auth-field"><input name="email" type="email" required autocomplete="email" placeholder="<%= t('auth.email', 'Email') %>" class="auth-input auth-input--solo" /></div>
+          <button type="submit" class="auth-submit"><%= t('auth.send', 'Send') %></button>
+          <button type="button" data-auth-view="signin" class="auth-link auth-link--center"><%= t('shared.cancel', 'Cancel') %></button>
+        </form>
+      </div>
+
+      <div class="auth-view" data-auth-view="verify">
+        <div class="auth-dialog-head">
+          <h2 class="auth-dialog-title"><%= t('auth.forgotPassword') %></h2>
+          <p class="auth-dialog-subtitle"><%= t('auth.forgotPasswordVerify', 'Please check your email') %></p>
+        </div>
+        <form id="verify-form" action="/auth/verify-reset" method="post" class="auth-form">
+          <div class="auth-field"><input name="otp" required maxlength="6" inputmode="numeric" placeholder="OTP" class="auth-input auth-input--solo auth-input--otp" /></div>
+          <button type="submit" class="auth-submit"><%= t('auth.verify', 'Verify') %></button>
+        </form>
+      </div>
+
+      <div class="auth-view" data-auth-view="reset">
+        <div class="auth-dialog-head">
+          <h2 class="auth-dialog-title"><%= t('auth.resetPassword', 'Reset Password') %></h2>
+          <p class="auth-dialog-subtitle"><%= t('auth.resetPasswordSubtitle') %></p>
+        </div>
+        <form id="reset-form" action="/auth/reset-password" method="post" class="auth-form">
+          <div class="auth-field"><input name="email" type="email" required autocomplete="email" placeholder="<%= t('auth.email', 'Email') %>" class="auth-input auth-input--solo" /></div>
+          <div class="auth-field"><input name="password" type="password" required autocomplete="new-password" placeholder="<%= t('auth.newPassword', 'New Password') %>" class="auth-input auth-input--solo" /></div>
+          <button type="submit" class="auth-submit"><%= t('auth.confirm', 'Confirm') %></button>
+        </form>
+      </div>
+
+      <div class="auth-view" data-auth-view="accountExists">
+        <div class="auth-dialog-head">
+          <h2 class="auth-dialog-title"><%= t('auth.accountExists', 'Account Already Exists') %></h2>
+          <p class="auth-dialog-subtitle"><%= t('auth.accountExistsSubtitle', 'An account with this email already exists. Please sign in instead.') %></p>
+        </div>
+        <div class="auth-form auth-form--actions">
+          <button type="button" data-close-dialog="#signin-dialog" class="auth-btn-secondary"><%= t('shared.cancel', 'Cancel') %></button>
+          <button type="button" data-auth-view="signin" class="auth-submit auth-submit--inline"><%= t('shared.signIn', 'Sign In') %></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

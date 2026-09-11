@@ -1,0 +1,171 @@
+<%- include('../../partials/company-shell-start', { companyActive: 'dashboard' }) %>
+  <header class="company-header">
+    <div>
+      <h2 class="company-title"><%= t('company.dashboard.title', 'Dashboard') %></h2>
+      <p class="company-subtitle"><%= t('company.dashboard.subtitle', 'Track trips, bookings, and revenue at a glance.') %></p>
+    </div>
+    <a href="/company/trips/new" class="cp-btn cp-btn--primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <%= t('company.trips.create', 'New trip') %>
+    </a>
+  </header>
+
+  <div class="company-stats">
+    <% const cards = [
+      { key: 'trips', label: t('company.stats.trips', 'Trips'), value: stats.totalTrips, hint: stats.activeTrips + ' ' + t('company.stats.active', 'active') },
+      { key: 'bookings', label: t('company.stats.bookings', 'Bookings'), value: stats.totalBookings, hint: stats.pendingBookings + ' ' + t('company.stats.pending', 'pending') },
+      { key: 'confirmed', label: t('company.stats.confirmed', 'Confirmed'), value: stats.confirmedBookings, hint: t('company.stats.thisSeason', 'this season') },
+      { key: 'revenue', label: t('company.stats.earned', 'Earned (confirmed)'), value: formatPrice(stats.earningsBase) + ' ' + t('shared.egp', 'EGP'), hint: t('company.stats.confirmedOnly', 'confirmed only') },
+      { key: 'unsettled', label: t('company.stats.unsettled', 'Awaiting settlement'), value: formatPrice(stats.unsettledBase) + ' ' + t('shared.egp', 'EGP'), hint: t('company.stats.unsettledHint', 'confirmed, not yet paid out') },
+      { key: 'settled', label: t('company.stats.settled', 'Settled'), value: formatPrice(stats.settledBase) + ' ' + t('shared.egp', 'EGP'), hint: t('company.stats.settledHint', 'already paid out') },
+    ]; %>
+    <% const cardIcons = {
+      trips: '<rect x="4" y="6" width="16" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 6V5a4 4 0 0 1 8 0v1M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      bookings: '<path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+      confirmed: '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.2l2.4 2.4L16.2 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+      revenue: '<path d="M4 16.5 9 11l3.5 3.5L20 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h6v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+      unsettled: '<circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4l2.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      settled: '<path d="M4 12.5 9 17.5 20 6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    }; %>
+    <% cards.forEach(function(card, index) { %>
+      <article class="company-stat-card company-stat-card--<%= card.key %>" style="--load-delay: <%= 0.05 * (index + 1) %>s">
+        <span class="company-stat-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"><%- cardIcons[card.key] %></svg>
+        </span>
+        <p class="company-stat-label"><%= card.label %></p>
+        <p class="company-stat-value"><%= card.value %></p>
+        <p class="company-stat-hint"><%= card.hint %></p>
+      </article>
+    <% }) %>
+  </div>
+
+  <div class="company-grid-2">
+    <section class="company-panel company-chart-panel">
+      <div class="company-panel-head company-chart-head">
+        <div>
+          <h2><%= t('company.dashboard.bookingsByMonth', 'Bookings by month') %></h2>
+          <p class="company-chart-subtitle"><%= t('company.dashboard.lastMonths', 'Last 8 months of confirmed and pending bookings') %></p>
+        </div>
+        <div class="company-chart-meta">
+          <div class="company-chart-total">
+            <strong><%= stats.monthlyBookingsTotal %></strong>
+            <span><%= t('company.dashboard.totalInRange', 'bookings') %></span>
+          </div>
+          <% if (stats.monthlyTrend !== 0) { %>
+            <span class="company-chart-trend <%= stats.monthlyTrend > 0 ? 'is-up' : 'is-down' %>">
+              <%= stats.monthlyTrend > 0 ? '+' : '' %><%= stats.monthlyTrend %>%
+              <em><%= t('company.dashboard.vsLastMonth', 'vs last month') %></em>
+            </span>
+          <% } %>
+        </div>
+      </div>
+
+      <div
+        class="company-mchart"
+        data-company-booking-chart
+        role="img"
+        aria-label="<%= t('company.dashboard.bookingsByMonth', 'Bookings by month') %>"
+      >
+        <div class="company-mchart-axis" aria-hidden="true">
+          <% stats.monthlyBookingsTicks.slice().reverse().forEach(function(tick) { %>
+            <span><%= tick %></span>
+          <% }) %>
+        </div>
+        <div class="company-mchart-body">
+          <div class="company-mchart-grid" aria-hidden="true">
+            <% stats.monthlyBookingsTicks.forEach(function(tick) { %>
+              <span style="--line-pos: <%= (tick / stats.monthlyBookingsChartMax) * 100 %>%"></span>
+            <% }) %>
+          </div>
+          <div class="company-mchart-bars">
+            <% stats.monthlyBookings.forEach(function(item, index) { %>
+              <% const barHeight = Math.round((item.value / stats.monthlyBookingsChartMax) * 100); %>
+              <div
+                class="company-mchart-bar <%= item.value ? '' : 'is-zero' %>"
+                style="--bar-height: <%= barHeight %>%; --bar-delay: <%= 0.03 * index %>s"
+                title="<%= item.monthFull %>: <%= item.value %>"
+              >
+                <span class="company-mchart-value"><%= item.value %></span>
+                <span class="company-mchart-col" aria-hidden="true"></span>
+                <span class="company-mchart-month"><%= item.monthLabel %></span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="company-panel company-status-panel">
+      <div class="company-panel-head">
+        <div>
+          <h2><%= t('company.dashboard.bookingStatus', 'Booking status') %></h2>
+          <p class="company-chart-subtitle"><%= t('company.dashboard.bookingStatusHint', 'Distribution across all bookings') %></p>
+        </div>
+        <strong class="company-status-total"><%= stats.totalBookings %></strong>
+      </div>
+      <ul class="company-status-list company-status-list--bookings">
+        <% const bookingStatusRows = [
+          { key: 'confirmed', count: stats.bookingStatusCounts.confirmed, className: 'confirmed' },
+          { key: 'pending', count: stats.bookingStatusCounts.pending, className: 'pending' },
+          { key: 'cancelled', count: stats.bookingStatusCounts.cancelled, className: 'cancelled' },
+        ]; %>
+        <% bookingStatusRows.forEach(function(row) { %>
+          <li>
+            <span class="company-status company-status--<%= row.className %>">
+              <%= t('company.bookingStatus.' + row.key, row.key) %>
+            </span>
+            <span class="company-status-meter">
+              <span style="width: <%= Math.min(100, (row.count / Math.max(1, stats.totalBookings)) * 100) %>%"></span>
+            </span>
+            <strong><%= row.count %></strong>
+          </li>
+        <% }) %>
+      </ul>
+      <div class="company-status-legend" aria-hidden="true">
+        <% bookingStatusRows.forEach(function(row) { %>
+          <span class="company-status-legend-item company-status-legend-item--<%= row.className %>">
+            <%= Math.round((row.count / Math.max(1, stats.totalBookings)) * 100) %>%
+          </span>
+        <% }) %>
+      </div>
+    </section>
+  </div>
+
+  <section class="company-panel">
+    <div class="company-panel-head">
+      <h2><%= t('company.dashboard.recent', 'Recent bookings') %></h2>
+      <a href="/company/bookings"><%= t('shared.see_all', 'See All') %></a>
+    </div>
+    <% if (!stats.recentBookings.length) { %>
+      <p class="company-empty"><%= t('company.bookings.empty', 'No bookings yet.') %></p>
+    <% } else { %>
+      <div class="company-table-wrap">
+        <table class="company-table">
+          <thead>
+            <tr>
+              <th><%= t('company.bookings.id', 'ID') %></th>
+              <th><%= t('company.bookings.customer', 'Customer') %></th>
+              <th><%= t('company.bookings.trip', 'Trip') %></th>
+              <th><%= t('company.bookings.status', 'Status') %></th>
+              <th><%= t('company.bookings.total', 'Total') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% stats.recentBookings.forEach(function(booking) { %>
+              <tr>
+                <td><a href="/company/bookings/<%= booking.id %>"><%= booking.id %></a></td>
+                <td>
+                  <strong><%= booking.customerName %></strong>
+                  <span class="company-muted"><%= booking.customerEmail %></span>
+                </td>
+                <td><%= booking.tripName %></td>
+                <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= t('company.bookingStatus.' + booking.status.toLowerCase(), booking.status) %></span></td>
+                <td><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+<%- include('../../partials/company-shell-end') %>

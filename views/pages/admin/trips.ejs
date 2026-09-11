@@ -1,0 +1,87 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  function filterQuery(overrides) {
+    const q = Object.assign({}, filters, overrides || {});
+    return Object.keys(q).filter(function(k) { return q[k] && q[k] !== 'all'; }).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+%>
+<div class="admin-header admin-header--compact">
+  <div>
+    <h2 class="admin-title"><%= t('admin.trips.title', 'Trips') %></h2>
+    <p class="admin-subtitle"><%= t('admin.trips.subtitle', 'Moderate and manage all platform trips') %></p>
+  </div>
+  <div class="admin-header-actions">
+    <a href="/admin/trips/new" class="adm-btn adm-btn--primary">+ <%= t('admin.trips.create', 'Create trip') %></a>
+    <a href="/admin/trips/approvals" class="adm-btn adm-btn--secondary">
+      <%= t('admin.trips.approvals', 'Approvals') %>
+      <% if (pendingCount) { %><span class="adm-btn-badge"><%= pendingCount %></span><% } %>
+    </a>
+  </div>
+</div>
+
+<% if (topTrips && topTrips.length) { %>
+  <div class="admin-panel admin-rank-panel mb-4">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.trips.topBooked', 'Most booked trips') %></h3>
+    </div>
+    <%- include('../../partials/admin-rank-trips', { items: topTrips }) %>
+  </div>
+<% } %>
+
+<form method="get" class="admin-filters" data-admin-filters>
+  <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.search', 'Search...') %>" class="admin-input" />
+  <select name="companyId" class="admin-input">
+    <option value="all"><%= t('admin.filter.allCompanies', 'All companies') %></option>
+    <% companies.forEach(function(c) { %>
+      <option value="<%= c.id %>" <%= filters.companyId === c.id ? 'selected' : '' %>><%= c.title %></option>
+    <% }) %>
+  </select>
+  <select name="status" class="admin-input">
+    <option value="all"><%= t('admin.filter.allStatus', 'All status') %></option>
+    <% ['active','pending','draft','sold-out','rejected'].forEach(function(s) { %>
+      <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+    <% }) %>
+  </select>
+  <select name="sort" class="admin-input">
+    <option value="bookings" <%= filters.sort === 'bookings' ? 'selected' : '' %>><%= t('admin.sort.bookings', 'Most bookings') %></option>
+    <option value="revenue" <%= filters.sort === 'revenue' ? 'selected' : '' %>><%= t('admin.sort.revenue', 'Highest revenue') %></option>
+    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('admin.sort.newest', 'Newest') %></option>
+  </select>
+  <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
+</form>
+
+<% if (!trips.length) { %>
+  <%- include('../../partials/admin-empty', { actionHref: '/admin/trips/new', actionLabel: t('admin.trips.create', 'Create trip') }) %>
+<% } else { %>
+  <div class="admin-trip-list">
+    <% trips.forEach(function(trip) { %>
+      <article class="admin-trip-row admin-panel">
+        <div class="admin-trip-row-media">
+          <img src="<%= trip.images && trip.images[0] ? trip.images[0] : '/assets/trip/trip.jpg' %>" alt="" />
+        </div>
+        <div class="admin-trip-row-body">
+          <div class="admin-trip-row-head">
+            <div>
+              <a href="/admin/trips/<%= trip.id %>" class="admin-trip-row-title"><%= trip.title %></a>
+              <p class="admin-muted"><%= trip.companyName %> · <%= trip.destination %> · <%= trip.type %></p>
+            </div>
+            <span class="admin-status admin-status--<%= trip.status %>"><%= trip.status %></span>
+          </div>
+          <div class="admin-trip-row-metrics">
+            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.table.price', 'Price') %></span><strong><%= formatPrice(trip.price) %> EGP</strong></div>
+            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.kpi.bookings', 'Bookings') %></span><strong><%= trip.bookingCount %></strong></div>
+            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.kpi.revenue', 'Revenue') %></span><strong><%= formatPrice(trip.revenue) %> EGP</strong></div>
+            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.profit', 'Profit') %></span><strong class="admin-text-profit"><%= formatPrice(trip.platformProfit) %> EGP</strong></div>
+            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.fillRate', 'Fill rate') %></span><strong><%= trip.fillRate %>%</strong></div>
+          </div>
+        </div>
+        <div class="admin-trip-row-actions">
+          <a href="/admin/trips/<%= trip.id %>" class="adm-btn adm-btn--sm adm-btn--ghost"><%= t('admin.actions.view', 'View') %></a>
+          <a href="/admin/trips/<%= trip.id %>/edit" class="adm-btn adm-btn--sm adm-btn--secondary"><%= t('admin.actions.edit', 'Edit') %></a>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+  <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
+<% } %>
+<%- include('../../partials/admin-shell-end') %>

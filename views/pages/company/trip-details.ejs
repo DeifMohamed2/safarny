@@ -1,0 +1,94 @@
+<%- include('../../partials/company-shell-start', { companyActive: 'trips' }) %>
+  <header class="company-header" data-scroll-reveal>
+    <div>
+      <p class="company-kicker"><%= trip.destination %></p>
+      <h1 class="company-title"><%= trip.title %></h1>
+      <p class="company-subtitle"><%= trip.description %></p>
+    </div>
+    <div class="company-header-actions">
+      <a href="/company/trips/<%= trip.id %>/edit" class="cp-btn cp-btn--primary"><%= t('company.trips.edit', 'Edit') %></a>
+      <form method="post" action="/company/trips/<%= trip.id %>/delete" onsubmit="return confirm('<%= t('company.trips.deleteConfirm', 'Delete this trip?') %>');">
+        <button type="submit" class="cp-btn cp-btn--danger"><%= t('company.trips.delete', 'Delete') %></button>
+      </form>
+    </div>
+  </header>
+
+  <div class="company-detail-hero" data-scroll-reveal>
+    <img src="<%= trip.images[0] %>" alt="" />
+    <span class="company-status company-status--<%= trip.status %>"><%= t('company.tripStatus.' + trip.status, trip.status) %></span>
+  </div>
+
+  <% if (trip.images && trip.images.length > 1) { %>
+    <section class="company-panel" data-scroll-reveal>
+      <div class="company-panel-head">
+        <h2><%= t('company.trips.gallery', 'Photo gallery') %></h2>
+      </div>
+      <div class="company-detail-gallery">
+        <% trip.images.forEach(function(image) { %>
+          <img src="<%= image %>" alt="" />
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (trip.videos && trip.videos.length) { %>
+    <section class="company-panel" data-scroll-reveal>
+      <div class="company-panel-head">
+        <h2><%= t('company.trips.videos', 'Trip videos') %></h2>
+      </div>
+      <div class="company-detail-videos">
+        <% trip.videos.forEach(function(video) { %>
+          <video src="<%= video %>" controls playsinline preload="metadata"></video>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <section class="company-panel" data-scroll-reveal>
+    <ul class="company-meta-grid">
+      <li><span><%= t('company.form.price', 'Price') %></span><strong><%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></strong></li>
+      <li><span><%= t('company.trips.seats', 'Seats') %></span><strong><%= trip.availableSeats %>/<%= trip.totalSeats %></strong></li>
+      <li><span><%= t('filter.beds', 'Bed type') %></span><strong><%= bedTypeLabel(trip.beds) %></strong></li>
+      <li><span><%= t('tripDetails.duration', 'Duration') %></span><strong><%= trip.days %> / <%= trip.nights %></strong></li>
+      <li><span><%= t('company.form.start', 'Start') %></span><strong><%= trip.startDate %></strong></li>
+      <li><span><%= t('company.form.end', 'End') %></span><strong><%= trip.endDate %></strong></li>
+    </ul>
+    <% if (trip.rejectionReason) { %>
+      <p class="company-alert"><%= trip.rejectionReason %></p>
+    <% } %>
+    <p class="company-copy"><%= trip.includedServices %></p>
+    <p class="company-copy muted"><%= trip.cancellationPolicy %></p>
+  </section>
+
+  <section class="company-panel" data-scroll-reveal>
+    <div class="company-panel-head">
+      <h2><%= t('company.trips.relatedBookings', 'Bookings for this trip') %></h2>
+    </div>
+    <% if (!bookings.length) { %>
+      <p class="company-empty"><%= t('company.bookings.empty', 'No bookings yet.') %></p>
+    <% } else { %>
+      <div class="company-table-wrap">
+        <table class="company-table">
+          <thead>
+            <tr>
+              <th><%= t('company.bookings.id', 'ID') %></th>
+              <th><%= t('company.bookings.customer', 'Customer') %></th>
+              <th><%= t('company.bookings.status', 'Status') %></th>
+              <th><%= t('company.bookings.total', 'Total') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% bookings.forEach(function(booking) { %>
+              <tr>
+                <td><a href="/company/bookings/<%= booking.id %>"><%= booking.id %></a></td>
+                <td><%= booking.customerName %></td>
+                <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= booking.status %></span></td>
+                <td><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+<%- include('../../partials/company-shell-end') %>

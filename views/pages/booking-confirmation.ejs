@@ -1,0 +1,70 @@
+<section class="checkout-page checkout-confirmation-page">
+  <div class="checkout-shell max-w-220 w-full px-4 pt-28 sm:pt-32 pb-12 mx-auto">
+    <div class="checkout-confirmation-card" data-scroll-reveal>
+      <div class="checkout-confirmation-icon <%= booking.paymentStatus === 'verified' ? 'is-verified' : booking.paymentStatus === 'rejected' ? 'is-rejected' : 'is-pending' %>">
+        <% if (booking.paymentStatus === 'verified') { %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <% } else if (booking.paymentStatus === 'rejected') { %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <% } else { %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <% } %>
+      </div>
+      <h1 class="checkout-title"><%= t('checkout.confirmationTitle', 'Booking submitted') %></h1>
+      <p class="checkout-subtitle">
+        <% if (booking.paymentStatus === 'verified') { %>
+          <%= t('checkout.statusVerified', 'Your payment was verified and your booking is confirmed.') %>
+        <% } else if (booking.paymentStatus === 'rejected') { %>
+          <%= t('checkout.statusRejected', 'Your payment proof was rejected. Please upload a new proof below.') %>
+        <% } else { %>
+          <%= t('checkout.statusSubmitted', 'Payment submitted — awaiting review. We will confirm your booking once verified.') %>
+        <% } %>
+      </p>
+
+      <dl class="checkout-confirmation-meta">
+        <div><dt><%= t('checkout.bookingCode', 'Booking code') %></dt><dd><strong><%= booking.code %></strong></dd></div>
+        <div><dt><%= t('checkout.total', 'Total') %></dt><dd><%= formatPrice(booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></dd></div>
+        <div><dt><%= t('checkout.travelDate', 'Travel date') %></dt><dd><%= booking.travelDate %></dd></div>
+        <div><dt><%= t('checkout.paymentStatus', 'Payment status') %></dt><dd><span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus %>"><%= booking.paymentStatus %></span></dd></div>
+        <% if (payment && payment.methodLabel) { %>
+          <div><dt><%= t('checkout.paymentMethod', 'Payment method') %></dt><dd><%= payment.methodLabel %></dd></div>
+        <% } %>
+      </dl>
+
+      <% if (payment && payment.proof && payment.proof.url) { %>
+        <div class="checkout-proof-preview">
+          <p class="checkout-label"><%= t('checkout.proofUploaded', 'Uploaded proof') %></p>
+          <% if (payment.isImageProof) { %>
+            <a href="<%= payment.proof.url %>" target="_blank" rel="noopener"><img src="<%= payment.proof.url %>" alt="" class="checkout-proof-image" /></a>
+          <% } else { %>
+            <a href="<%= payment.proof.url %>" target="_blank" rel="noopener" class="account-btn account-btn--secondary account-btn--sm"><%= payment.proof.name || 'View PDF' %></a>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (canResubmit) { %>
+        <form method="post" action="/bookings/<%= booking.code %>/payment" enctype="multipart/form-data" class="checkout-resubmit-form">
+          <h2 class="checkout-card-title"><%= t('checkout.resubmit', 'Resubmit payment proof') %></h2>
+          <% if (payment && payment.reviewNote) { %>
+            <p class="checkout-reject-note"><%= t('checkout.rejectReason', 'Reason') %>: <%= payment.reviewNote %></p>
+          <% } %>
+          <label class="checkout-field">
+            <span class="checkout-label"><%= t('checkout.senderPhone', 'Sender phone / wallet number') %></span>
+            <input type="tel" name="senderPhone" class="checkout-input" value="<%= payment.senderPhone %>" required />
+          </label>
+          <label class="checkout-field checkout-dropzone">
+            <span class="checkout-label"><%= t('checkout.newProof', 'New payment proof') %></span>
+            <input type="file" name="proof" accept="image/jpeg,image/png,image/webp,application/pdf" required class="checkout-file-input" />
+            <span class="checkout-dropzone-ui"><%= t('checkout.proofHint', 'Upload screenshot or PDF (max 10MB)') %></span>
+          </label>
+          <button type="submit" class="trip-details-book-btn checkout-submit"><%= t('checkout.resubmitBtn', 'Resubmit proof') %></button>
+        </form>
+      <% } %>
+
+      <div class="checkout-confirmation-actions">
+        <a href="/booking-history" class="account-btn account-btn--secondary"><%= t('checkout.viewHistory', 'View booking history') %></a>
+        <a href="/trips/<%= booking.tripId %>" class="account-btn account-btn--primary"><%= t('checkout.backToTrip', 'Back to trip') %></a>
+      </div>
+    </div>
+  </div>
+</section>

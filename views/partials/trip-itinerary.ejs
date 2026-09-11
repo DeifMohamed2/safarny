@@ -1,0 +1,71 @@
+<% const groups = typeof groupItinerary === 'function' ? groupItinerary(trip) : []; %>
+<% const hasStays = groups.some(function(block) { return block.kind === 'stay'; }); %>
+<% if (groups.length) { %>
+  <% if (hasStays) { %>
+    <section class="<%= typeof variant !== 'undefined' && variant === 'sidebar' ? 'trip-itinerary-card' : 'trip-details-section trip-itinerary-board' %>" data-scroll-reveal>
+      <h2 class="<%= typeof variant !== 'undefined' && variant === 'sidebar' ? 'trip-itinerary-title' : 'trip-details-section-title' %>">
+        <% if (typeof variant !== 'undefined' && variant === 'sidebar') { %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 6v6l3.5 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/>
+          </svg>
+        <% } %>
+        <%= t('tripDetails.tripItinerary', 'Trip Itinerary') %>
+      </h2>
+      <ol class="trip-itinerary-timeline">
+        <% groups.forEach(function(block) { %>
+          <li class="trip-itinerary-block <%= block.kind === 'stay' ? 'is-stay' : 'is-activity' %>">
+            <div class="trip-itinerary-block-head">
+              <span class="trip-itinerary-days"><%= block.rangeLabel %></span>
+              <% if (block.locationLabel) { %>
+                <span class="trip-itinerary-place"><%= block.locationLabel %></span>
+              <% } %>
+            </div>
+            <% if (block.title) { %>
+              <h3 class="trip-itinerary-block-title"><%= block.title %></h3>
+            <% } %>
+            <% if (block.description) { %>
+              <p class="trip-itinerary-block-copy"><%= block.description %></p>
+            <% } %>
+            <% if (block.activities && block.activities.length) { %>
+              <ul class="trip-itinerary-activities">
+                <% block.activities.forEach(function(act) { %>
+                  <li>
+                    <span><%= act.rangeLabel %></span>
+                    <div>
+                      <strong><%= act.title %></strong>
+                      <% if (act.description) { %><p><%= act.description %></p><% } %>
+                    </div>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } %>
+          </li>
+        <% }) %>
+      </ol>
+    </section>
+  <% } else { %>
+    <section class="<%= typeof variant !== 'undefined' && variant === 'sidebar' ? 'trip-itinerary-card' : 'trip-details-section' %>" data-scroll-reveal>
+      <h2 class="<%= typeof variant !== 'undefined' && variant === 'sidebar' ? 'trip-itinerary-title' : 'trip-details-section-title' %>">
+        <% if (typeof variant !== 'undefined' && variant === 'sidebar') { %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 6v6l3.5 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/>
+          </svg>
+        <% } %>
+        <%= t('tripDetails.tripItinerary', 'Trip Itinerary') %>
+      </h2>
+      <ol class="trip-itinerary-list">
+        <% groups.forEach(function(day, index) { %>
+          <li class="trip-itinerary-item" style="--item-delay: <%= index * 70 %>ms">
+            <span class="trip-itinerary-marker"><%= day.day || (index + 1) %></span>
+            <div class="trip-itinerary-content">
+              <h3><%= day.title %></h3>
+              <% if (day.description) { %><p><%= day.description %></p><% } %>
+            </div>
+          </li>
+        <% }) %>
+      </ol>
+    </section>
+  <% } %>
+<% } %>

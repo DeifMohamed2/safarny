@@ -1,0 +1,130 @@
+<header class="site-header" data-site-header>
+  <div class="site-header-inner max-w-340 w-full px-4">
+    <a href="/" class="site-logo site-header-start shrink-0" aria-label="Safarny">
+      <img src="/assets/logo.svg" alt="Safarny" class="w-28 h-11 object-contain" />
+    </a>
+
+    <nav class="site-nav site-header-center hidden lg:flex items-center gap-1" aria-label="Primary">
+      <% navItems.forEach(function(link) { %>
+        <a
+          href="<%= link.path %>"
+          class="site-nav-link <%= isActive(link.path) ? 'is-active' : '' %>"
+        >
+          <span><%= t(link.translateKey) %></span>
+        </a>
+      <% }) %>
+    </nav>
+
+    <div class="site-header-end flex items-center gap-2.5">
+      <div class="hidden lg:block relative" data-dropdown>
+        <button type="button" data-dropdown-trigger class="site-lang-btn">
+          <span><%= isRtl ? 'العربية' : 'English' %></span>
+          <img src="<%= isRtl ? '/assets/icons/flags/Egypt.png' : '/assets/icons/flags/UnitedStates.svg' %>" alt="" class="w-4 h-4 rounded-full object-cover" />
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div data-dropdown-menu class="dropdown-menu site-dropdown <%= isRtl ? 'end-0' : 'start-0' %>">
+          <a href="/lang/en?redirect=<%= encodeURIComponent(currentPath) %>" class="<%= !isRtl ? 'is-current' : '' %>">English</a>
+          <a href="/lang/ar?redirect=<%= encodeURIComponent(currentPath) %>" class="<%= isRtl ? 'is-current' : '' %>">العربية</a>
+        </div>
+      </div>
+
+      <% if (authenticated) { %>
+        <div class="relative" data-dropdown>
+          <button type="button" data-dropdown-trigger class="site-user-btn">
+            <span class="max-w-22.5 truncate text-sm capitalize"><%= user.userName %></span>
+            <span class="site-avatar">
+              <img src="<%= user.avatar || '/user.png' %>" alt="" class="w-full h-full object-cover object-top" />
+            </span>
+          </button>
+          <div data-dropdown-menu class="dropdown-menu site-dropdown end-0">
+            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+              <a href="/admin/dashboard"><%= t('admin.nav.dashboard', 'Admin dashboard') %></a>
+              <a href="/admin/companies"><%= t('admin.nav.companies', 'Companies') %></a>
+              <a href="/admin/support"><%= t('admin.nav.support', 'Support') %></a>
+              <a href="/admin/settings"><%= t('admin.nav.settings', 'Settings') %></a>
+            <% } else if (typeof isCompany !== 'undefined' && isCompany) { %>
+              <a href="/company/dashboard"><%= t('nav.companyDashboard', 'Company dashboard') %></a>
+              <a href="/company/trips"><%= t('company.nav.trips', 'Trips') %></a>
+              <a href="/company/bookings"><%= t('company.nav.bookings', 'Bookings') %></a>
+              <a href="/company/settings"><%= t('nav.settings', 'Settings') %></a>
+            <% } else { %>
+              <a href="/profile"><%= t('nav.profile', 'Profile') %></a>
+              <a href="/saved"><%= t('nav.saved', 'Saved') %></a>
+              <a href="/tickets"><%= t('nav.tickets', 'Support') %></a>
+              <a href="/settings"><%= t('nav.settings', 'Settings') %></a>
+            <% } %>
+            <button type="button" data-open-dialog="#signout-dialog" class="site-dropdown-danger">
+              <%= t('shared.logOut', 'Log out') %>
+            </button>
+          </div>
+        </div>
+      <% } else { %>
+        <a href="/register/company" class="site-partner-link hidden sm:inline-flex"><%= t('partner.nav', 'For companies') %></a>
+        <button type="button" data-open-dialog="#signin-dialog" class="site-signin-btn">
+          <%= t('shared.signIn', 'sign in') %>
+        </button>
+      <% } %>
+
+      <button type="button" data-open-sidebar class="lg:hidden site-icon-btn" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div id="mobile-sidebar" class="mobile-sidebar lg:hidden">
+  <div class="mobile-sidebar-backdrop" data-close-sidebar></div>
+  <div class="mobile-sidebar-panel flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-black/8">
+      <a href="/"><img src="/assets/logo.svg" alt="Safarny" class="h-11 w-28" /></a>
+      <button type="button" data-close-sidebar class="site-icon-btn" aria-label="Close">✕</button>
+    </div>
+    <nav class="px-5 py-5 flex flex-col gap-1 w-full">
+      <% navItems.forEach(function(link) { %>
+        <a href="<%= link.path %>" class="mobile-nav-link <%= isActive(link.path) ? 'is-active' : '' %>">
+          <%= t(link.translateKey) %>
+        </a>
+      <% }) %>
+    </nav>
+    <div class="px-5 pb-4 flex flex-col gap-2">
+      <% if (authenticated) { %>
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+          <a href="/admin/dashboard" class="mobile-nav-link"><%= t('admin.nav.dashboard', 'Admin dashboard') %></a>
+          <a href="/admin/companies" class="mobile-nav-link"><%= t('admin.nav.companies', 'Companies') %></a>
+          <a href="/admin/support" class="mobile-nav-link"><%= t('admin.nav.support', 'Support') %></a>
+          <a href="/admin/settings" class="mobile-nav-link"><%= t('admin.nav.settings', 'Settings') %></a>
+        <% } else if (typeof isCompany !== 'undefined' && isCompany) { %>
+          <a href="/company/dashboard" class="mobile-nav-link"><%= t('nav.companyDashboard', 'Company dashboard') %></a>
+          <a href="/company/trips" class="mobile-nav-link"><%= t('company.nav.trips', 'Trips') %></a>
+          <a href="/company/bookings" class="mobile-nav-link"><%= t('company.nav.bookings', 'Bookings') %></a>
+          <a href="/company/settings" class="mobile-nav-link"><%= t('nav.settings', 'Settings') %></a>
+        <% } else { %>
+          <a href="/profile" class="mobile-nav-link"><%= t('nav.profile', 'Profile') %></a>
+          <a href="/saved" class="mobile-nav-link"><%= t('nav.saved', 'Saved') %></a>
+          <a href="/tickets" class="mobile-nav-link"><%= t('nav.tickets', 'Support') %></a>
+          <a href="/settings" class="mobile-nav-link"><%= t('nav.settings', 'Settings') %></a>
+        <% } %>
+        <button type="button" data-close-sidebar data-open-dialog="#signout-dialog" class="mobile-nav-link text-red-600">
+          <%= t('shared.logOut', 'Log out') %>
+        </button>
+      <% } else { %>
+        <a href="/register/company" class="mobile-nav-link"><%= t('partner.nav', 'For companies') %></a>
+        <button type="button" data-close-sidebar data-open-dialog="#signin-dialog" class="site-signin-btn w-full">
+          <%= t('shared.signIn', 'sign in') %>
+        </button>
+      <% } %>
+    </div>
+    <div class="mt-auto w-full flex justify-center items-center gap-3 border-t border-black/8 p-6">
+      <a href="/lang/en?redirect=<%= encodeURIComponent(currentPath) %>" class="site-lang-chip">
+        <img src="/assets/icons/flags/UnitedStates.svg" alt="" class="w-5 h-5 rounded-full" /> English
+      </a>
+      <a href="/lang/ar?redirect=<%= encodeURIComponent(currentPath) %>" class="site-lang-chip">
+        <img src="/assets/icons/flags/Egypt.png" alt="" class="w-5 h-5 rounded-full" /> العربية
+      </a>
+    </div>
+  </div>
+</div>

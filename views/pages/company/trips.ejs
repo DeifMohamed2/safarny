@@ -1,0 +1,276 @@
+<%
+  const statusOptions = ['all', 'active', 'pending', 'draft', 'sold-out', 'rejected'];
+  const filterQuery = function(overrides) {
+    const next = Object.assign({}, filters, overrides || {});
+    return Object.keys(next)
+      .filter(function(key) { return next[key] !== '' && next[key] !== null && next[key] !== undefined; })
+      .map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(next[key]); })
+      .join('&');
+  };
+%>
+<%- include('../../partials/company-shell-start', { companyActive: 'trips' }) %>
+  <header class="company-header" data-scroll-reveal>
+    <div>
+      <h1 class="company-title"><%= t('company.trips.title', 'Trips') %></h1>
+      <p class="company-subtitle"><%= t('company.trips.subtitle', 'Create, review, and publish your packages.') %></p>
+    </div>
+    <a href="/company/trips/new" class="cp-btn cp-btn--primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <%= t('company.trips.create', 'New trip') %>
+    </a>
+  </header>
+
+  <div class="company-trip-stats" data-scroll-reveal>
+    <% statusOptions.forEach(function(option) { %>
+      <a
+        href="/company/trips?<%= filterQuery({ status: option, view: view }) %>"
+        class="company-trip-stat <%= filters.status === option ? 'is-active' : '' %>"
+      >
+        <strong><%= meta.statusCounts[option] || 0 %></strong>
+        <span><%= t('company.tripStatus.' + option, option) %></span>
+      </a>
+    <% }) %>
+  </div>
+
+  <section class="company-filters company-trip-filters company-booking-filters--compact" data-company-trip-filters data-scroll-reveal>
+    <form class="company-filters-form" method="get" action="/company/trips" data-company-trip-form>
+      <input type="hidden" name="view" value="<%= view %>" data-trip-view-input />
+
+      <div class="company-booking-filter-toolbar company-trip-filter-toolbar">
+        <label class="company-search-field company-search-field--compact">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M16.5 16.5 20 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          <input
+            type="search"
+            name="q"
+            value="<%= filters.q %>"
+            placeholder="<%= t('company.trips.search', 'Search trips') %>"
+            class="company-input company-input--search"
+            data-trip-search
+          />
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.trips.filterDestination', 'Destination') %></span>
+          <select name="destination" class="company-input company-input--sm" data-trip-auto-submit>
+            <option value="all" <%= filters.destination === 'all' ? 'selected' : '' %>><%= t('company.tripStatus.all', 'All') %></option>
+            <% meta.destinations.forEach(function(destination) { %>
+              <option value="<%= destination %>" <%= filters.destination === destination ? 'selected' : '' %>><%= destination %></option>
+            <% }) %>
+          </select>
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.trips.filterType', 'Type') %></span>
+          <select name="type" class="company-input company-input--sm" data-trip-auto-submit>
+            <option value="all" <%= filters.type === 'all' ? 'selected' : '' %>><%= t('company.tripStatus.all', 'All') %></option>
+            <option value="leisure" <%= filters.type === 'leisure' ? 'selected' : '' %>><%= t('company.trips.typeLeisure', 'Leisure') %></option>
+            <option value="umrah" <%= filters.type === 'umrah' ? 'selected' : '' %>><%= t('company.trips.typeUmrah', 'Umrah') %></option>
+          </select>
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.trips.filterAvailability', 'Availability') %></span>
+          <select name="availability" class="company-input company-input--sm" data-trip-auto-submit>
+            <option value="all" <%= filters.availability === 'all' ? 'selected' : '' %>><%= t('company.tripStatus.all', 'All') %></option>
+            <option value="available" <%= filters.availability === 'available' ? 'selected' : '' %>><%= t('company.trips.availabilityAvailable', 'Available') %></option>
+            <option value="low" <%= filters.availability === 'low' ? 'selected' : '' %>><%= t('company.trips.availabilityLow', 'Low stock') %></option>
+            <option value="sold-out" <%= filters.availability === 'sold-out' ? 'selected' : '' %>><%= t('company.trips.availabilitySoldOut', 'Sold out') %></option>
+          </select>
+        </label>
+
+        <label class="company-filter-field company-filter-field--compact">
+          <span><%= t('company.trips.filterSort', 'Sort by') %></span>
+          <select name="sort" class="company-input company-input--sm" data-trip-auto-submit>
+            <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('company.trips.sortNewest', 'Newest first') %></option>
+            <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>><%= t('company.trips.sortOldest', 'Oldest first') %></option>
+            <option value="price-asc" <%= filters.sort === 'price-asc' ? 'selected' : '' %>><%= t('company.trips.sortPriceAsc', 'Price: low to high') %></option>
+            <option value="price-desc" <%= filters.sort === 'price-desc' ? 'selected' : '' %>><%= t('company.trips.sortPriceDesc', 'Price: high to low') %></option>
+            <option value="seats-desc" <%= filters.sort === 'seats-desc' ? 'selected' : '' %>><%= t('company.trips.sortSeatsDesc', 'Most seats left') %></option>
+            <option value="name" <%= filters.sort === 'name' ? 'selected' : '' %>><%= t('company.trips.sortName', 'Name A-Z') %></option>
+            <option value="date" <%= filters.sort === 'date' ? 'selected' : '' %>><%= t('company.trips.sortDate', 'Trip date') %></option>
+          </select>
+        </label>
+
+        <div class="company-filters-actions company-filters-actions--inline">
+          <button type="button" class="cp-btn cp-btn--ghost cp-btn--sm" data-trip-advanced-toggle>
+            <span
+              data-trip-advanced-label
+              data-more="<%= t('company.trips.moreFilters', 'More filters') %>"
+              data-less="<%= t('company.trips.lessFilters', 'Less filters') %>"
+            ><%= t('company.trips.moreFilters', 'More filters') %></span>
+          </button>
+          <button type="submit" class="cp-btn cp-btn--primary cp-btn--sm"><%= t('filter.search', 'Search') %></button>
+          <% if (hasActiveFilters) { %>
+            <a href="/company/trips?view=<%= view %>" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('company.trips.clearFilters', 'Clear') %></a>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="company-filters-advanced company-trip-filters-advanced" data-trip-advanced <%= hasActiveFilters && (filters.priceMin || filters.priceMax || filters.offer !== 'all' || filters.status !== 'all') ? '' : 'hidden' %>>
+        <div class="company-filters-row company-filters-row--compact">
+          <input type="hidden" name="status" value="<%= filters.status %>" data-trip-status-input />
+
+          <label class="company-filter-field company-filter-field--compact">
+            <span><%= t('company.trips.filterStatus', 'Status') %></span>
+            <select class="company-input company-input--sm" data-trip-status-select>
+              <% statusOptions.forEach(function(option) { %>
+                <option value="<%= option %>" <%= filters.status === option ? 'selected' : '' %>><%= t('company.tripStatus.' + option, option) %></option>
+              <% }) %>
+            </select>
+          </label>
+
+          <label class="company-filter-field company-filter-field--compact">
+            <span><%= t('company.trips.filterOffer', 'Offers') %></span>
+            <select name="offer" class="company-input company-input--sm" data-trip-auto-submit>
+              <option value="all" <%= filters.offer === 'all' ? 'selected' : '' %>><%= t('company.tripStatus.all', 'All') %></option>
+              <option value="yes" <%= filters.offer === 'yes' ? 'selected' : '' %>><%= t('company.trips.offerOnly', 'Offers only') %></option>
+              <option value="no" <%= filters.offer === 'no' ? 'selected' : '' %>><%= t('company.trips.noOffer', 'Without offer') %></option>
+            </select>
+          </label>
+
+          <label class="company-filter-field company-filter-field--compact">
+            <span><%= t('company.trips.filterPriceMin', 'Min price') %></span>
+            <input type="number" name="priceMin" value="<%= filters.priceMin || '' %>" min="0" step="100" class="company-input company-input--sm" placeholder="<%= formatPrice(meta.priceRange.min) %>" />
+          </label>
+
+          <label class="company-filter-field company-filter-field--compact">
+            <span><%= t('company.trips.filterPriceMax', 'Max price') %></span>
+            <input type="number" name="priceMax" value="<%= filters.priceMax || '' %>" min="0" step="100" class="company-input company-input--sm" placeholder="<%= formatPrice(meta.priceRange.max) %>" />
+          </label>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <div class="company-results-bar" data-scroll-reveal>
+    <p class="company-results-copy">
+      <%= t('company.trips.showing', 'Showing') %>
+      <strong><%= resultCount %></strong>
+      <%= t('company.trips.of', 'of') %>
+      <strong><%= meta.total %></strong>
+      <%= t('company.trips.results', 'trips') %>
+    </p>
+    <div class="company-view-toggle" role="group" aria-label="<%= t('company.trips.viewMode', 'View mode') %>">
+      <button type="button" class="company-view-btn <%= view === 'grid' ? 'is-active' : '' %>" data-trip-view="grid" aria-pressed="<%= view === 'grid' %>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="13" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="4" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="13" y="13" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </button>
+      <button type="button" class="company-view-btn <%= view === 'list' ? 'is-active' : '' %>" data-trip-view="list" aria-pressed="<%= view === 'list' %>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <% if (!items.length) { %>
+    <div class="company-empty-state" data-scroll-reveal>
+      <div class="company-empty-state-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="6" width="16" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M8 6V5a4 4 0 0 1 8 0v1M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2><%= t('company.trips.emptyTitle', 'No trips found') %></h2>
+      <p><%= t('company.trips.empty', 'No trips match this filter.') %></p>
+      <div class="company-empty-state-actions">
+        <% if (hasActiveFilters) { %>
+          <a href="/company/trips" class="cp-btn cp-btn--secondary"><%= t('company.trips.clearFilters', 'Clear all') %></a>
+        <% } %>
+        <a href="/company/trips/new" class="cp-btn cp-btn--primary"><%= t('company.trips.create', 'New trip') %></a>
+      </div>
+    </div>
+  <% } else if (view === 'list') { %>
+    <div class="company-trip-list" data-scroll-reveal>
+      <% items.forEach(function(trip, index) { %>
+        <article class="company-trip-row" style="--reveal-delay: <%= index * 35 %>ms">
+          <a href="/company/trips/<%= trip.id %>" class="company-trip-row-media">
+            <img src="<%= trip.images[0] %>" alt="" />
+            <% if (trip.offer) { %><span class="company-trip-badge company-trip-badge--offer"><%= t('company.trips.offerBadge', 'Offer') %></span><% } %>
+          </a>
+          <div class="company-trip-row-main">
+            <div class="company-trip-row-head">
+              <div>
+                <span class="company-status company-status--<%= trip.status %>"><%= t('company.tripStatus.' + trip.status, trip.status) %></span>
+                <h3><a href="/company/trips/<%= trip.id %>"><%= trip.title %></a></h3>
+              </div>
+              <strong class="company-trip-price"><%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></strong>
+            </div>
+            <p class="company-trip-row-meta">
+              <span><%= trip.destination %></span>
+              <span><%= trip.category %></span>
+              <span><%= trip.days %> <%= t('shared.days', 'Days') %> / <%= trip.nights %> <%= t('shared.nights', 'Nights') %></span>
+              <span><%= trip.startDate %></span>
+            </p>
+            <div class="company-trip-row-stats">
+              <span><%= trip.availableSeats %>/<%= trip.totalSeats %> <%= t('company.trips.seats', 'seats') %></span>
+              <span><%= trip.bookingCount %> <%= t('company.trips.bookingsCount', 'bookings') %></span>
+              <div class="company-trip-capacity">
+                <span style="width: <%= trip.fillRate %>%"></span>
+              </div>
+              <em><%= trip.fillRate %>% <%= t('company.trips.filled', 'filled') %></em>
+            </div>
+          </div>
+          <div class="company-trip-row-actions">
+            <a href="/company/trips/<%= trip.id %>" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('shared.viewDetails', 'View') %></a>
+            <a href="/company/trips/<%= trip.id %>/edit" class="cp-btn cp-btn--primary cp-btn--sm"><%= t('company.trips.edit', 'Edit') %></a>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="company-trip-grid">
+      <% items.forEach(function(trip, index) { %>
+        <article class="company-trip-card" data-scroll-reveal style="--reveal-delay: <%= index * 40 %>ms">
+          <a href="/company/trips/<%= trip.id %>" class="company-trip-media">
+            <img src="<%= trip.images[0] %>" alt="" class="company-trip-img" />
+            <div class="company-trip-media-badges">
+              <span class="company-status company-status--<%= trip.status %>"><%= t('company.tripStatus.' + trip.status, trip.status) %></span>
+              <% if (trip.offer) { %><span class="company-trip-badge company-trip-badge--offer"><%= t('company.trips.offerBadge', 'Offer') %></span><% } %>
+              <% if (trip.isLowStock && !trip.isSoldOut) { %><span class="company-trip-badge company-trip-badge--warn"><%= t('company.trips.lowStock', 'Low stock') %></span><% } %>
+            </div>
+          </a>
+          <div class="company-trip-body">
+            <div class="company-trip-top">
+              <span class="company-trip-category"><%= trip.category %></span>
+              <span class="company-trip-price"><%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></span>
+            </div>
+            <h3><a href="/company/trips/<%= trip.id %>"><%= trip.title %></a></h3>
+            <p class="company-trip-location">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z" stroke="currentColor" stroke-width="1.6"/>
+                <circle cx="12" cy="11" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+              <%= trip.destination %>
+            </p>
+            <div class="company-trip-meta-line">
+              <span><%= trip.days %>d / <%= trip.nights %>n</span>
+              <span><%= trip.startDate %></span>
+              <span class="company-trip-type"><%= trip.type === 'umrah' ? t('company.trips.typeUmrah', 'Umrah') : t('company.trips.typeLeisure', 'Leisure') %></span>
+            </div>
+            <div class="company-trip-capacity-wrap">
+              <div class="company-trip-capacity-head">
+                <span><%= trip.availableSeats %>/<%= trip.totalSeats %> <%= t('company.trips.seats', 'seats') %></span>
+                <span><%= trip.bookingCount %> <%= t('company.trips.bookingsCount', 'bookings') %></span>
+              </div>
+              <div class="company-trip-capacity">
+                <span style="width: <%= trip.fillRate %>%"></span>
+              </div>
+            </div>
+            <div class="company-trip-actions">
+              <a href="/company/trips/<%= trip.id %>" class="cp-btn cp-btn--ghost"><%= t('shared.viewDetails', 'View') %></a>
+              <a href="/company/trips/<%= trip.id %>/edit" class="cp-btn cp-btn--primary cp-btn--sm"><%= t('company.trips.edit', 'Edit') %></a>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+<%- include('../../partials/company-shell-end') %>

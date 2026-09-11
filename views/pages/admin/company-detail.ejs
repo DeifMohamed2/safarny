@@ -1,0 +1,116 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/companies" class="admin-back"><%= t('admin.back', 'Back to companies') %></a>
+    <h2 class="admin-title"><%= company.title %></h2>
+    <p class="admin-subtitle"><%= company.location %> · ★ <%= company.rating %> · <%= company.markupType === 'fixed' ? (formatPrice(company.markupFixed || 0) + ' EGP ' + t('admin.companies.markupFixedLabel', 'fixed markup')) : ((company.commissionRate || 0) + '% ' + t('admin.companies.markupPercentLabel', 'markup')) %></p>
+  </div>
+  <div class="admin-header-actions">
+    <a href="/admin/companies/<%= company.id %>/edit" class="adm-btn adm-btn--secondary"><%= t('admin.actions.edit', 'Edit') %></a>
+    <% if (company.verification !== 'verified') { %>
+      <form method="post" action="/admin/companies/<%= company.id %>/verify"><button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.verify', 'Verify') %></button></form>
+    <% } %>
+    <% if (company.status === 'active') { %>
+      <button type="button" class="adm-btn adm-btn--danger" data-admin-confirm data-action="/admin/companies/<%= company.id %>/suspend" data-message="<%= t('admin.companies.suspendConfirm', 'Suspend this company?') %>"><%= t('admin.actions.suspend', 'Suspend') %></button>
+    <% } else { %>
+      <form method="post" action="/admin/companies/<%= company.id %>/reactivate"><button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.reactivate', 'Reactivate') %></button></form>
+    <% } %>
+  </div>
+</div>
+
+<div class="admin-stats admin-stats--compact">
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.kpi.trips', 'Trips') %></p><p class="admin-stat-value"><%= company.tripCount %> <span class="admin-muted-sm">(<%= company.activeTrips %> <%= t('admin.status.active', 'active') %>)</span></p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.kpi.bookings', 'Bookings') %></p><p class="admin-stat-value"><%= company.bookingCount %></p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.kpi.revenue', 'Revenue') %></p><p class="admin-stat-value"><%= formatPrice(company.revenue) %> EGP</p></div>
+  <div class="admin-stat-card"><p class="admin-stat-label"><%= t('admin.profit', 'Platform profit') %></p><p class="admin-stat-value admin-stat-value--profit"><%= formatPrice(company.platformProfit) %> EGP</p></div>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.companies.profile', 'Company profile') %></h3>
+    </div>
+    <img src="<%= company.image %>" alt="" class="admin-company-detail-img" />
+    <p class="admin-muted mt-3"><%= company.description %></p>
+    <form method="post" action="/admin/companies/<%= company.id %>/commission" class="admin-form-inline admin-markup-form mt-4">
+      <label><%= t('admin.companies.markupType', 'Platform markup') %></label>
+      <select name="markupType" class="admin-input admin-input--sm">
+        <option value="percent" <%= company.markupType !== 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupPercent', 'Percent') %></option>
+        <option value="fixed" <%= company.markupType === 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupFixed', 'Fixed per person') %></option>
+      </select>
+      <label><%= t('admin.kpi.commission', 'Commission') %> (%)</label>
+      <input type="number" name="commissionRate" value="<%= company.commissionRate %>" class="admin-input admin-input--sm" min="0" max="100" step="0.1" />
+      <label><%= t('admin.companies.markupFixed', 'Fixed per person') %></label>
+      <input type="number" name="markupFixed" value="<%= company.markupFixed || 0 %>" class="admin-input admin-input--sm" min="0" step="1" />
+      <button type="submit" class="adm-btn adm-btn--sm adm-btn--primary"><%= t('admin.actions.save', 'Save') %></button>
+    </form>
+    <p class="admin-muted-sm mt-2"><%= t('admin.companies.markupHint', 'Folded into the traveler price. Companies never see this split.') %></p>
+
+    <div class="admin-docs">
+      <h4 class="admin-docs-title"><%= t('admin.companies.verificationDocs', 'Verification documents') %></h4>
+      <% const docs = company.verificationDocs || {}; %>
+      <% if (!docs.commercialRegister && !docs.taxCard) { %>
+        <p class="admin-muted"><%= t('admin.companies.missingDocs', 'No verification documents uploaded yet.') %></p>
+      <% } else { %>
+        <div class="admin-docs-grid">
+          <% ['commercialRegister', 'taxCard'].forEach(function(key) { %>
+            <% const doc = docs[key]; %>
+            <article class="admin-doc-card">
+              <p class="admin-doc-label"><%= key === 'commercialRegister' ? t('admin.companies.commercialRegister', 'Commercial register (سجل تجاري)') : t('admin.companies.taxCard', 'Tax card (بطاقة ضريبية)') %></p>
+              <% if (!doc || !doc.url) { %>
+                <p class="admin-muted"><%= t('admin.companies.missingDocs', 'No verification documents uploaded yet.') %></p>
+              <% } else if (doc.mime && String(doc.mime).indexOf('image/') === 0) { %>
+                <a href="<%= doc.url %>" target="_blank" rel="noopener">
+                  <img src="<%= doc.url %>" alt="<%= doc.name || key %>" class="admin-doc-preview" />
+                </a>
+                <a href="<%= doc.url %>" target="_blank" rel="noopener" class="admin-link admin-link--sm"><%= t('admin.companies.viewDocument', 'View document') %></a>
+              <% } else { %>
+                <a href="<%= doc.url %>" target="_blank" rel="noopener" class="adm-btn adm-btn--secondary adm-btn--sm"><%= doc.name || t('admin.companies.viewDocument', 'View document') %></a>
+              <% } %>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  <div class="admin-panel">
+    <div class="admin-panel-head">
+      <h3><%= t('admin.kpi.trips', 'Trips') %></h3>
+      <a href="/admin/trips/new?companyId=<%= company.id %>" class="admin-link">+ <%= t('admin.trips.create', 'Create trip') %></a>
+    </div>
+    <% if (!trips.length) { %><p class="admin-muted"><%= t('admin.trips.noTrips', 'No trips yet.') %></p><% } else { %>
+      <div class="admin-mini-list">
+        <% trips.slice(0, 6).forEach(function(trip) { %>
+          <a href="/admin/trips/<%= trip.id %>" class="admin-mini-item">
+            <span><%= trip.title %></span>
+            <span class="admin-status admin-status--<%= trip.status %> admin-status--sm"><%= trip.status %></span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<div class="admin-panel mt-4">
+  <div class="admin-panel-head">
+    <h3><%= t('admin.companies.allBookings', 'All bookings') %></h3>
+    <span class="admin-muted"><%= bookings.length %> <%= t('admin.total', 'total') %></span>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table admin-table--compact">
+      <thead><tr><th>ID</th><th><%= t('admin.table.customer', 'Customer') %></th><th><%= t('admin.table.trip', 'Trip') %></th><th><%= t('admin.table.amount', 'Amount') %></th><th><%= t('admin.table.status', 'Status') %></th></tr></thead>
+      <tbody>
+        <% bookings.forEach(function(b) { %>
+          <tr>
+            <td><a href="/admin/bookings/<%= b.id %>" class="admin-link"><%= b.id %></a></td>
+            <td><%= b.customerName %><br/><span class="admin-muted-sm"><%= b.customerEmail %></span></td>
+            <td><%= b.tripName %></td>
+            <td><%= formatPrice(b.totalPrice) %> EGP</td>
+            <td><span class="admin-status admin-status--<%= b.status.toLowerCase() %> admin-status--sm"><%= b.status %></span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../../partials/admin-shell-end') %>

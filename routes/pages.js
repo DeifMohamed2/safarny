@@ -1,0 +1,43 @@
+const express = require('express');
+const pages = require('../controllers/pagesController');
+const { requireTravelerAuth } = require('../middleware/auth');
+
+const router = express.Router();
+
+router.get('/lang/:code', pages.setLang);
+router.post('/favorites/:id', pages.toggleFavorite);
+router.get('/', pages.home);
+router.get('/api/suggest', pages.suggest);
+router.get('/api/search-preview', pages.searchPreview);
+router.get('/search', pages.search);
+router.get('/trips', pages.trips);
+router.get('/trips/offers', pages.offers);
+router.get('/trips/:id/checkout', requireTravelerAuth, pages.checkoutForm);
+router.post('/trips/:id/checkout', requireTravelerAuth, pages.submitCheckout);
+router.get('/trips/:id', pages.tripDetails);
+router.post('/trips/:id/book', pages.bookTrip);
+router.get('/umrah', pages.umrah);
+router.get('/companies', (req, res) => res.redirect(301, '/trips'));
+router.get('/companies/search', (req, res) => res.redirect(301, '/trips'));
+router.get('/companies/:id', (req, res) => res.redirect(301, '/trips'));
+router.get('/profile', requireTravelerAuth, pages.profile);
+router.get('/saved', requireTravelerAuth, pages.saved);
+router.get('/settings', requireTravelerAuth, pages.settingsPage);
+router.get('/booking-history', requireTravelerAuth, pages.bookingHistory);
+router.get('/bookings/:code', requireTravelerAuth, pages.bookingConfirmation);
+router.post('/bookings/:code/payment', requireTravelerAuth, pages.resubmitPayment);
+router.get('/contact-us', requireTravelerAuth, pages.contactUs);
+router.post('/contact-us', requireTravelerAuth, pages.submitContact);
+router.get('/tickets', requireTravelerAuth, pages.ticketsPage);
+router.post('/tickets/:id/reply', requireTravelerAuth, pages.replyTicket);
+router.post('/tickets/new', requireTravelerAuth, pages.newTicket);
+router.get('/chat', requireTravelerAuth, pages.chatRedirect);
+router.post('/chat/:id', requireTravelerAuth, pages.chatReply);
+router.post('/newsletter', pages.newsletter);
+router.get('/register/company', pages.companyRegister);
+router.get('/privacy', pages.renderLegal('Privacy Policy'));
+router.get('/terms', pages.renderLegal('Terms of Use'));
+router.get('/legal', pages.renderLegal('Legal'));
+router.get('/sitemap', pages.renderLegal('Site Map'));
+
+module.exports = router;

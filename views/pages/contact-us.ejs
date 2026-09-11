@@ -1,0 +1,32 @@
+<%- include('../partials/account-shell-start', { accountActive: 'contact' }) %>
+  <header class="account-header" data-scroll-reveal>
+    <h1 class="account-title"><%= t('profile.contactUs', 'Contact Us') %></h1>
+    <p class="account-subtitle"><%= t('contactUs.subtitle', "We're here to assist you with any questions.") %></p>
+  </header>
+
+  <div class="account-card account-card--wide" data-scroll-reveal style="--reveal-delay: 80ms">
+    <form id="contact-form" action="/contact-us" method="post" class="account-form account-form--grid">
+      <div class="account-field">
+        <label for="contact-name" class="account-label"><%= t('contactUs.fullName', 'Full Name') %></label>
+        <input id="contact-name" name="fullName" required minlength="2" value="<%= user.userName %>" class="account-input" />
+      </div>
+      <div class="account-field">
+        <label for="contact-email" class="account-label"><%= t('contactUs.email', 'Email') %></label>
+        <input id="contact-email" name="email" type="email" required value="<%= user.email %>" class="account-input" />
+      </div>
+      <div class="account-field">
+        <label for="contact-phone" class="account-label"><%= t('contactUs.phoneNumber', 'Phone Number') %></label>
+        <input id="contact-phone" name="phone" required value="<%= user.phone || '' %>" placeholder="<%= t('contactUs.phoneNumberPlaceholder') %>" class="account-input" />
+      </div>
+      <div class="account-field account-field--full">
+        <label for="contact-message" class="account-label"><%= t('contactUs.message', 'Message') %></label>
+        <textarea id="contact-message" name="message" required minlength="10" rows="5" placeholder="<%= t('contactUs.messagePlaceholder') %>" class="account-input account-input--textarea"></textarea>
+      </div>
+      <div class="account-field account-field--full">
+        <button type="submit" class="account-btn account-btn--primary account-btn--wide">
+          <%= t('contactUs.submit', 'Leave Us A Message') %>
+        </button>
+      </div>
+    </form>
+  </div>
+<%- include('../partials/account-shell-end') %>

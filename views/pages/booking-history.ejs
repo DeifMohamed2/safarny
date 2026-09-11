@@ -1,0 +1,40 @@
+<%- include('../partials/account-shell-start', { accountActive: 'bookings' }) %>
+  <header class="account-header" data-scroll-reveal>
+    <h1 class="account-title"><%= t('profile.bookingHistory', 'Booking History') %></h1>
+    <p class="account-subtitle"><%= t('bookingHistory.subtitle', 'Track your past and upcoming trips') %></p>
+  </header>
+
+  <% if (items.length) { %>
+    <div class="account-booking-stats" data-scroll-reveal style="--reveal-delay: 60ms">
+      <div class="account-booking-stat">
+        <span class="account-booking-stat-value"><%= items.length %></span>
+        <span class="account-booking-stat-label"><%= t('bookingHistory.totalBookings', 'Total bookings') %></span>
+      </div>
+      <div class="account-booking-stat">
+        <span class="account-booking-stat-value"><%= items.filter((b) => b.status === 'confirmed').length %></span>
+        <span class="account-booking-stat-label"><%= t('bookingHistory.statusConfirmed', 'Confirmed') %></span>
+      </div>
+      <div class="account-booking-stat">
+        <span class="account-booking-stat-value"><%= items.filter((b) => b.status === 'pending').length %></span>
+        <span class="account-booking-stat-label"><%= t('bookingHistory.statusPending', 'Pending') %></span>
+      </div>
+    </div>
+
+    <div class="account-booking-list">
+      <% items.forEach(function(booking, index) { %>
+        <div data-scroll-reveal style="--reveal-delay: <%= (index % 4) * 70 %>ms">
+          <%- include('../partials/booking-card', { booking: booking }) %>
+        </div>
+      <% }) %>
+    </div>
+    <div class="account-pagination">
+      <%- include('../partials/pagination') %>
+    </div>
+  <% } else { %>
+    <div class="account-empty" data-scroll-reveal>
+      <p class="account-empty-title"><%= t('bookingHistory.emptyTitle', 'No bookings yet') %></p>
+      <p class="account-empty-text"><%= t('bookingHistory.emptyText', 'When you book a trip, it will appear here.') %></p>
+      <a href="/trips" class="account-btn account-btn--primary"><%= t('saved.browseTrips', 'Browse trips') %></a>
+    </div>
+  <% } %>
+<%- include('../partials/account-shell-end') %>

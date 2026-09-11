@@ -1,0 +1,107 @@
+<%- include('../../partials/admin-shell-start') %>
+<% const editing = typeof isEdit !== 'undefined' && isEdit; %>
+<div class="admin-header admin-header--compact">
+  <div>
+    <a href="/admin/companies" class="admin-back"><%= t('admin.back', 'Back to companies') %></a>
+    <h2 class="admin-title"><%= editing ? t('admin.companies.edit', 'Edit company') : t('admin.companies.create', 'Create company') %></h2>
+    <p class="admin-subtitle"><%= t('admin.companies.createDesc', 'Register a new travel company on the platform') %></p>
+  </div>
+</div>
+
+<form method="post" action="<%= editing ? '/admin/companies/' + company.id + '/edit' : '/admin/companies/new' %>" class="admin-form-layout">
+  <div class="admin-form-layout-grid<%= editing ? ' admin-form-layout-grid--single' : '' %>">
+    <div class="admin-form-section">
+      <div class="admin-form-section-head">
+        <h3 class="admin-form-section-title"><%= t('admin.companies.profile', 'Company profile') %></h3>
+        <p class="admin-form-section-desc"><%= t('admin.companies.profileDesc', 'Basic information shown on the public company page') %></p>
+      </div>
+      <div class="admin-form-fields">
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="company-title"><%= t('admin.table.name', 'Name') %> <span class="admin-required">*</span></label>
+          <input id="company-title" type="text" name="title" required class="admin-input" value="<%= company ? company.title : '' %>" placeholder="<%= t('admin.companies.namePlaceholder', 'e.g. Red Sea Adventures') %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-location"><%= t('admin.table.destination', 'Location') %> <span class="admin-required">*</span></label>
+          <input id="company-location" type="text" name="location" required class="admin-input" value="<%= company ? company.location : '' %>" placeholder="<%= t('admin.companies.locationPlaceholder', 'e.g. Hurghada') %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-phone"><%= t('admin.table.phone', 'Phone') %></label>
+          <input id="company-phone" type="tel" name="contactNumber" class="admin-input" value="<%= company ? company.contactNumber : '' %>" placeholder="+20 100 000 0000" />
+        </div>
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="company-description"><%= t('admin.companies.about', 'Description') %></label>
+          <textarea id="company-description" name="description" class="admin-textarea" rows="4" placeholder="<%= t('admin.companies.aboutPlaceholder', 'Describe the company, specialties, and services...') %>"><%= company ? company.description : '' %></textarea>
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-years"><%= t('admin.companies.years', 'Years in business') %></label>
+          <input id="company-years" type="number" name="years" min="0" class="admin-input" value="<%= company ? company.years : 1 %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-rating"><%= t('admin.companies.rating', 'Rating') %></label>
+          <input id="company-rating" type="number" name="rating" min="1" max="5" step="0.1" class="admin-input" value="<%= company ? company.rating : 4.5 %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-markup-type"><%= t('admin.companies.markupType', 'Platform markup') %></label>
+          <select id="company-markup-type" name="markupType" class="admin-input">
+            <option value="percent" <%= !company || company.markupType !== 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupPercent', 'Percent') %></option>
+            <option value="fixed" <%= company && company.markupType === 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupFixed', 'Fixed per person') %></option>
+          </select>
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-commission"><%= t('admin.kpi.commission', 'Commission') %> (%)</label>
+          <input id="company-commission" type="number" name="commissionRate" min="0" max="100" step="0.1" class="admin-input" value="<%= company ? company.commissionRate : 12 %>" />
+          <span class="admin-field-hint"><%= t('admin.companies.markupHint', 'Folded into the traveler price. Companies never see this split.') %></span>
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-markup-fixed"><%= t('admin.companies.markupFixed', 'Fixed per person') %></label>
+          <input id="company-markup-fixed" type="number" name="markupFixed" min="0" step="1" class="admin-input" value="<%= company ? (company.markupFixed || 0) : 0 %>" />
+        </div>
+        <div class="admin-form-field">
+          <label class="admin-label" for="company-badges"><%= t('admin.companies.badges', 'Badges') %></label>
+          <input id="company-badges" type="text" name="badges" class="admin-input" value="<%= company && company.badges ? company.badges.join(', ') : '' %>" placeholder="Diving, Beach Resorts" />
+          <span class="admin-field-hint"><%= t('admin.companies.badgesHint', 'Comma separated') %></span>
+        </div>
+        <div class="admin-form-field admin-form-field--span-2">
+          <label class="admin-label" for="company-image"><%= t('admin.companies.logoUrl', 'Logo URL') %></label>
+          <input id="company-image" type="text" name="image" class="admin-input" value="<%= company ? company.image : '/assets/companies/company.png' %>" placeholder="/assets/companies/company.png" />
+        </div>
+      </div>
+    </div>
+
+    <% if (!editing) { %>
+      <div class="admin-form-section admin-form-section--aside">
+        <div class="admin-form-section-head">
+          <h3 class="admin-form-section-title"><%= t('admin.companies.loginAccount', 'Company login account') %></h3>
+          <p class="admin-form-section-desc"><%= t('admin.companies.loginDesc', 'Optional portal access for the company team') %></p>
+        </div>
+        <label class="admin-checkbox admin-checkbox--card">
+          <input type="checkbox" name="createLogin" value="on" checked />
+          <span><%= t('admin.companies.createLogin', 'Create company portal login') %></span>
+        </label>
+        <div class="admin-form-fields admin-form-fields--stack" data-login-fields>
+          <div class="admin-form-field">
+            <label class="admin-label" for="company-contact"><%= t('admin.companies.contactName', 'Contact name') %></label>
+            <input id="company-contact" type="text" name="userName" class="admin-input" />
+          </div>
+          <div class="admin-form-field">
+            <label class="admin-label" for="company-email"><%= t('admin.table.email', 'Email') %> <span class="admin-required">*</span></label>
+            <input id="company-email" type="email" name="email" class="admin-input" placeholder="company@example.com" />
+          </div>
+          <div class="admin-form-field">
+            <label class="admin-label" for="company-password"><%= t('admin.users.password', 'Password') %> <span class="admin-required">*</span></label>
+            <input id="company-password" type="password" name="password" minlength="6" class="admin-input" placeholder="Min. 6 characters" />
+          </div>
+        </div>
+        <input type="hidden" name="phone" value="" />
+      </div>
+    <% } %>
+  </div>
+
+  <div class="admin-form-actions">
+    <a href="/admin/companies" class="adm-btn adm-btn--ghost"><%= t('admin.actions.cancel', 'Cancel') %></a>
+    <button type="submit" class="adm-btn adm-btn--primary">
+      <%= editing ? t('admin.actions.save', 'Save changes') : t('admin.companies.create', 'Create company') %>
+    </button>
+  </div>
+</form>
+<%- include('../../partials/admin-shell-end') %>

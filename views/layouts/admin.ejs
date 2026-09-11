@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= dir %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        var stored = localStorage.getItem('safarny-admin-theme');
+        var theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
+        document.documentElement.setAttribute('data-adm-theme', theme);
+      })();
+    </script>
+    <title><%= typeof title !== 'undefined' && title ? title + ' | Safarny Admin' : 'Safarny Admin' %></title>
+    <meta name="description" content="Safarny admin portal — platform control center." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: "Inter", "Poppins", sans-serif;
+        --font-arabic: "Cairo", sans-serif;
+        --color-primary: #6366f1;
+        --color-navy: #0f172a;
+        --color-accent: #22d3ee;
+      }
+    </style>
+  </head>
+  <body class="admin-app antialiased">
+    <div id="adm-toast-stack" class="adm-toast-stack" aria-live="polite" aria-atomic="true"></div>
+    <% if (flash) { %>
+      <script type="application/json" id="adm-flash-payload"><%- JSON.stringify(flash) %></script>
+    <% } %>
+    <%- body %>
+    <%- include('../partials/admin-dialogs') %>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/trip-form.js"></script>
+    <script src="/js/admin.js"></script>
+    <%- typeof scripts !== 'undefined' ? scripts : '' %>
+  </body>
+</html>

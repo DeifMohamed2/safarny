@@ -1,0 +1,37 @@
+<section class="relative min-h-dvh max-w-340 w-full px-4 pt-32.5 mb-12 sm:mb-18 lg:mb-25 mx-auto">
+  <div class="w-full flex flex-col gap-2">
+    <h1 class="font-semibold text-2xl sm:text-3xl lg:text-4xl capitalize text-[#122445]"><%= t('trips.title', 'Trips') %></h1>
+    <p class="font-normal text-sm sm:text-base lg:text-xl capitalize text-[#122445]"><%= t('trips.subtitle', 'Browse available trips and choose your next destination.') %></p>
+  </div>
+
+  <%- include('../partials/search-filters', { filterAction: '/trips', filterVariant: 'list', filters: filters }) %>
+
+  <div class="page-results w-full flex flex-col gap-7 mt-8">
+    <h2 class="text-base sm:text-xl lg:text-2xl font-semibold capitalize">
+      <span class="text-orange-500"><%= total %> <%= total === 1 ? t('filter.tripSingular', 'trip') : t('filter.tripsFound', 'trips') %></span>
+      <% if (typeof hasActiveFilters !== 'undefined' && hasActiveFilters) { %>
+        <span class="text-sky-950"> <%= t('filter.thatMatch', 'that match your search') %></span>
+      <% } %>
+    </h2>
+    <% if (!items.length) { %>
+      <%- include('../partials/empty-results', { clearUrl: clearUrl }) %>
+    <% } else { %>
+      <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7 gap-y-6.5">
+        <% items.forEach(function(trip) { %>
+          <%- include('../partials/trip-card', { trip: trip, cardClass: 'w-full' }) %>
+        <% }) %>
+      </div>
+      <%- include('../partials/pagination') %>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/trips-section', {
+  title1: '',
+  title2: 'trips.offers',
+  title3: '',
+  description: 'trips.offerDescription',
+  actionText: 'shared.seeMore',
+  actionLink: '/trips/offers',
+  trips: offerTrips
+}) %>

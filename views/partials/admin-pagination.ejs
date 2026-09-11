@@ -1,0 +1,15 @@
+<% if (pagination && pagination.total > 0) { %>
+  <nav class="admin-pagination" aria-label="<%= t('admin.pagination', 'Pagination') %>">
+    <% if (pagination.hasPrev) { %>
+      <a href="?<%= typeof filterQuery === 'function' ? filterQuery({ page: pagination.page - 1 }) : 'page=' + (pagination.page - 1) %>" class="admin-pagination-btn"><%= t('admin.prev', 'Previous') %></a>
+    <% } else { %>
+      <span class="admin-pagination-btn is-disabled"><%= t('admin.prev', 'Previous') %></span>
+    <% } %>
+    <span class="admin-pagination-info"><%= pagination.start %>–<%= pagination.end %> <%= t('admin.of', 'of') %> <%= pagination.total %></span>
+    <% if (pagination.hasNext) { %>
+      <a href="?<%= typeof filterQuery === 'function' ? filterQuery({ page: pagination.page + 1 }) : 'page=' + (pagination.page + 1) %>" class="admin-pagination-btn"><%= t('admin.next', 'Next') %></a>
+    <% } else { %>
+      <span class="admin-pagination-btn is-disabled"><%= t('admin.next', 'Next') %></span>
+    <% } %>
+  </nav>
+<% } %>

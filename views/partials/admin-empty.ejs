@@ -1,0 +1,10 @@
+<div class="admin-empty-state">
+  <div class="admin-empty-icon" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </div>
+  <h2 class="admin-empty-title"><%= title || t('admin.empty.title', 'Nothing here yet') %></h2>
+  <p class="admin-empty-text"><%= message || t('admin.empty.message', 'No records match your current filters.') %></p>
+  <% if (typeof actionHref !== 'undefined' && actionHref) { %>
+    <a href="<%= actionHref %>" class="adm-btn adm-btn--primary"><%= actionLabel || t('admin.empty.action', 'Clear filters') %></a>
+  <% } %>
+</div>

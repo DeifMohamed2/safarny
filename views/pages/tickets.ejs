@@ -1,0 +1,187 @@
+<%
+  const openCount = tickets.filter((t) => t.status === 'open').length;
+  const isDetail = view === 'detail' && activeTicket;
+%>
+<%- include('../partials/account-shell-start', { accountActive: 'tickets' }) %>
+  <% if (!isDetail) { %>
+    <header class="account-header account-header--compact account-header--row account-tickets-page-head" data-scroll-reveal>
+      <div>
+        <h1 class="account-title"><%= t('tickets.title', 'Support Tickets') %></h1>
+        <p class="account-subtitle"><%= t('tickets.subtitle', 'Get help from our support team') %></p>
+      </div>
+      <button type="button" data-open-dialog="#new-ticket-dialog" class="account-btn account-btn--primary account-btn--compact">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <%= t('tickets.newTicket', 'New Ticket') %>
+      </button>
+    </header>
+  <% } %>
+
+  <div class="account-tickets <%= isDetail ? 'is-detail' : 'is-list' %>" data-active-ticket="<%= activeId || '' %>" data-tickets-root>
+    <% if (!isDetail) { %>
+    <aside class="account-tickets-list">
+      <div class="account-tickets-list-toolbar">
+        <label class="account-tickets-search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" placeholder="<%= t('tickets.search', 'Search tickets') %>" class="account-tickets-search-input" data-ticket-search />
+        </label>
+        <div class="account-tickets-filter-pills" role="tablist" aria-label="<%= t('tickets.filterStatus', 'Filter by status') %>">
+          <button type="button" class="account-tickets-filter-pill is-active" data-ticket-filter-btn="all" role="tab" aria-selected="true">
+            <%= t('tickets.filterAllShort', 'All') %> <span class="account-tickets-filter-count"><%= tickets.length %></span>
+          </button>
+          <button type="button" class="account-tickets-filter-pill" data-ticket-filter-btn="open" role="tab" aria-selected="false">
+            <%= t('tickets.statusOpen', 'Open') %> <span class="account-tickets-filter-count"><%= openCount %></span>
+          </button>
+          <button type="button" class="account-tickets-filter-pill" data-ticket-filter-btn="pending" role="tab" aria-selected="false">
+            <%= t('tickets.statusPending', 'Pending') %> <span class="account-tickets-filter-count"><%= tickets.filter((t) => t.status === 'pending').length %></span>
+          </button>
+          <button type="button" class="account-tickets-filter-pill" data-ticket-filter-btn="resolved" role="tab" aria-selected="false">
+            <%= t('tickets.statusResolved', 'Resolved') %> <span class="account-tickets-filter-count"><%= countByStatus('resolved') %></span>
+          </button>
+        </div>
+        <button type="button" data-open-dialog="#new-ticket-dialog" class="account-btn account-btn--primary account-btn--compact account-tickets-new-inline">
+          <%= t('tickets.newTicket', 'New Ticket') %>
+        </button>
+      </div>
+      <div class="account-tickets-items" role="list">
+        <% tickets.forEach(function(ticket) { %>
+          <a
+            href="/tickets?ticket=<%= ticket.id %>"
+            class="account-tickets-chat <%= ticket.unread ? 'has-unread' : '' %>"
+            data-ticket-id="<%= ticket.id %>"
+            data-ticket-status="<%= ticket.status %>"
+            data-ticket-search="<%= (ticket.ticketNo + ' ' + ticket.subject + ' ' + (ticket.lastReply || '')).toLowerCase() %>"
+            role="listitem"
+          >
+            <span class="account-tickets-chat-avatar" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="account-tickets-chat-status ticket-status-dot ticket-status-dot--<%= ticket.status %>"></span>
+            </span>
+            <span class="account-tickets-chat-body">
+              <span class="account-tickets-chat-head">
+                <span class="account-tickets-chat-title"><%= ticket.subject %></span>
+                <span class="account-tickets-chat-aside">
+                  <time class="account-tickets-chat-time"><%= ticket.updatedAt %></time>
+                  <% if (ticket.unread) { %>
+                    <span class="account-tickets-unread" aria-label="<%= t('tickets.unread', 'Unread messages') %>"><%= ticket.unread %></span>
+                  <% } %>
+                </span>
+              </span>
+              <span class="account-tickets-chat-preview">
+                <% if (ticket.lastFrom === 'user') { %><span class="account-tickets-you"><%= t('tickets.you', 'You') %>:</span> <% } %>
+                <%= ticket.lastReply %>
+              </span>
+              <span class="account-tickets-chat-meta">
+                <span class="account-tickets-meta-chip account-tickets-no"><%= ticket.ticketNo %></span>
+                <span class="account-tickets-meta-chip account-tickets-category"><%= ticket.category %></span>
+                <span class="ticket-status ticket-status--<%= ticket.status %>"><%= ticket.status %></span>
+              </span>
+            </span>
+            <svg class="account-tickets-chat-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        <% }) %>
+      </div>
+    </aside>
+    <% } %>
+
+    <% if (isDetail) { %>
+      <div class="account-tickets-panel">
+        <div class="account-tickets-panel-head">
+          <a href="/tickets" class="account-tickets-back" data-ticket-back>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <%= t('tickets.back', 'Back to tickets') %>
+          </a>
+          <div class="account-tickets-panel-head-main">
+            <div class="account-tickets-panel-head-row">
+              <span class="account-tickets-no"><%= activeTicket.ticketNo %></span>
+              <span class="ticket-status ticket-status--<%= activeTicket.status %>"><%= activeTicket.status %></span>
+            </div>
+            <h2 class="account-tickets-panel-subject"><%= activeTicket.subject %></h2>
+            <p class="account-tickets-panel-meta"><%= activeTicket.category %> · <%= activeTicket.updatedAt %></p>
+          </div>
+        </div>
+
+        <div id="ticket-thread" class="account-tickets-thread" data-ticket-thread>
+          <% threadItems.forEach(function(item) { %>
+            <% if (item.type === 'date') { %>
+              <div class="account-tickets-date"><span><%= item.label %></span></div>
+            <% } else { %>
+              <div class="account-tickets-reply <%= item.from === 'user' ? 'is-user' : 'is-admin' %>">
+                <div class="account-tickets-reply-bubble">
+                  <% if (item.from === 'admin') { %>
+                    <span class="account-tickets-reply-label"><%= t('tickets.supportAgent', 'Support') %></span>
+                  <% } %>
+                  <% if (item.text) { %><p><%= item.text %></p><% } %>
+                  <%- include('../partials/support-message-attachments', { attachments: item.attachments }) %>
+                  <time><%= item.time %></time>
+                </div>
+              </div>
+            <% } %>
+          <% }) %>
+        </div>
+
+        <% if (activeTicket.status !== 'closed') { %>
+          <form id="ticket-reply-form" action="/tickets/<%= activeId %>/reply" method="post" class="account-tickets-compose" enctype="multipart/form-data">
+            <div class="account-tickets-compose-inner">
+              <textarea id="ticket-reply-input" name="text" rows="1" placeholder="<%= t('tickets.replyPlaceholder', 'Write your reply...') %>" class="account-input account-input--textarea account-input--reply"></textarea>
+              <label class="account-tickets-attach" title="<%= t('tickets.attachFiles', 'Attach files') %>">
+                <input type="file" name="attachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" hidden data-support-file-input />
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </label>
+              <button type="submit" class="account-tickets-send" aria-label="<%= t('tickets.sendReply', 'Send reply') %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+            <div class="support-attach-preview account-tickets-attach-preview" data-support-file-preview hidden></div>
+            <p class="account-tickets-compose-hint"><%= t('tickets.attachHint', 'Images, PDF, Word, Excel, ZIP — up to 5 files, 10 MB each') %></p>
+          </form>
+        <% } else { %>
+          <div class="account-tickets-closed-notice">
+            <%= t('tickets.closedNotice', 'This ticket is closed. Open a new ticket if you need further assistance.') %>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+
+  <div id="new-ticket-dialog" class="dialog-overlay auth-dialog-overlay">
+    <div class="dialog-panel auth-dialog-panel account-dialog-panel account-dialog-panel--wide">
+      <button type="button" class="auth-dialog-close" data-close-dialog="#new-ticket-dialog" aria-label="<%= t('shared.close', 'Close') %>">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="auth-dialog-head">
+        <h2 class="auth-dialog-title"><%= t('tickets.newTicket', 'New Ticket') %></h2>
+        <p class="auth-dialog-subtitle"><%= t('tickets.newTicketDesc', 'Describe your issue and our team will get back to you') %></p>
+      </div>
+      <form id="new-ticket-form" action="/tickets/new" method="post" class="account-form">
+        <div class="account-field">
+          <label for="ticket-subject" class="account-label"><%= t('tickets.subject', 'Subject') %></label>
+          <input id="ticket-subject" name="subject" required minlength="5" class="account-input" placeholder="<%= t('tickets.subjectPlaceholder', 'Brief summary of your issue') %>" />
+        </div>
+        <div class="account-field">
+          <label for="ticket-category" class="account-label"><%= t('tickets.category', 'Category') %></label>
+          <select id="ticket-category" name="category" class="account-input account-input--select" required>
+            <option value="General"><%= t('tickets.catGeneral', 'General') %></option>
+            <option value="Booking"><%= t('tickets.catBooking', 'Booking') %></option>
+            <option value="Payment"><%= t('tickets.catPayment', 'Payment') %></option>
+            <option value="Refund"><%= t('tickets.catRefund', 'Refund') %></option>
+            <option value="Technical"><%= t('tickets.catTechnical', 'Technical') %></option>
+          </select>
+        </div>
+        <div class="account-field">
+          <label for="ticket-message" class="account-label"><%= t('tickets.message', 'Message') %></label>
+          <textarea id="ticket-message" name="message" required minlength="10" rows="4" class="account-input account-input--textarea" placeholder="<%= t('tickets.messagePlaceholder', 'Provide details so we can help you faster') %>"></textarea>
+        </div>
+        <div class="account-form-actions">
+          <button type="button" data-close-dialog="#new-ticket-dialog" class="account-btn account-btn--secondary account-btn--flex"><%= t('shared.cancel', 'Cancel') %></button>
+          <button type="submit" class="account-btn account-btn--primary account-btn--flex"><%= t('tickets.submitTicket', 'Submit Ticket') %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+<%- include('../partials/account-shell-end') %>

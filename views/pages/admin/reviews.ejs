@@ -1,0 +1,196 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  function filterQuery(overrides) {
+    const q = Object.assign({}, filters, overrides || {});
+    return Object.keys(q).filter(function(k) { return q[k] && q[k] !== 'all'; }).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+  function reviewDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  const statusTabs = [
+    { key: 'all', label: t('admin.filter.allStatus', 'All status'), count: stats.total },
+    { key: 'published', label: t('admin.reviews.statusPublished', 'Published'), count: stats.published },
+    { key: 'flagged', label: t('admin.reviews.statusFlagged', 'Flagged'), count: stats.flagged },
+    { key: 'hidden', label: t('admin.reviews.statusHidden', 'Hidden'), count: stats.hidden },
+  ];
+  const maxRatingCount = Math.max.apply(null, [1, 2, 3, 4, 5].map(function(s) { return stats.byRating[s] || 0; }), 1);
+%>
+<div class="admin-header admin-header--compact adm-reviews-header">
+  <div>
+    <h2 class="admin-title"><%= t('admin.reviews.title', 'Reviews') %></h2>
+    <p class="admin-subtitle"><%= t('admin.reviews.subtitle', 'Moderate traveler feedback across all companies') %></p>
+  </div>
+</div>
+
+<div class="adm-reviews-kpis">
+  <article class="adm-reviews-kpi">
+    <span class="adm-reviews-kpi-icon adm-reviews-kpi-icon--total" aria-hidden="true">★</span>
+    <div>
+      <p class="adm-reviews-kpi-label"><%= t('admin.reviews.total', 'Total reviews') %></p>
+      <p class="adm-reviews-kpi-value"><%= stats.total %></p>
+    </div>
+  </article>
+  <article class="adm-reviews-kpi">
+    <span class="adm-reviews-kpi-icon adm-reviews-kpi-icon--avg" aria-hidden="true">☆</span>
+    <div>
+      <p class="adm-reviews-kpi-label"><%= t('admin.reviews.avgRating', 'Avg. rating') %></p>
+      <p class="adm-reviews-kpi-value"><%= stats.avgRating %><span class="adm-reviews-kpi-suffix">/5</span></p>
+    </div>
+  </article>
+  <article class="adm-reviews-kpi adm-reviews-kpi--warn">
+    <span class="adm-reviews-kpi-icon adm-reviews-kpi-icon--flagged" aria-hidden="true">!</span>
+    <div>
+      <p class="adm-reviews-kpi-label"><%= t('admin.reviews.needsReview', 'Needs review') %></p>
+      <p class="adm-reviews-kpi-value"><%= stats.flagged %></p>
+    </div>
+  </article>
+  <article class="adm-reviews-kpi adm-reviews-kpi--muted">
+    <span class="adm-reviews-kpi-icon adm-reviews-kpi-icon--hidden" aria-hidden="true">⊘</span>
+    <div>
+      <p class="adm-reviews-kpi-label"><%= t('admin.reviews.statusHidden', 'Hidden') %></p>
+      <p class="adm-reviews-kpi-value"><%= stats.hidden %></p>
+    </div>
+  </article>
+</div>
+
+<div class="adm-reviews-layout">
+  <aside class="admin-panel adm-reviews-sidebar">
+    <div class="adm-reviews-sidebar-block">
+      <h3 class="adm-reviews-sidebar-title"><%= t('admin.reviews.ratingBreakdown', 'Rating breakdown') %></h3>
+      <ul class="adm-reviews-rating-bars">
+        <% [5, 4, 3, 2, 1].forEach(function(star) {
+          const count = stats.byRating[star] || 0;
+          const pct = Math.round((count / maxRatingCount) * 100);
+          const isActive = filters.rating === String(star);
+        %>
+          <li class="adm-reviews-rating-row <%= isActive ? 'is-active' : '' %>">
+            <a href="/admin/reviews?<%= filterQuery({ rating: String(star), page: null }) %>" class="adm-reviews-rating-link">
+              <span class="adm-reviews-rating-label"><%= star %> ★</span>
+              <span class="adm-reviews-rating-track"><span class="adm-reviews-rating-fill" style="width: <%= pct %>%"></span></span>
+              <span class="adm-reviews-rating-count"><%= count %></span>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+      <% if (filters.rating !== 'all') { %>
+        <a href="/admin/reviews?<%= filterQuery({ rating: 'all', page: null }) %>" class="adm-reviews-clear-link"><%= t('admin.reviews.clearRating', 'Clear rating filter') %></a>
+      <% } %>
+    </div>
+    <div class="adm-reviews-sidebar-block">
+      <h3 class="adm-reviews-sidebar-title"><%= t('admin.reviews.quickFilters', 'Quick filters') %></h3>
+      <nav class="adm-reviews-status-tabs" aria-label="<%= t('admin.reviews.filterByStatus', 'Filter by status') %>">
+        <% statusTabs.forEach(function(tab) {
+          const isActive = filters.status === tab.key;
+          const href = tab.key === 'all' ? '/admin/reviews' + (filterQuery({ status: 'all', page: null }) ? '?' + filterQuery({ status: 'all', page: null }) : '') : '/admin/reviews?' + filterQuery({ status: tab.key, page: null });
+        %>
+          <a href="<%= href %>" class="adm-reviews-status-tab <%= isActive ? 'is-active' : '' %>">
+            <span><%= tab.label %></span>
+            <span class="adm-reviews-status-count"><%= tab.count %></span>
+          </a>
+        <% }) %>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="adm-reviews-main">
+    <form method="get" class="adm-reviews-filters" data-admin-filters>
+      <% if (filters.status && filters.status !== 'all') { %><input type="hidden" name="status" value="<%= filters.status %>" /><% } %>
+      <% if (filters.rating && filters.rating !== 'all') { %><input type="hidden" name="rating" value="<%= filters.rating %>" /><% } %>
+      <div class="adm-reviews-search-wrap">
+        <span class="adm-reviews-search-icon" aria-hidden="true">⌕</span>
+        <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.reviews.searchPlaceholder', 'Search reviews, travelers, trips...') %>" class="admin-input adm-reviews-search" />
+      </div>
+      <select name="companyId" class="admin-input adm-reviews-select">
+        <option value="all"><%= t('admin.filter.allCompanies', 'All companies') %></option>
+        <% companies.forEach(function(c) { %>
+          <option value="<%= c.id %>" <%= filters.companyId === c.id ? 'selected' : '' %>><%= c.title %></option>
+        <% }) %>
+      </select>
+      <select name="rating" class="admin-input adm-reviews-select">
+        <option value="all"><%= t('admin.reviews.allRatings', 'All ratings') %></option>
+        <% [5, 4, 3, 2, 1].forEach(function(star) { %>
+          <option value="<%= star %>" <%= filters.rating === String(star) ? 'selected' : '' %>><%= star %> <%= t('admin.reviews.stars', 'stars') %></option>
+        <% }) %>
+      </select>
+      <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
+      <% if (hasActiveFilters) { %>
+        <a href="/admin/reviews" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.filter.clear', 'Clear') %></a>
+      <% } %>
+    </form>
+
+    <p class="adm-reviews-results-meta">
+      <%= pagination.total %> <%= t('admin.reviews.results', 'results') %>
+      <% if (filters.status !== 'all') { %> · <%= filters.status %><% } %>
+      <% if (filters.rating !== 'all') { %> · <%= filters.rating %>★<% } %>
+    </p>
+
+    <% if (!reviews.length) { %>
+      <%- include('../../partials/admin-empty') %>
+    <% } else { %>
+      <div class="adm-reviews-grid">
+        <% reviews.forEach(function(review) { %>
+          <article class="adm-review-card adm-review-card--<%= review.status %>">
+            <header class="adm-review-card-top">
+              <span class="admin-status admin-status--<%= review.status %>"><%= review.status %></span>
+              <time class="adm-review-date" datetime="<%= review.createdAt %>"><%= reviewDate(review.createdAt) %></time>
+            </header>
+
+            <div class="adm-review-author">
+              <img src="<%= review.avatar %>" alt="" class="adm-review-avatar" width="44" height="44" />
+              <div class="adm-review-author-body">
+                <p class="adm-review-name"><%= review.name %></p>
+                <div class="adm-review-stars" aria-label="<%= review.rating %> <%= t('admin.reviews.stars', 'stars') %>">
+                  <% for (var s = 1; s <= 5; s++) { %>
+                    <span class="adm-review-star <%= s <= review.rating ? 'is-filled' : '' %>">★</span>
+                  <% } %>
+                  <span class="adm-review-rating-num"><%= review.rating %>.0</span>
+                </div>
+              </div>
+            </div>
+
+            <blockquote class="adm-review-quote"><%= review.message %></blockquote>
+
+            <div class="adm-review-trip">
+              <% if (review.company) { %>
+                <img src="<%= review.company.image || '/assets/companies/company.png' %>" alt="" class="adm-review-company-logo" width="28" height="28" />
+                <div class="adm-review-trip-meta">
+                  <a href="/admin/companies/<%= review.company.id %>" class="adm-review-company"><%= review.company.title %></a>
+                  <% if (review.tripTitle) { %>
+                    <span class="adm-review-trip-title"><%= review.tripTitle %></span>
+                  <% } %>
+                </div>
+              <% } %>
+            </div>
+
+            <footer class="adm-review-actions">
+              <% if (review.status !== 'published') { %>
+                <form method="post" action="/admin/reviews/<%= review.id %>/publish" class="adm-review-action-form">
+                  <button type="submit" class="adm-review-action adm-review-action--publish" title="<%= t('admin.actions.publish', 'Publish') %>">
+                    <span aria-hidden="true">✓</span>
+                    <%= t('admin.actions.publish', 'Publish') %>
+                  </button>
+                </form>
+              <% } %>
+              <% if (review.status !== 'hidden') { %>
+                <form method="post" action="/admin/reviews/<%= review.id %>/hide" class="adm-review-action-form">
+                  <button type="submit" class="adm-review-action adm-review-action--hide" title="<%= t('admin.actions.hide', 'Hide') %>">
+                    <span aria-hidden="true">⊘</span>
+                    <%= t('admin.actions.hide', 'Hide') %>
+                  </button>
+                </form>
+              <% } %>
+              <button type="button" class="adm-review-action adm-review-action--delete" data-admin-confirm data-action="/admin/reviews/<%= review.id %>/delete" data-message="<%= t('admin.reviews.deleteConfirm', 'Delete this review?') %>" title="<%= t('admin.actions.delete', 'Delete') %>">
+                <span aria-hidden="true">×</span>
+                <%= t('admin.actions.delete', 'Delete') %>
+              </button>
+            </footer>
+          </article>
+        <% }) %>
+      </div>
+      <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
+    <% } %>
+  </div>
+</div>
+<%- include('../../partials/admin-shell-end') %>

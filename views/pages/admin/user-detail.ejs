@@ -1,0 +1,41 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/users" class="admin-back"><%= t('admin.back', 'Back to users') %></a>
+    <h2 class="admin-title"><%= profile.userName %></h2>
+    <p class="admin-subtitle"><%= profile.email %> · <span class="admin-status admin-status--<%= profile.role %>"><%= profile.role %></span></p>
+  </div>
+  <div class="admin-header-actions">
+    <% if (profile.status === 'suspended') { %>
+      <form method="post" action="/admin/users/<%= profile.id %>/reactivate"><button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.reactivate', 'Reactivate') %></button></form>
+    <% } else if (profile.role !== 'admin') { %>
+      <button type="button" class="adm-btn adm-btn--danger" data-admin-confirm data-action="/admin/users/<%= profile.id %>/suspend" data-message="<%= t('admin.users.suspendConfirm', 'Suspend this user?') %>"><%= t('admin.actions.suspend', 'Suspend') %></button>
+    <% } %>
+  </div>
+</div>
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.users.profile', 'User profile') %></h3>
+    <dl class="admin-dl">
+      <dt><%= t('admin.table.phone', 'Phone') %></dt><dd><%= profile.phone || '—' %></dd>
+      <dt><%= t('admin.table.joined', 'Joined') %></dt><dd><%= profile.createdAt || '—' %></dd>
+    </dl>
+    <form method="post" action="/admin/users/<%= profile.id %>/role" class="admin-form mt-4">
+      <label class="admin-label"><%= t('admin.table.role', 'Role') %></label>
+      <select name="role" class="admin-input">
+        <option value="traveler" <%= profile.role === 'traveler' ? 'selected' : '' %>><%= t('admin.role.traveler', 'Traveler') %></option>
+        <option value="company" <%= profile.role === 'company' ? 'selected' : '' %>><%= t('admin.role.company', 'Company') %></option>
+        <option value="admin" <%= profile.role === 'admin' ? 'selected' : '' %>><%= t('admin.role.admin', 'Admin') %></option>
+      </select>
+      <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm mt-2"><%= t('admin.actions.save', 'Save') %></button>
+    </form>
+  </div>
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.users.bookings', 'Bookings') %></h3>
+    <% if (!bookings.length) { %><p class="admin-muted"><%= t('admin.users.noBookings', 'No bookings found.') %></p><% } else { %>
+      <table class="admin-table"><thead><tr><th>ID</th><th><%= t('admin.table.trip', 'Trip') %></th><th><%= t('admin.table.status', 'Status') %></th></tr></thead>
+      <tbody><% bookings.forEach(function(b) { %><tr><td><a href="/admin/bookings/<%= b.id %>" class="admin-link"><%= b.id %></a></td><td><%= b.tripName %></td><td><%= b.status %></td></tr><% }) %></tbody></table>
+    <% } %>
+  </div>
+</div>
+<%- include('../../partials/admin-shell-end') %>

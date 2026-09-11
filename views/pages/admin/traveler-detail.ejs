@@ -1,0 +1,178 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  const traveler = detail.user;
+  const stats = detail.stats;
+  const profile = detail.profile;
+%>
+<div class="admin-header adm-traveler-header">
+  <div class="adm-traveler-header-main">
+    <a href="/admin/travelers" class="admin-back"><%= t('admin.travelers.back', 'Back to travelers') %></a>
+    <div class="adm-traveler-identity">
+      <img src="<%= traveler.avatar || '/user.png' %>" alt="" class="adm-traveler-avatar" width="72" height="72" />
+      <div>
+        <h2 class="admin-title"><%= traveler.userName %></h2>
+        <p class="admin-subtitle"><%= traveler.email %> · <%= traveler.phone || '—' %></p>
+        <div class="adm-traveler-badges">
+          <span class="admin-status admin-status--<%= traveler.status || 'active' %>"><%= traveler.status || 'active' %></span>
+          <% if (traveler.city) { %><span class="adm-traveler-chip"><%= traveler.city %>, <%= traveler.country || 'Egypt' %></span><% } %>
+          <span class="adm-traveler-chip"><%= t('admin.travelers.joined', 'Joined') %> <%= traveler.createdAt %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="admin-header-actions">
+    <a href="/admin/travelers/<%= traveler.id %>/edit" class="adm-btn adm-btn--secondary"><%= t('admin.actions.edit', 'Edit') %></a>
+    <% if (traveler.status === 'suspended') { %>
+      <form method="post" action="/admin/travelers/<%= traveler.id %>/reactivate"><button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.reactivate', 'Reactivate') %></button></form>
+    <% } else { %>
+      <button type="button" class="adm-btn adm-btn--danger" data-admin-confirm data-action="/admin/travelers/<%= traveler.id %>/suspend" data-message="<%= t('admin.travelers.suspendConfirm', 'Suspend this traveler?') %>"><%= t('admin.actions.suspend', 'Suspend') %></button>
+    <% } %>
+  </div>
+</div>
+
+<div class="adm-traveler-kpis">
+  <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.kpi.bookings', 'Bookings') %></p><p class="adm-traveler-kpi-value"><%= stats.bookings %></p><span class="adm-traveler-kpi-sub"><%= stats.confirmed %> <%= t('admin.travelers.confirmed', 'confirmed') %></span></article>
+  <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.travelers.totalSpent', 'Total spent') %></p><p class="adm-traveler-kpi-value"><%= formatPrice(stats.totalSpent) %></p><span class="adm-traveler-kpi-sub">EGP</span></article>
+  <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.travelers.favorites', 'Favorites') %></p><p class="adm-traveler-kpi-value"><%= stats.favorites %></p><span class="adm-traveler-kpi-sub"><%= t('admin.travelers.savedTrips', 'saved trips') %></span></article>
+  <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.support.title', 'Support') %></p><p class="adm-traveler-kpi-value"><%= stats.tickets %></p><span class="adm-traveler-kpi-sub"><%= t('admin.travelers.tickets', 'tickets') %></span></article>
+  <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.reviews.title', 'Reviews') %></p><p class="adm-traveler-kpi-value"><%= stats.reviews %></p><span class="adm-traveler-kpi-sub"><%= t('admin.travelers.written', 'written') %></span></article>
+</div>
+
+<div class="adm-traveler-layout">
+  <div class="adm-traveler-main">
+    <section class="admin-panel adm-traveler-section">
+      <div class="admin-panel-head"><h3><%= t('admin.travelers.bookingHistory', 'Booking history') %></h3></div>
+      <% if (!detail.bookings.length) { %>
+        <p class="admin-muted"><%= t('admin.travelers.noBookings', 'No bookings yet.') %></p>
+      <% } else { %>
+        <div class="admin-table-wrap">
+          <table class="admin-table admin-table--compact">
+            <thead><tr><th>ID</th><th><%= t('admin.table.trip', 'Trip') %></th><th><%= t('admin.table.company', 'Company') %></th><th><%= t('admin.table.dates', 'Dates') %></th><th><%= t('admin.table.amount', 'Amount') %></th><th><%= t('admin.table.status', 'Status') %></th></tr></thead>
+            <tbody>
+              <% detail.bookings.forEach(function(b) { %>
+                <tr>
+                  <td><a href="/admin/bookings/<%= b.id %>" class="admin-link"><%= b.id %></a></td>
+                  <td><%= b.tripName %></td>
+                  <td><%= b.company ? b.company.title : '—' %></td>
+                  <td class="admin-muted-sm"><%= b.bookingDate %> → <%= b.tripDate %></td>
+                  <td><%= formatPrice(b.totalPrice) %> EGP</td>
+                  <td><span class="admin-status admin-status--<%= String(b.status).toLowerCase() %>"><%= b.status %></span></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </section>
+
+    <section class="admin-panel adm-traveler-section">
+      <div class="admin-panel-head"><h3><%= t('admin.travelers.favoriteTrips', 'Favorite trips') %></h3></div>
+      <% if (!detail.favorites.length) { %>
+        <p class="admin-muted"><%= t('admin.travelers.noFavorites', 'No favorite trips saved.') %></p>
+      <% } else { %>
+        <div class="adm-traveler-fav-grid">
+          <% detail.favorites.forEach(function(trip) { %>
+            <article class="adm-traveler-fav-card">
+              <img src="<%= trip.image %>" alt="" class="adm-traveler-fav-img" />
+              <div class="adm-traveler-fav-body">
+                <p class="adm-traveler-fav-title"><%= trip.title %></p>
+                <p class="admin-muted-sm"><%= trip.destination %></p>
+                <p class="adm-traveler-fav-price"><%= formatPrice(trip.price) %> EGP</p>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+
+    <div class="admin-grid-2">
+      <section class="admin-panel adm-traveler-section">
+        <div class="admin-panel-head"><h3><%= t('admin.travelers.supportTickets', 'Support tickets') %></h3></div>
+        <% if (!detail.tickets.length) { %>
+          <p class="admin-muted"><%= t('admin.travelers.noTickets', 'No support tickets.') %></p>
+        <% } else { %>
+          <ul class="adm-traveler-ticket-list">
+            <% detail.tickets.forEach(function(ticket) { %>
+              <li>
+                <a href="/admin/support/<%= encodeURIComponent(ticket.globalId || ticket.id) %>" class="adm-traveler-ticket-item">
+                  <span class="adm-traveler-ticket-no"><%= ticket.ticketNo %></span>
+                  <span class="adm-traveler-ticket-subject"><%= ticket.subject %></span>
+                  <span class="admin-status admin-status--<%= ticket.status %>"><%= ticket.status %></span>
+                </a>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </section>
+
+      <section class="admin-panel adm-traveler-section">
+        <div class="admin-panel-head"><h3><%= t('admin.travelers.reviewsWritten', 'Reviews written') %></h3></div>
+        <% if (!detail.reviews.length) { %>
+          <p class="admin-muted"><%= t('admin.travelers.noReviews', 'No reviews written.') %></p>
+        <% } else { %>
+          <ul class="adm-traveler-review-list">
+            <% detail.reviews.forEach(function(review) { %>
+              <li class="adm-traveler-review-item">
+                <div class="adm-traveler-review-head">
+                  <span class="adm-traveler-review-stars"><% for (var s = 1; s <= 5; s++) { %><span class="<%= s <= review.rating ? 'is-filled' : '' %>">★</span><% } %></span>
+                  <span class="admin-status admin-status--<%= review.status %>"><%= review.status %></span>
+                </div>
+                <p class="adm-traveler-review-msg"><%= review.message %></p>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </section>
+    </div>
+  </div>
+
+  <aside class="adm-traveler-sidebar">
+    <section class="admin-panel adm-traveler-section">
+      <h3 class="admin-panel-title"><%= t('admin.travelers.profileDetails', 'Profile details') %></h3>
+      <dl class="admin-dl">
+        <dt><%= t('admin.table.phone', 'Phone') %></dt><dd><%= traveler.phone || '—' %></dd>
+        <dt><%= t('admin.travelers.language', 'Language') %></dt><dd><%= profile.language === 'ar' ? 'العربية' : 'English' %></dd>
+        <dt><%= t('admin.travelers.destinations', 'Preferred destinations') %></dt>
+        <dd><%= profile.preferredDestinations.length ? profile.preferredDestinations.join(', ') : '—' %></dd>
+        <dt><%= t('admin.travelers.lastActive', 'Last active') %></dt><dd><%= profile.lastActiveAt || '—' %></dd>
+        <dt><%= t('admin.travelers.avgBooking', 'Avg. booking') %></dt><dd><%= formatPrice(stats.avgBookingValue) %> EGP</dd>
+      </dl>
+      <div class="adm-traveler-notify">
+        <p class="adm-traveler-notify-label"><%= t('admin.travelers.notifications', 'Notifications') %></p>
+        <div class="adm-traveler-notify-tags">
+          <% if (profile.notifications.email) { %><span class="adm-traveler-chip">Email</span><% } %>
+          <% if (profile.notifications.sms) { %><span class="adm-traveler-chip">SMS</span><% } %>
+          <% if (profile.notifications.push) { %><span class="adm-traveler-chip">Push</span><% } %>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel adm-traveler-section">
+      <h3 class="admin-panel-title"><%= t('admin.travelers.adminNotes', 'Admin notes') %></h3>
+      <form method="post" action="/admin/travelers/<%= traveler.id %>/notes" class="admin-form">
+        <textarea name="notes" rows="4" class="admin-input admin-textarea" placeholder="<%= t('admin.travelers.notesPlaceholder', 'Internal notes about this traveler...') %>"><%= profile.notes || '' %></textarea>
+        <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm mt-2"><%= t('admin.actions.save', 'Save') %></button>
+      </form>
+    </section>
+
+    <section class="admin-panel adm-traveler-section">
+      <h3 class="admin-panel-title"><%= t('admin.travelers.activity', 'Activity timeline') %></h3>
+      <% if (!detail.activity.length) { %>
+        <p class="admin-muted"><%= t('admin.travelers.noActivity', 'No activity recorded.') %></p>
+      <% } else { %>
+        <ul class="adm-traveler-activity">
+          <% detail.activity.forEach(function(item) { %>
+            <li class="adm-traveler-activity-item adm-traveler-activity-item--<%= item.type %>">
+              <span class="adm-traveler-activity-dot"></span>
+              <div>
+                <p class="adm-traveler-activity-label"><%= item.label %></p>
+                <p class="admin-muted-sm"><%= item.at %><% if (item.meta) { %> · <%= item.meta %><% } %></p>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+  </aside>
+</div>
+<%- include('../../partials/admin-shell-end') %>

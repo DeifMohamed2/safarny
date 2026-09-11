@@ -1,0 +1,37 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/trips" class="admin-back"><%= t('admin.back', 'Back to trips') %></a>
+    <h2 class="admin-title"><%= t('admin.trips.approvals', 'Trip approvals') %></h2>
+    <p class="admin-subtitle"><%= t('admin.trips.approvalsDesc', 'Review and approve pending trip listings') %></p>
+  </div>
+  <% if (trips.length) { %>
+    <form method="post" action="/admin/trips/bulk-approve" data-admin-bulk-form>
+      <% trips.forEach(function(trip) { %><input type="hidden" name="ids" value="<%= trip.id %>" /><% }) %>
+      <button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.actions.approveAll', 'Approve all') %></button>
+    </form>
+  <% } %>
+</div>
+<% if (!trips.length) { %>
+  <%- include('../../partials/admin-empty', { title: t('admin.trips.noPending', 'No pending trips'), message: t('admin.trips.noPendingDesc', 'All trip listings are up to date.') }) %>
+<% } else { %>
+  <div class="admin-table-wrap admin-panel">
+    <table class="admin-table" data-admin-bulk-table>
+      <thead><tr><th><input type="checkbox" data-admin-select-all /></th><th><%= t('admin.table.trip', 'Trip') %></th><th><%= t('admin.table.destination', 'Destination') %></th><th><%= t('admin.table.price', 'Price') %></th><th></th></tr></thead>
+      <tbody>
+        <% trips.forEach(function(trip) { %>
+          <tr>
+            <td><input type="checkbox" name="ids" value="<%= trip.id %>" data-admin-row-check /></td>
+            <td><a href="/admin/trips/<%= trip.id %>" class="admin-link"><%= trip.title %></a></td>
+            <td><%= trip.destination %></td>
+            <td><%= formatPrice(trip.price) %> EGP</td>
+            <td>
+              <form method="post" action="/admin/trips/<%= trip.id %>/approve" class="inline"><button type="submit" class="adm-btn adm-btn--sm adm-btn--primary"><%= t('admin.actions.approve', 'Approve') %></button></form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+<%- include('../../partials/admin-shell-end') %>

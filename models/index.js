@@ -1,0 +1,15 @@
+module.exports = {
+  User: require('./User'),
+  Company: require('./Company'),
+  Trip: require('./Trip'),
+  Booking: require('./Booking'),
+  Ticket: require('./Ticket'),
+  Review: require('./Review'),
+  Conversation: require('./Conversation'),
+  PlatformSettings: require('./PlatformSettings'),
+  AuditLog: require('./AuditLog'),
+  Payment: require('./Payment'),
+  PasswordResetToken: require('./PasswordResetToken'),
+  Counter: require('./Counter').Counter,
+  nextSeq: require('./Counter').nextSeq,
+};
