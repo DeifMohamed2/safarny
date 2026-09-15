@@ -2,19 +2,41 @@
   const qs = (sel, root = document) => root.querySelector(sel);
   const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+  function toastDuration(el) {
+    const length = String(el.textContent || '').replace(/\s+/g, ' ').trim().length;
+    return Math.min(9000, Math.max(4200, length * 55));
+  }
+
+  function bindToast(el) {
+    if (!el || el.dataset.toastBound === '1') return;
+    el.dataset.toastBound = '1';
+    let timer;
+    const close = () => {
+      if (el.dataset.toastClosed === '1') return;
+      el.dataset.toastClosed = '1';
+      window.clearTimeout(timer);
+      el.classList.add('is-leaving');
+      window.setTimeout(() => el.remove(), 220);
+    };
+    el.querySelector('[data-toast-close]')?.addEventListener('click', close);
+    timer = window.setTimeout(close, toastDuration(el));
+  }
+
   function toast(title, description) {
     const stack = qs('#toast-stack');
     if (!stack) return;
     const el = document.createElement('div');
     el.className = 'toast';
-    el.innerHTML = `<p class="font-semibold text-[#122445]">${title}</p>${
+    el.setAttribute('role', 'status');
+    el.innerHTML = `<div class="toast-body"><p class="font-semibold text-[#122445]">${title}</p>${
       description ? `<p class="text-sm text-[#535353] mt-1">${description}</p>` : ''
-    }`;
+    }</div><button type="button" class="toast-close" data-toast-close aria-label="Close">×</button>`;
     stack.appendChild(el);
-    setTimeout(() => el.remove(), 4200);
+    bindToast(el);
   }
 
   window.safarnyToast = toast;
+  qsa('#toast-stack .toast').forEach(bindToast);
 
   const header = qs('[data-site-header]');
   if (header) {
@@ -129,12 +151,13 @@
 
   qsa('[data-password-toggle]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const wrap = btn.closest('.auth-input-wrap');
-      const input = qs('[data-password-input]', wrap);
+      const wrap = btn.closest('.auth-input-wrap, .partner-password') || btn.parentElement;
+      const input = wrap ? qs('[data-password-input]', wrap) : null;
       if (!input) return;
       const visible = input.type === 'text';
       input.type = visible ? 'password' : 'text';
       btn.classList.toggle('is-visible', !visible);
+      btn.setAttribute('aria-pressed', visible ? 'false' : 'true');
     });
   });
 
@@ -266,7 +289,7 @@
 
   function countActiveFilters(form) {
     let count = 0;
-    if (!form.dataset.lockType && String(form.elements.tripType?.value || '').trim()) count += 1;
+    if (form.dataset.lockType !== 'leisure' && String(form.elements.tripType?.value || '').trim()) count += 1;
     if (String(form.elements.priceFrom?.value || '').trim() || String(form.elements.priceTo?.value || '').trim()) {
       count += 1;
     }
@@ -323,9 +346,18 @@
       if (key === 'guests' && trimmed === '1') return;
       params.set(key, trimmed);
     });
-    if (form.dataset.lockType) {
+    if (form.dataset.lockType === 'leisure') {
       if (forUrl) params.delete('tripType');
-      else params.set('type', form.dataset.lockType);
+      else params.set('type', 'leisure');
+    } else if (form.dataset.lockType === 'umrah') {
+      const selected = String(form.elements.tripType?.value || '').trim();
+      const type = selected === 'hajj' || selected === 'umrah' ? selected : 'sacred';
+      if (forUrl) {
+        if (!selected) params.delete('tripType');
+      } else {
+        params.set('type', type);
+        params.delete('tripType');
+      }
     }
     if (form.dataset.offersOnly === '1') {
       if (!forUrl) params.set('offersOnly', '1');
@@ -378,7 +410,7 @@
 
   function clearAdvancedFilters(form) {
     ADVANCED_FILTER_KEYS.forEach((key) => {
-      if (form.dataset.lockType && key === 'tripType') return;
+      if (form.dataset.lockType === 'leisure' && key === 'tripType') return;
       const field = form.elements[key];
       if (field) field.value = '';
     });
@@ -392,7 +424,7 @@
   function clearFilterForm(form, includeSearch = false) {
     qsa('[data-filter-field]', form).forEach((field) => {
       if (!includeSearch && field.name === 'q') return;
-      if (form.dataset.lockType && field.name === 'tripType') return;
+      if (form.dataset.lockType === 'leisure' && field.name === 'tripType') return;
       if (field.name === 'guests') {
         field.value = '1';
         return;
@@ -414,6 +446,13 @@
     datePickerLang === 'ar'
       ? { placeholder: 'اختر التاريخ' }
       : { placeholder: 'Select date' };
+  const monthFormatter = new Intl.DateTimeFormat(datePickerLocale, { month: 'long', year: 'numeric' });
+  const displayFormatter = new Intl.DateTimeFormat(datePickerLocale, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const weekdayFormatter = new Intl.DateTimeFormat(datePickerLocale, { weekday: 'short' });
 
   function toIsoDate(date) {
     const y = date.getFullYear();
@@ -431,11 +470,7 @@
   function formatDateDisplay(value) {
     const date = parseIsoDate(value);
     if (!date) return '';
-    return new Intl.DateTimeFormat(datePickerLocale, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
+    return displayFormatter.format(date);
   }
 
   function startOfDay(date) {
@@ -525,7 +560,7 @@
     const panel = root._datePanel || document.getElementById(root.dataset.datePanelId || '');
     const row = panel ? qs('[data-date-weekdays]', panel) : null;
     if (!row || row.childElementCount) return;
-    const formatter = new Intl.DateTimeFormat(datePickerLocale, { weekday: 'short' });
+    const formatter = weekdayFormatter;
     for (let i = 0; i < 7; i += 1) {
       const date = new Date(2024, 0, 7 + i);
       const label = document.createElement('span');
@@ -573,19 +608,23 @@
       syncDisplay();
       renderDateWeekdays(root);
 
-      const renderMonth = () => {
+      const renderMonth = (force = false) => {
         const year = viewDate.getFullYear();
         const month = viewDate.getMonth();
-        monthLabel.textContent = new Intl.DateTimeFormat(datePickerLocale, {
-          month: 'long',
-          year: 'numeric',
-        }).format(viewDate);
+        const monthKey = `${year}-${month}`;
+        monthLabel.textContent = monthFormatter.format(viewDate);
+        const selected = input.value;
+        if (!force && root._renderedMonth === monthKey && grid.childElementCount) {
+          qsa('[data-date]', grid).forEach((btn) => {
+            btn.classList.toggle('is-selected', btn.dataset.date === selected);
+          });
+          return;
+        }
 
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const prevMonthDays = new Date(year, month, 0).getDate();
-        const selected = input.value;
-        grid.innerHTML = '';
+        const cells = [];
 
         for (let i = 0; i < 42; i += 1) {
           let dayNumber;
@@ -606,29 +645,33 @@
           }
 
           const iso = toIsoDate(cellDate);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'booking-date-day';
-          btn.textContent = String(dayNumber);
-          btn.dataset.date = iso;
-          if (isOutside) btn.classList.add('is-outside');
-          if (iso === todayIso) btn.classList.add('is-today');
-          if (iso === selected) btn.classList.add('is-selected');
-          if (startOfDay(cellDate) < todayDate) {
-            btn.disabled = true;
-            btn.classList.add('is-disabled');
-          }
-
-          btn.addEventListener('click', () => {
-            input.value = iso;
-            syncDisplay();
-            closeDatePicker(root);
-            const form = root.closest('form');
-            if (form) notifyFilterChange(form);
-          });
-          grid.appendChild(btn);
+          const classes = ['booking-date-day'];
+          if (isOutside) classes.push('is-outside');
+          if (iso === todayIso) classes.push('is-today');
+          if (iso === selected) classes.push('is-selected');
+          const disabled = startOfDay(cellDate) < todayDate;
+          if (disabled) classes.push('is-disabled');
+          cells.push(
+            `<button type="button" class="${classes.join(' ')}" data-date="${iso}"${disabled ? ' disabled' : ''}>${dayNumber}</button>`
+          );
         }
+        grid.innerHTML = cells.join('');
+        root._renderedMonth = monthKey;
       };
+
+      if (!grid._dateBound) {
+        grid._dateBound = true;
+        grid.addEventListener('click', (event) => {
+          const btn = event.target.closest('[data-date]');
+          if (!btn || btn.disabled) return;
+          const iso = btn.dataset.date;
+          input.value = iso;
+          syncDisplay();
+          closeDatePicker(root);
+          const form = root.closest('form');
+          if (form) notifyFilterChange(form);
+        });
+      }
 
       const openDatePicker = () => {
         const form = root.closest('form');
@@ -640,12 +683,12 @@
         }
         const parsed = parseIsoDate(input.value);
         if (parsed) viewDate = new Date(parsed.getFullYear(), parsed.getMonth(), 1);
-        renderMonth();
         root.classList.add('is-open');
         panel.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
         panel.setAttribute('aria-hidden', 'false');
         widget?.classList.add('is-date-open');
+        renderMonth();
         positionDatePanel(root, panel);
       };
 
@@ -666,14 +709,14 @@
       qs('[data-date-prev]', panel)?.addEventListener('click', (event) => {
         event.stopPropagation();
         viewDate.setMonth(viewDate.getMonth() - 1);
-        renderMonth();
+        renderMonth(true);
         positionDatePanel(root, panel);
       });
 
       qs('[data-date-next]', panel)?.addEventListener('click', (event) => {
         event.stopPropagation();
         viewDate.setMonth(viewDate.getMonth() + 1);
-        renderMonth();
+        renderMonth(true);
         positionDatePanel(root, panel);
       });
 
@@ -691,7 +734,7 @@
         input.value = todayIso;
         viewDate = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
         syncDisplay();
-        renderMonth();
+        renderMonth(true);
         closeDatePicker(root);
         const form = root.closest('form');
         if (form) notifyFilterChange(form);
@@ -700,6 +743,7 @@
       input.addEventListener('change', syncDisplay);
       root._syncDateDisplay = syncDisplay;
       root._repositionDatePanel = () => positionDatePanel(root, panel);
+      renderMonth(true);
     });
   }
 
@@ -718,19 +762,25 @@
     const btn = qs('[data-filter-apply]', form);
     const hint = qs('[data-filter-hint]', form);
     if (!btn) return;
+    const panel = qs('[data-filter-panel]', form);
+    if (panel && !panel.classList.contains('is-open')) return;
     const fallback = btn.dataset.applyLabel || btn.textContent.trim();
     if (!btn.dataset.applyLabel) btn.dataset.applyLabel = fallback;
     const template = btn.dataset.showTrips || 'Show %s trips';
     const emptyLabel = btn.dataset.noTrips || 'No matching trips';
     clearTimeout(form._previewTimer);
+    form._previewAbort?.abort();
     form._previewTimer = setTimeout(async () => {
       const params = collectFilterParams(form);
+      const controller = new AbortController();
+      form._previewAbort = controller;
       const data = await fetch(`/api/search-preview?${params.toString()}`, {
         headers: { Accept: 'application/json' },
+        signal: controller.signal,
       })
         .then((response) => response.json())
-        .catch(() => ({ count: 0 }));
-      if (!btn.isConnected) return;
+        .catch((error) => (error.name === 'AbortError' ? null : { count: 0 }));
+      if (!data || !btn.isConnected) return;
       const count = Number(data.count) || 0;
       btn.textContent = count === 1
         ? (btn.dataset.showTrip || 'Show 1 trip')
@@ -739,7 +789,7 @@
           : emptyLabel;
       btn.classList.toggle('is-empty', count === 0);
       if (hint) hint.hidden = true;
-    }, 160);
+    }, 180);
   }
 
   function refreshOpenExplorer(form) {
@@ -851,6 +901,8 @@
           empty: 'لا توجد وجهات أو عروض مطابقة',
           trips: 'رحلات',
           trip: 'رحلة',
+          offer: 'عرض',
+          currency: 'ج.م',
         }
       : {
           destinations: 'Destinations',
@@ -860,10 +912,35 @@
           empty: 'No matching destinations or deals',
           trips: 'trips',
           trip: 'trip',
+          offer: 'Offer',
+          currency: 'EGP',
         };
 
+  const suggestLang = document.documentElement.lang === 'ar' ? 'ar' : 'en';
+
   function formatSuggestPrice(value) {
-    return `${Number(value || 0).toLocaleString()} EGP`;
+    const amount = Number(value || 0).toLocaleString(suggestLang === 'ar' ? 'ar-EG' : 'en-US');
+    return suggestLang === 'ar' ? `${amount} ${suggestCopy.currency}` : `${amount} ${suggestCopy.currency}`;
+  }
+
+  function destTitle(dest) {
+    if (suggestLang === 'ar') return dest.nameAr || dest.label || dest.nameEn || dest.name || '';
+    return dest.nameEn || dest.label || dest.name || dest.nameAr || '';
+  }
+
+  function dealTitle(deal) {
+    if (suggestLang === 'ar') return deal.titleAr || deal.title || '';
+    return deal.title || '';
+  }
+
+  function dealDestination(root, deal) {
+    if (suggestLang === 'ar') {
+      if (deal.destinationAr) return deal.destinationAr;
+      const needle = String(deal.destinationEn || deal.destination || '').toLowerCase();
+      const found = destIndex(root).find((item) => String(item.nameEn || item.name || '').toLowerCase() === needle);
+      return found?.nameAr || found?.label || deal.destination || '';
+    }
+    return deal.destinationEn || deal.destination || '';
   }
 
   function prefersReducedMotion() {
@@ -903,10 +980,9 @@
     clearTimeout(root._suggestClose);
     const finish = () => {
       if (isSuggestOpen(root)) return;
-      clearSuggestContent(root);
     };
     if (isExplorer(root) && !prefersReducedMotion()) {
-      root._suggestClose = setTimeout(finish, 420);
+      root._suggestClose = setTimeout(finish, 120);
     } else {
       finish();
     }
@@ -959,7 +1035,10 @@
         const name = btn.dataset.suggestDest;
         const input = qs('[data-suggest-input]', root);
         const form = root.closest('form') || root;
-        if (input) input.value = name;
+        if (input) {
+          const label = btn.querySelector('.suggest-item-title');
+          input.value = label ? label.textContent.trim() : name;
+        }
         const destField = form.querySelector('[data-dest-hidden]') || form.elements?.destination;
         if (destField) destField.value = name;
         closeSuggest(root);
@@ -1028,23 +1107,26 @@
     if (explorer) {
       let destHtml = `<p class="suggest-label">${escapeHtml(destLabel)}</p>`;
       dests.forEach((dest) => {
+        const title = destTitle(dest);
         destHtml += `<button type="button" class="suggest-item" data-suggest-item data-suggest-dest="${escapeHtml(dest.name)}">
           <span class="suggest-pin" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.2" fill="currentColor"/></svg>
           </span>
           <span>
-            <span class="suggest-item-title">${escapeHtml(dest.name)}</span>
-            <span class="suggest-item-meta">${Number(dest.count) || 0} ${escapeHtml(Number(dest.count) === 1 ? suggestCopy.trip : suggestCopy.trips)}</span>
+            <span class="suggest-item-title" dir="auto">${escapeHtml(title)}</span>
+            ${dest.count == null ? '' : `<span class="suggest-item-meta">${Number(dest.count) || 0} ${escapeHtml(Number(dest.count) === 1 ? suggestCopy.trip : suggestCopy.trips)}</span>`}
           </span>
         </button>`;
       });
       let dealHtml = `<p class="suggest-label">${escapeHtml(dealLabel)}</p><div class="suggest-deal-grid">`;
       deals.forEach((deal) => {
+        const destName = dealDestination(root, deal);
+        const offerSuffix = deal.offer ? ` · ${suggestCopy.offer}` : '';
         dealHtml += `<a class="suggest-deal-card" href="/trips/${encodeURIComponent(deal.id)}" data-suggest-item>
           <img src="${escapeHtml(deal.image)}" alt="" />
           <span class="suggest-deal-body">
-            <span class="suggest-item-title">${escapeHtml(deal.title)}</span>
-            <span class="suggest-item-meta">${escapeHtml(deal.destination)}${deal.offer ? ' · Offer' : ''}</span>
+            <span class="suggest-item-title" dir="auto">${escapeHtml(dealTitle(deal))}</span>
+            <span class="suggest-item-meta" dir="auto">${escapeHtml(destName)}${escapeHtml(offerSuffix)}</span>
             <span class="suggest-item-price">${escapeHtml(formatSuggestPrice(deal.price))}</span>
           </span>
         </a>`;
@@ -1059,13 +1141,14 @@
       if (dests.length) {
         html += `<p class="suggest-label">${escapeHtml(destLabel)}</p>`;
         dests.forEach((dest) => {
+          const title = destTitle(dest);
           html += `<button type="button" class="suggest-item" data-suggest-item data-suggest-dest="${escapeHtml(dest.name)}">
             <span class="suggest-pin" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.2" fill="currentColor"/></svg>
             </span>
             <span>
-              <span class="suggest-item-title">${escapeHtml(dest.name)}</span>
-              <span class="suggest-item-meta">${Number(dest.count) || 0} ${escapeHtml(Number(dest.count) === 1 ? suggestCopy.trip : suggestCopy.trips)}</span>
+              <span class="suggest-item-title" dir="auto">${escapeHtml(title)}</span>
+              ${dest.count == null ? '' : `<span class="suggest-item-meta">${Number(dest.count) || 0} ${escapeHtml(Number(dest.count) === 1 ? suggestCopy.trip : suggestCopy.trips)}</span>`}
             </span>
           </button>`;
         });
@@ -1076,8 +1159,8 @@
           html += `<a class="suggest-item" href="/trips/${encodeURIComponent(deal.id)}" data-suggest-item>
             <img src="${escapeHtml(deal.image)}" alt="" />
             <span>
-              <span class="suggest-item-title">${escapeHtml(deal.title)}</span>
-              <span class="suggest-item-meta">${escapeHtml(deal.destination)}</span>
+              <span class="suggest-item-title" dir="auto">${escapeHtml(dealTitle(deal))}</span>
+              <span class="suggest-item-meta" dir="auto">${escapeHtml(dealDestination(root, deal))}</span>
             </span>
             <span class="suggest-item-price">${escapeHtml(formatSuggestPrice(deal.price))}</span>
           </a>`;
@@ -1091,16 +1174,73 @@
     bindSuggestionActions(root, target);
   }
 
-  function fetchSuggestions(root, q) {
-    const form = root.closest('[data-filter-form]') || root.closest('form');
-    const params = form ? collectFilterParams(form) : new URLSearchParams();
-    params.set('q', q);
-    return fetch(`/api/suggest?${params.toString()}`, {
-      headers: { Accept: 'application/json' },
-    }).then((response) => response.json().catch(() => ({ destinations: [], deals: [] })));
+  function destIndex(root) {
+    if (root._destIndex) return root._destIndex;
+    const node = (root.closest('form') || root).querySelector('[data-dest-index]');
+    try {
+      root._destIndex = node ? JSON.parse(node.textContent || '[]') : [];
+    } catch {
+      root._destIndex = [];
+    }
+    return root._destIndex;
   }
 
-  let suggestTimer;
+  function matchDestItem(item, needle) {
+    if (!needle) return true;
+    const hay = [item.label, item.name, item.nameEn, item.nameAr, ...(item.aliases || [])]
+      .join(' ')
+      .toLowerCase();
+    return hay.includes(needle);
+  }
+
+  function instantSuggestData(root, q) {
+    const needle = String(q || '').trim().toLowerCase();
+    const dests = destIndex(root);
+    const cached = root._suggestCache || { destinations: [], deals: [] };
+    if (!needle) {
+      const popular = dests.filter((item) => item.popular).slice(0, 8);
+      return {
+        popular: true,
+        destinations: (cached.destinations && cached.destinations.length) ? cached.destinations : (popular.length ? popular : dests.slice(0, 8)),
+        deals: cached.deals || [],
+      };
+    }
+    const localDests = dests.filter((item) => matchDestItem(item, needle)).slice(0, 8);
+    const deals = (cached.deals || []).filter((deal) => {
+      const hay = `${deal.title || ''} ${deal.destination || ''}`.toLowerCase();
+      return hay.includes(needle);
+    });
+    return { popular: false, destinations: localDests, deals };
+  }
+
+  function collectSuggestParams(form) {
+    const params = new URLSearchParams();
+    params.set('lang', suggestLang);
+    if (!form) return params;
+    if (form.dataset.lockType === 'leisure') params.set('type', 'leisure');
+    else if (form.dataset.lockType === 'umrah') {
+      const selected = String(form.elements.tripType?.value || '').trim();
+      params.set('type', selected === 'hajj' || selected === 'umrah' ? selected : 'sacred');
+    }
+    if (form.dataset.offersOnly === '1') params.set('offersOnly', '1');
+    return params;
+  }
+
+  function fetchSuggestions(root, q) {
+    const form = root.closest('[data-filter-form]') || root.closest('form');
+    const params = collectSuggestParams(form);
+    params.set('q', q);
+    root._suggestAbort?.abort();
+    const controller = new AbortController();
+    root._suggestAbort = controller;
+    return fetch(`/api/suggest?${params.toString()}`, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+      .then((response) => response.json().catch(() => ({ destinations: [], deals: [] })))
+      .catch((error) => (error.name === 'AbortError' ? null : { destinations: [], deals: [] }));
+  }
+
   qsa('[data-suggest]').forEach((root) => {
     const input = qs('[data-suggest-input]', root);
     const panel = qs('[data-suggest-panel]', root);
@@ -1108,14 +1248,21 @@
     containSuggestScroll(root);
 
     const runSuggest = (q, immediate = false) => {
-      clearTimeout(suggestTimer);
+      clearTimeout(root._suggestTimer);
+      const instant = instantSuggestData(root, q);
+      if (instant.destinations.length || instant.deals.length || !q) {
+        renderSuggestions(root, instant);
+      } else {
+        openSuggest(root);
+      }
       const load = async () => {
         const data = await fetchSuggestions(root, q);
-        if (input.value.trim() !== q) return;
+        if (!data || input.value.trim() !== q) return;
+        root._suggestCache = data;
         renderSuggestions(root, data);
       };
       if (immediate) load();
-      else suggestTimer = setTimeout(load, 90);
+      else root._suggestTimer = setTimeout(load, 40);
     };
     root._runSuggest = runSuggest;
 
@@ -1124,10 +1271,7 @@
       const destField = form?.querySelector('[data-dest-hidden]');
       if (destField) destField.value = '';
       runSuggest(input.value.trim());
-      if (form) {
-        updateFilterBadge(form);
-        updateApplyPreview(form);
-      }
+      if (form) updateFilterBadge(form);
     });
 
     input.addEventListener('focus', () => {
@@ -1157,6 +1301,15 @@
         event.stopPropagation();
         closeSuggest(root);
       }
+    });
+  });
+
+  const scheduleIdle = window.requestIdleCallback || ((fn) => setTimeout(fn, 80));
+  scheduleIdle(() => {
+    qsa('[data-suggest]').forEach((root) => {
+      fetchSuggestions(root, '').then((data) => {
+        if (data) root._suggestCache = data;
+      });
     });
   });
 
@@ -1399,8 +1552,8 @@
       triple: document.documentElement.lang === 'ar' ? 'ثلاثية' : 'Triple',
       quad: document.documentElement.lang === 'ar' ? 'رباعية' : 'Quadruple',
     };
-    const sleepsLabel = document.documentElement.lang === 'ar' ? 'تسع {n}' : 'sleeps {n}';
-    const personLabel = document.documentElement.lang === 'ar' ? 'شخص' : 'person';
+    const sleepsLabel = document.documentElement.lang === 'ar' ? 'تسع {n} ضيوف' : 'sleeps {n}';
+    const roomPriceLabel = document.documentElement.lang === 'ar' ? 'للغرفة' : 'room';
     const currencyLabel = document.documentElement.lang === 'ar' ? 'ج.م' : 'EGP';
 
     function selectedRoomType() {
@@ -1427,7 +1580,7 @@
         const selected = room.type === current ? ' is-selected' : '';
         return `<button type="button" class="trip-room-picker-card${selected}" data-trip-room data-room-type="${room.type}" data-price="${room.price || 0}" data-max-rooms="${room.maxRooms || 0}" data-occupancy="${room.occupancy || 1}">
           <strong>${typeNames[room.type] || room.type}</strong>
-          <span>${Number(room.price || 0).toLocaleString()} ${currencyLabel} / ${personLabel}</span>
+          <span>${Number(room.price || 0).toLocaleString()} ${currencyLabel} / ${roomPriceLabel}</span>
           <em>${sleepsLabel.replace('{n}', String(room.occupancy || 1))}</em>
         </button>`;
       }).join('');
@@ -2048,7 +2201,12 @@
 
     try {
       const savedView = window.localStorage.getItem('companyTripsView');
-      if (savedView && viewInput && !window.location.search.includes('view=')) {
+      if (
+        savedView &&
+        viewInput &&
+        savedView !== viewInput.value &&
+        !window.location.search.includes('view=')
+      ) {
         viewInput.value = savedView;
         submitForm();
       }
@@ -2481,9 +2639,10 @@
     const removeBtn = qs('[data-company-logo-remove]', logoPicker);
     const hiddenInput = qs('[data-company-logo-input]', logoPicker);
     const previewImg = qs('[data-company-logo-img]', logoPicker);
+    const preview = qs('[data-company-logo-preview]', logoPicker);
+    const fallback = qs('[data-company-logo-fallback]', logoPicker);
     const overlay = qs('[data-company-logo-overlay]', logoPicker);
     const feedback = qs('[data-company-logo-feedback]', logoPicker);
-    const defaultLogo = '/assets/companies/company.png';
 
     const setFeedback = (message, isSuccess = false) => {
       if (!feedback) return;
@@ -2505,8 +2664,20 @@
     };
 
     const setPreview = (url) => {
-      if (previewImg) previewImg.src = url || defaultLogo;
-      if (hiddenInput) hiddenInput.value = url || defaultLogo;
+      const next = url || '';
+      if (previewImg) {
+        if (next) {
+          previewImg.src = next;
+          previewImg.hidden = false;
+        } else {
+          previewImg.removeAttribute('src');
+          previewImg.hidden = true;
+        }
+      }
+      if (fallback) fallback.hidden = Boolean(next);
+      if (preview) preview.classList.toggle('is-empty', !next);
+      if (hiddenInput) hiddenInput.value = next;
+      if (removeBtn) removeBtn.disabled = !next;
     };
 
     const uploadLogo = async (file) => {
@@ -2551,7 +2722,7 @@
       uploadLogo(file);
     });
     removeBtn?.addEventListener('click', () => {
-      setPreview(defaultLogo);
+      setPreview('');
       setFeedback('Logo removed. Save profile to apply.');
     });
 
@@ -2572,4 +2743,30 @@
       });
     });
   }
+
+  function bindMethodFields(root, selectSel) {
+    const select = root.querySelector(selectSel);
+    if (!select) return;
+    const setGroup = (attr, show) => {
+      root.querySelectorAll(`[${attr}]`).forEach((el) => {
+        el.hidden = !show;
+        el.querySelectorAll('input, select, textarea').forEach((input) => {
+          input.disabled = !show;
+        });
+      });
+    };
+    const sync = () => {
+      const method = select.value;
+      setGroup('data-payout-bank', method === 'bank_transfer');
+      setGroup('data-payout-wallet', Boolean(method) && method !== 'bank_transfer');
+      setGroup('data-payout-instapay', method === 'instapay');
+      setGroup('data-refund-bank', method === 'bank_transfer');
+      setGroup('data-refund-wallet', Boolean(method) && method !== 'bank_transfer');
+      setGroup('data-refund-instapay', method === 'instapay');
+    };
+    select.addEventListener('change', sync);
+    sync();
+  }
+  qsa('[data-payout-details]').forEach((root) => bindMethodFields(root, '[data-payout-method]'));
+  qsa('[data-refund-form]').forEach((root) => bindMethodFields(root, '[data-refund-method]'));
 })();

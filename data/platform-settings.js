@@ -1,15 +1,21 @@
+const { DEFAULT_DESTINATIONS, ensureDestinationCatalog, normalizeDestination, normalizeDestinationList } = require('../lib/destinations');
+
 const settings = {
   commissionRate: 12,
   currency: 'EGP',
   defaultLocale: 'en',
   autoApproveTrips: false,
   maintenanceMode: false,
-  destinations: ['Cairo', 'Hurghada', 'Sharm El Sheikh', 'Luxor', 'Aswan', 'Dahab', 'Siwa', 'Alexandria', 'Marsa Alam'],
-  categories: ['Cultural Tour', 'Beach Escape', 'Adventure', 'Umrah Package', 'City Tours', 'Leisure'],
+  destinations: DEFAULT_DESTINATIONS.map((item) => ({ ...item })),
+  categories: ['Cultural Tour', 'Beach Escape', 'Adventure', 'Umrah & Hajj', 'City Tours', 'Leisure'],
 };
 
 function getSettings() {
-  return { ...settings, destinations: [...settings.destinations], categories: [...settings.categories] };
+  return {
+    ...settings,
+    destinations: ensureDestinationCatalog(settings.destinations),
+    categories: [...settings.categories],
+  };
 }
 
 function updateSettings(patch = {}) {
@@ -18,21 +24,33 @@ function updateSettings(patch = {}) {
   if (patch.defaultLocale) settings.defaultLocale = String(patch.defaultLocale);
   if (patch.autoApproveTrips !== undefined) settings.autoApproveTrips = Boolean(patch.autoApproveTrips);
   if (patch.maintenanceMode !== undefined) settings.maintenanceMode = Boolean(patch.maintenanceMode);
-  if (Array.isArray(patch.destinations)) settings.destinations = patch.destinations.filter(Boolean);
+  if (Array.isArray(patch.destinations)) settings.destinations = normalizeDestinationList(patch.destinations);
   if (Array.isArray(patch.categories)) settings.categories = patch.categories.filter(Boolean);
   return getSettings();
 }
 
-function addDestination(name) {
-  const value = String(name || '').trim();
-  if (!value || settings.destinations.includes(value)) return getSettings();
-  settings.destinations.push(value);
-  settings.destinations.sort();
+function addDestination(payload) {
+  const incoming = normalizeDestination(typeof payload === 'string' ? { nameEn: payload } : payload);
+  if (!incoming) return getSettings();
+  if (settings.destinations.some((item) => item.id === incoming.id || String(item.nameEn || item).toLowerCase() === incoming.nameEn.toLowerCase())) {
+    return getSettings();
+  }
+  settings.destinations = normalizeDestinationList([...ensureDestinationCatalog(settings.destinations), incoming]);
   return getSettings();
 }
 
-function removeDestination(name) {
-  settings.destinations = settings.destinations.filter((item) => item !== name);
+function updateDestination(id, payload = {}) {
+  const current = ensureDestinationCatalog(settings.destinations);
+  const match = current.find((item) => item.id === String(id));
+  if (!match) return getSettings();
+  settings.destinations = current.map((item) => (item.id === match.id ? normalizeDestination({ ...item, ...payload, id: match.id }) : item));
+  return getSettings();
+}
+
+function removeDestination(idOrName) {
+  const key = String(idOrName || '').trim().toLowerCase();
+  settings.destinations = ensureDestinationCatalog(settings.destinations)
+    .filter((item) => item.id !== key && item.nameEn.toLowerCase() !== key);
   return getSettings();
 }
 
@@ -53,6 +71,7 @@ module.exports = {
   getSettings,
   updateSettings,
   addDestination,
+  updateDestination,
   removeDestination,
   addCategory,
   removeCategory,

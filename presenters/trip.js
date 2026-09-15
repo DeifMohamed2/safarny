@@ -1,5 +1,6 @@
 const { ensureTripDefaults, scheduleLabel, lowestTripPrice, enabledRoomTypes, roomTypesLabel } = require('../lib/trip-form-helpers');
 const { applyMarkupToTrip } = require('../lib/markup');
+const { isSacredTripType } = require('../lib/helpers');
 
 const FALLBACK_IMAGE = '/assets/trip/trip.jpg';
 
@@ -21,13 +22,13 @@ function toPublicTrip(trip, company) {
   return {
     ...publicTrip,
     id: publicTrip.id || publicTrip._id,
-    location: publicTrip.location || `${publicTrip.destination}, ${publicTrip.type === 'umrah' ? 'Saudi Arabia' : 'Egypt'}`,
+    location: publicTrip.location || `${publicTrip.destination}, ${isSacredTripType(publicTrip.type) ? 'Saudi Arabia' : 'Egypt'}`,
     image,
     gallery: images,
     availableSpots: Number(publicTrip.availableSeats) || 0,
     price,
-    oldPrice: publicTrip.oldPrice || Math.round(Number(price || 0) * 1.08),
-    discountPercent: publicTrip.discountPercent || (publicTrip.offer ? 8 : 0),
+    oldPrice: Number(publicTrip.oldPrice) > 0 ? publicTrip.oldPrice : 0,
+    discountPercent: Number(publicTrip.discountPercent) > 0 ? publicTrip.discountPercent : 0,
     about: publicTrip.about || publicTrip.description || '',
     frequency: publicTrip.frequency || scheduleLabel(publicTrip.schedule),
     source: publicTrip.catalog ? 'catalog' : 'company',

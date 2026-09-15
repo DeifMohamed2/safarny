@@ -34,17 +34,24 @@
         </div>
         <div class="admin-form-field">
           <label class="admin-label" for="company-years"><%= t('admin.companies.years', 'Years in business') %></label>
-          <input id="company-years" type="number" name="years" min="0" class="admin-input" value="<%= company ? company.years : 1 %>" />
+          <input id="company-years" type="number" name="years" min="0" class="admin-input" value="<%= company ? (company.years || 0) : 0 %>" />
         </div>
         <div class="admin-form-field">
-          <label class="admin-label" for="company-rating"><%= t('admin.companies.rating', 'Rating') %></label>
-          <input id="company-rating" type="number" name="rating" min="1" max="5" step="0.1" class="admin-input" value="<%= company ? company.rating : 4.5 %>" />
+          <span class="admin-label"><%= t('admin.companies.rating', 'Rating') %></span>
+          <p class="admin-readonly-value">
+            <% if (company && formatCompanyRating(company)) { %>
+              <%= formatCompanyRating(company) %> · <%= companyReviewCount(company) %> <%= t('admin.companies.reviewsCount', 'reviews') %>
+            <% } else { %>
+              <%= t('admin.companies.noReviewsYet', 'No reviews yet') %>
+            <% } %>
+          </p>
+          <span class="admin-field-hint"><%= t('admin.companies.ratingHint', 'Calculated automatically from published traveler reviews.') %></span>
         </div>
         <div class="admin-form-field">
           <label class="admin-label" for="company-markup-type"><%= t('admin.companies.markupType', 'Platform markup') %></label>
           <select id="company-markup-type" name="markupType" class="admin-input">
             <option value="percent" <%= !company || company.markupType !== 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupPercent', 'Percent') %></option>
-            <option value="fixed" <%= company && company.markupType === 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupFixed', 'Fixed per person') %></option>
+            <option value="fixed" <%= company && company.markupType === 'fixed' ? 'selected' : '' %>><%= t('admin.companies.markupFixed', 'Fixed per room') %></option>
           </select>
         </div>
         <div class="admin-form-field">
@@ -53,7 +60,7 @@
           <span class="admin-field-hint"><%= t('admin.companies.markupHint', 'Folded into the traveler price. Companies never see this split.') %></span>
         </div>
         <div class="admin-form-field">
-          <label class="admin-label" for="company-markup-fixed"><%= t('admin.companies.markupFixed', 'Fixed per person') %></label>
+          <label class="admin-label" for="company-markup-fixed"><%= t('admin.companies.markupFixed', 'Fixed per room') %></label>
           <input id="company-markup-fixed" type="number" name="markupFixed" min="0" step="1" class="admin-input" value="<%= company ? (company.markupFixed || 0) : 0 %>" />
         </div>
         <div class="admin-form-field">
@@ -63,7 +70,7 @@
         </div>
         <div class="admin-form-field admin-form-field--span-2">
           <label class="admin-label" for="company-image"><%= t('admin.companies.logoUrl', 'Logo URL') %></label>
-          <input id="company-image" type="text" name="image" class="admin-input" value="<%= company ? company.image : '/assets/companies/company.png' %>" placeholder="/assets/companies/company.png" />
+          <input id="company-image" type="text" name="image" class="admin-input" value="<%= company ? companyLogoUrl(company.image) : '' %>" placeholder="<%= t('admin.companies.logoPlaceholder', 'Leave blank until a logo is uploaded') %>" />
         </div>
       </div>
     </div>

@@ -6,6 +6,8 @@ const { getCompanyStats, listCompanies } = require('./companies');
 const { getReviewStats } = require('./reviews');
 const { getSettings } = require('./settings');
 const { getUserStats } = require('./users');
+const { sumBookingSplits } = require('../lib/money');
+const { normalizeTripType } = require('../lib/helpers');
 
 const RANGE_DAYS = {
   '7d': 7,
@@ -66,11 +68,15 @@ function buildMonthlySeries(bookings, monthCount = 12, locale = 'en') {
     const revenue = monthBookings
       .filter((b) => normalizeStatus(b.status) === 'confirmed')
       .reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
+    const profit = sumBookingSplits(
+      monthBookings.filter((b) => normalizeStatus(b.status) === 'confirmed')
+    ).platformFee;
     series.push({
       key: `${year}-${String(month + 1).padStart(2, '0')}`,
       label: date.toLocaleDateString(dateLocale, { month: 'short' }),
       bookings: monthBookings.length,
       revenue,
+      profit,
     });
   }
   return series;
@@ -97,16 +103,8 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
   const gmv = confirmed.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
   const prevGmv = prevConfirmed.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0);
 
-  const platformProfit = confirmed.reduce((sum, booking) => {
-    const company = companies.find((c) => c.id === booking.companyId);
-    const commission = company?.commissionRate || settings.commissionRate || 12;
-    return sum + Math.round(Number(booking.totalPrice || 0) * (commission / 100));
-  }, 0);
-  const prevPlatformProfit = prevConfirmed.reduce((sum, booking) => {
-    const company = companies.find((c) => c.id === booking.companyId);
-    const commission = company?.commissionRate || settings.commissionRate || 12;
-    return sum + Math.round(Number(booking.totalPrice || 0) * (commission / 100));
-  }, 0);
+  const platformProfit = sumBookingSplits(confirmed).platformFee;
+  const prevPlatformProfit = sumBookingSplits(prevConfirmed).platformFee;
 
   const conversionRate = currentBookings.length ? Math.round((confirmed.length / currentBookings.length) * 100) : 0;
   const prevConversionRate = previousBookings.length
@@ -127,7 +125,7 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
     refunded: currentBookings.filter((b) => normalizeStatus(b.status) === 'refunded').length,
   };
 
-  const tripTypes = { leisure: 0, umrah: 0 };
+  const tripTypes = { leisure: 0, umrah: 0, hajj: 0 };
   companyTrips.forEach((trip) => {
     if (tripTypes[trip.type] !== undefined) tripTypes[trip.type] += 1;
   });
@@ -147,7 +145,10 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
   const categoryMap = {};
   currentBookings.forEach((booking) => {
     const trip = companyTrips.find((t) => t.id === booking.tripId);
-    const category = trip?.type === 'umrah' ? 'Umrah' : trip?.type === 'leisure' ? 'Leisure' : 'Other';
+    const labels = locale === 'ar'
+      ? { leisure: 'ترفيهية', umrah: 'عمرة', hajj: 'حج' }
+      : { leisure: 'Leisure', umrah: 'Umrah', hajj: 'Hajj' };
+    const category = labels[normalizeTripType(trip?.type)] || (locale === 'ar' ? 'أخرى' : 'Other');
     categoryMap[category] = (categoryMap[category] || 0) + 1;
   });
   const categoryBreakdown = Object.entries(categoryMap)
@@ -169,8 +170,7 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
     .map(([id, revenue]) => {
       const company = companies.find((c) => c.id === id);
       const companyBookingsList = confirmed.filter((b) => b.companyId === id);
-      const commission = company?.commissionRate || settings.commissionRate || 12;
-      const profit = Math.round(revenue * (commission / 100));
+      const profit = sumBookingSplits(companyBookingsList).platformFee;
       const trips = companyTrips.filter((t) => String(t.companyId) === id);
       const activeTrips = trips.filter((t) => t.status === 'active').length;
       return {
@@ -193,17 +193,16 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
     .map((trip) => {
       const tripBookings = allBookings.filter((b) => b.tripId === trip.id);
       const tripConfirmed = tripBookings.filter((b) => normalizeStatus(b.status) === 'confirmed');
-      const revenue = tripConfirmed.reduce((s, b) => s + Number(b.totalPrice || 0), 0);
+      const totals = sumBookingSplits(tripConfirmed);
       const company = companies.find((c) => c.id === trip.companyId);
-      const commission = company?.commissionRate || settings.commissionRate || 12;
       return {
         id: trip.id,
         title: trip.title,
         destination: trip.destination,
         companyName: company?.title,
         bookingCount: tripBookings.length,
-        revenue,
-        platformProfit: Math.round(revenue * (commission / 100)),
+        revenue: totals.collected,
+        platformProfit: totals.platformFee,
         image: trip.images?.[0],
         status: trip.status,
       };
@@ -213,20 +212,7 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
     .map((item, index) => ({ ...item, rank: index + 1 }));
 
   const monthlySeries = buildMonthlySeries(allBookings, range === '12m' || range === 'all' ? 12 : 8, locale);
-  const commissionSeries = monthlySeries.map((item) => {
-    const monthBookings = allBookings.filter((b) => {
-      const booked = parseDate(b.bookingDate);
-      if (!booked || normalizeStatus(b.status) !== 'confirmed') return false;
-      const [year, month] = item.key.split('-').map(Number);
-      return booked.getFullYear() === year && booked.getMonth() + 1 === month;
-    });
-    const profit = monthBookings.reduce((sum, booking) => {
-      const company = companies.find((c) => c.id === booking.companyId);
-      const commission = company?.commissionRate || settings.commissionRate || 12;
-      return sum + Math.round(Number(booking.totalPrice || 0) * (commission / 100));
-    }, 0);
-    return { ...item, profit };
-  });
+  const commissionSeries = monthlySeries.map((item) => ({ ...item, profit: item.profit || 0 }));
 
   const pendingTrips = companyTrips.filter((t) => t.status === 'pending');
   const activeCompanies = companies.filter((c) => (c.status || 'active') === 'active').length;
@@ -251,7 +237,11 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
       trips: { value: companyTrips.length, delta: 0 },
       users: { value: userStats.travelers, delta: 0 },
       openTickets: { value: supportMeta.open, delta: 0 },
-      avgRating: { value: Number(reviewStats.avgRating), delta: 0 },
+      avgRating: {
+        value: reviewStats.published ? Number(reviewStats.avgRating) : 0,
+        display: reviewStats.published ? `${reviewStats.avgRating} ★` : '—',
+        delta: 0,
+      },
     },
     health: {
       activeCompanies,
@@ -292,7 +282,7 @@ async function getPlatformAnalytics(range = '30d', locale = 'en') {
 
 async function getChartData(metric, range = '30d', locale = 'en') {
   const analytics = await getPlatformAnalytics(range, locale);
-  const tripTypeLabels = locale === 'ar' ? ['ترفيهية', 'عمرة'] : ['Leisure', 'Umrah'];
+  const tripTypeLabels = locale === 'ar' ? ['ترفيهية', 'عمرة', 'حج'] : ['Leisure', 'Umrah', 'Hajj'];
   const statusLabels = locale === 'ar'
     ? ['مؤكدة', 'قيد الانتظار', 'ملغاة', 'مستردة']
     : ['Confirmed', 'Pending', 'Cancelled', 'Refunded'];
@@ -326,7 +316,7 @@ async function getChartData(metric, range = '30d', locale = 'en') {
     };
   }
   if (metric === 'trip-types') {
-    return { labels: tripTypeLabels, data: [analytics.tripTypes.leisure, analytics.tripTypes.umrah], label: tripsLabel };
+    return { labels: tripTypeLabels, data: [analytics.tripTypes.leisure, analytics.tripTypes.umrah, analytics.tripTypes.hajj], label: tripsLabel };
   }
   if (metric === 'top-companies') {
     return { labels: analytics.topCompanies.map((c) => c.name), data: analytics.topCompanies.map((c) => c.revenue), label: revenueLabel };

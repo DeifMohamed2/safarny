@@ -16,6 +16,9 @@ const {
   Counter,
   PasswordResetToken,
   Payment,
+  Payout,
+  Refund,
+  LedgerEntry,
 } = require('../models');
 const { ROUNDS } = require('../lib/password');
 const { parseTravelDates } = require('../lib/trip-form-helpers');
@@ -34,6 +37,7 @@ const { getSettings: getSeedSettings } = require('../data/platform-settings');
 const { DEFAULTS: platformDefaults } = require('../services/settings');
 const { auditLog } = require('../data/admin-audit');
 const { normalizeStatus } = require('../lib/status');
+const { bookingSplit, roundMoney } = require('../lib/money');
 
 const MONTHS = {
   jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
@@ -112,6 +116,9 @@ async function seed(options = {}) {
     await Trip.deleteMany({});
     await Booking.deleteMany({});
     await Payment.deleteMany({});
+    await Payout.deleteMany({});
+    await Refund.deleteMany({});
+    await LedgerEntry.deleteMany({});
     await Ticket.deleteMany({});
     await Review.deleteMany({});
     await Conversation.deleteMany({});
@@ -143,6 +150,21 @@ async function seed(options = {}) {
       commissionRate: company.commissionRate || 12,
       markupType: company.markupType === 'fixed' ? 'fixed' : 'percent',
       markupFixed: Number(company.markupFixed) || 0,
+      payoutDetails: ['1', '2'].includes(String(id))
+        ? {
+            method: 'bank_transfer',
+            bankName: 'National Bank of Egypt',
+            accountName: company.title,
+            accountNumber: `1000${String(id).padStart(8, '0')}`,
+            iban: `EG380003000${String(id).padStart(16, '0')}`,
+            swift: 'NBEGEGCX',
+            walletProvider: '',
+            walletNumber: '',
+            instapayIpa: '',
+            verifiedAt: new Date('2026-08-01'),
+            verifiedBy: 'a1',
+          }
+        : {},
     };
   }));
 
@@ -294,6 +316,9 @@ async function seed(options = {}) {
       paymentMethod,
       paymentStatus: booking.paymentStatus || (status === 'confirmed' ? 'verified' : 'unpaid'),
       paymentId: '',
+      payoutId: '',
+      refundStatus: 'none',
+      refundedAmount: 0,
     };
   });
 
@@ -342,6 +367,9 @@ async function seed(options = {}) {
       paymentMethod,
       paymentStatus: booking.paymentStatus || (status === 'confirmed' ? 'verified' : 'unpaid'),
       paymentId: '',
+      payoutId: '',
+      refundStatus: 'none',
+      refundedAmount: 0,
     };
   });
 
@@ -379,6 +407,201 @@ async function seed(options = {}) {
 
   await upsert(Booking, allBookingDocs);
   await upsert(Payment, paymentDocs);
+
+  const ledgerDocs = [];
+  let ledgerSeq = 0;
+  function pushLedger(entry) {
+    ledgerSeq += 1;
+    ledgerDocs.push({
+      _id: `LED-${String(ledgerSeq).padStart(6, '0')}`,
+      currency: 'EGP',
+      createdBy: 'a1',
+      ...entry,
+    });
+  }
+
+  paymentDocs.filter((payment) => payment.status === 'verified').forEach((payment) => {
+    const booking = allBookingDocs.find((item) => item.code === payment.bookingId || item._id === payment.bookingId);
+    if (!booking) return;
+    const split = bookingSplit(booking);
+    pushLedger({
+      type: 'collection',
+      direction: 'in',
+      amount: split.collected,
+      companyId: String(booking.companyId),
+      bookingId: booking._id,
+      refId: payment._id,
+      note: `Collected for booking ${booking.code}`,
+      occurredAt: payment.reviewedAt || booking.bookingDate,
+    });
+    if (split.platformFee) {
+      pushLedger({
+        type: 'platform_fee',
+        direction: 'in',
+        amount: split.platformFee,
+        companyId: String(booking.companyId),
+        bookingId: booking._id,
+        refId: payment._id,
+        note: `Platform markup on booking ${booking.code}`,
+        occurredAt: payment.reviewedAt || booking.bookingDate,
+      });
+    }
+  });
+
+  const settledByCompany = new Map();
+  allBookingDocs.forEach((booking) => {
+    if (normalizeStatus(booking.status) !== 'confirmed' || booking.settlementStatus !== 'settled') return;
+    const companyId = String(booking.companyId);
+    if (!settledByCompany.has(companyId)) settledByCompany.set(companyId, []);
+    settledByCompany.get(companyId).push(booking);
+  });
+
+  const payoutDocs = [];
+  let payoutSeq = 0;
+  settledByCompany.forEach((bookings, companyId) => {
+    payoutSeq += 1;
+    const id = `PO-${String(payoutSeq).padStart(4, '0')}`;
+    let grossCollected = 0;
+    let platformFee = 0;
+    let payable = 0;
+    bookings.forEach((booking) => {
+      const split = bookingSplit(booking);
+      grossCollected += split.collected;
+      platformFee += split.platformFee;
+      payable += split.payableToCompany;
+      booking.payoutId = id;
+    });
+    const paidAt = bookings[0].settledAt || new Date('2026-08-28');
+    payoutDocs.push({
+      _id: id,
+      companyId,
+      currency: 'EGP',
+      method: 'bank_transfer',
+      destination: {
+        method: 'bank_transfer',
+        bankName: 'National Bank of Egypt',
+        accountName: companies.find((company) => String(company.id) === companyId)?.title || companyId,
+        accountNumber: `1000${String(companyId).padStart(8, '0')}`,
+        iban: `EG380003000${String(companyId).padStart(16, '0')}`,
+      },
+      bookingIds: bookings.map((booking) => booking._id),
+      grossCollected: roundMoney(grossCollected),
+      platformFee: roundMoney(platformFee),
+      adjustments: [],
+      netPayable: roundMoney(payable),
+      status: 'paid',
+      reference: `${id}-TRF`,
+      proof: { url: '/user.png', name: `${id}-proof.png`, mime: 'image/png', size: 12000 },
+      statementNumber: `STM-${String(payoutSeq).padStart(4, '0')}`,
+      createdBy: 'a1',
+      paidAt,
+      createdAt: paidAt,
+    });
+    pushLedger({
+      type: 'payout',
+      direction: 'out',
+      amount: roundMoney(payable),
+      companyId,
+      refId: id,
+      note: `Payout ${id}`,
+      occurredAt: paidAt,
+    });
+  });
+
+  const refundTarget = allBookingDocs.find((booking) => booking._id === 'B002')
+    || allBookingDocs.find((booking) => booking.settlementStatus === 'settled' && normalizeStatus(booking.status) === 'confirmed');
+  const openRefundTarget = allBookingDocs.find((booking) => booking._id === 'B001')
+    || allBookingDocs.find((booking) => booking.paymentStatus === 'verified' && booking.settlementStatus !== 'settled');
+
+  const refundDocs = [];
+  if (openRefundTarget) {
+    refundDocs.push({
+      _id: 'RF-0001',
+      bookingId: openRefundTarget._id,
+      paymentId: openRefundTarget.paymentId || '',
+      userId: String(openRefundTarget.userId || '21'),
+      companyId: String(openRefundTarget.companyId),
+      requestedAmount: roundMoney(openRefundTarget.totalPrice),
+      approvedAmount: 0,
+      currency: 'EGP',
+      reasonCategory: 'date_change',
+      reason: 'Cannot travel on the booked date.',
+      method: 'instapay',
+      destination: { method: 'instapay', walletNumber: '01012345678', instapayIpa: '' },
+      status: 'requested',
+      createdAt: new Date('2026-09-01'),
+    });
+    openRefundTarget.refundStatus = 'requested';
+  }
+  if (refundTarget) {
+    const split = bookingSplit(refundTarget);
+    refundDocs.push({
+      _id: 'RF-0002',
+      bookingId: refundTarget._id,
+      paymentId: refundTarget.paymentId || '',
+      userId: String(refundTarget.userId || '22'),
+      companyId: String(refundTarget.companyId),
+      requestedAmount: split.collected,
+      approvedAmount: split.collected,
+      currency: 'EGP',
+      reasonCategory: 'cancellation',
+      reason: 'Trip cancelled after payout.',
+      method: 'vodafone_cash',
+      destination: { method: 'mobile_wallet', walletNumber: '01098765432' },
+      status: 'refunded',
+      platformFeeRefunded: split.platformFee,
+      companyClawback: split.payableToCompany,
+      clawbackPayoutId: '',
+      reference: 'RF-0002-TRF',
+      proof: { url: '/user.png', name: 'refund-proof.png', mime: 'image/png', size: 11000 },
+      reviewedBy: 'a1',
+      reviewNote: 'Approved full refund.',
+      creditNoteNumber: 'CRN-0001',
+      reviewedAt: new Date('2026-09-05'),
+      refundedAt: new Date('2026-09-06'),
+      createdAt: new Date('2026-09-04'),
+    });
+    refundTarget.refundStatus = 'refunded';
+    refundTarget.refundedAmount = split.collected;
+    refundTarget.status = 'refunded';
+    pushLedger({
+      type: 'refund',
+      direction: 'out',
+      amount: split.collected,
+      companyId: String(refundTarget.companyId),
+      bookingId: refundTarget._id,
+      refId: 'RF-0002',
+      note: 'Refund RF-0002',
+      occurredAt: new Date('2026-09-06'),
+    });
+    pushLedger({
+      type: 'clawback',
+      direction: 'in',
+      amount: split.payableToCompany,
+      companyId: String(refundTarget.companyId),
+      bookingId: refundTarget._id,
+      refId: 'RF-0002',
+      note: 'Company clawback on RF-0002',
+      occurredAt: new Date('2026-09-06'),
+    });
+    if (split.platformFee) {
+      pushLedger({
+        type: 'adjustment',
+        direction: 'out',
+        amount: split.platformFee,
+        companyId: String(refundTarget.companyId),
+        bookingId: refundTarget._id,
+        refId: 'RF-0002',
+        note: 'Platform fee reversed on RF-0002',
+        occurredAt: new Date('2026-09-06'),
+      });
+    }
+  }
+
+  await upsert(Booking, allBookingDocs);
+  await upsert(Payout, payoutDocs);
+  await upsert(Refund, refundDocs);
+  await upsert(LedgerEntry, ledgerDocs);
 
   function mapMessages(replies, fallback) {
     return (replies || []).map((reply) => ({
@@ -476,6 +699,12 @@ async function seed(options = {}) {
 
   await primeCounter('booking', 40);
   await primeCounter('payment', paymentDocs.length);
+  await primeCounter('payout', payoutDocs.length);
+  await primeCounter('refund', refundDocs.length);
+  await primeCounter('ledger', ledgerDocs.length);
+  await primeCounter('invoice', 0);
+  await primeCounter('statement', payoutDocs.length);
+  await primeCounter('credit-note', refundDocs.some((item) => item.creditNoteNumber) ? 1 : 0);
   await primeCounter('ticket-tkt', 1043);
   await primeCounter('ticket-cmp', 1048);
   await primeCounter('ticket-traveler', travelerTickets.length);
@@ -488,12 +717,18 @@ async function seed(options = {}) {
     Trip.syncIndexes(),
     Booking.syncIndexes(),
     Payment.syncIndexes(),
+    Payout.syncIndexes(),
+    Refund.syncIndexes(),
+    LedgerEntry.syncIndexes(),
     Ticket.syncIndexes(),
     Review.syncIndexes(),
     Conversation.syncIndexes(),
     AuditLog.syncIndexes(),
     PasswordResetToken.syncIndexes(),
   ]);
+
+  const { refreshOperationalStats } = require('../services/companies');
+  await refreshOperationalStats();
 
   console.log('Safarny MongoDB seed complete.');
 }

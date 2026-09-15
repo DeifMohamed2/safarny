@@ -75,7 +75,7 @@
               <span class="account-tickets-chat-meta">
                 <span class="account-tickets-meta-chip account-tickets-no"><%= ticket.ticketNo %></span>
                 <span class="account-tickets-meta-chip account-tickets-category"><%= ticket.category %></span>
-                <span class="ticket-status ticket-status--<%= ticket.status %>"><%= ticket.status %></span>
+                <span class="ticket-status ticket-status--<%= ticket.status %>"><%= statusLabel(ticket.status) %></span>
               </span>
             </span>
             <svg class="account-tickets-chat-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -97,7 +97,7 @@
           <div class="account-tickets-panel-head-main">
             <div class="account-tickets-panel-head-row">
               <span class="account-tickets-no"><%= activeTicket.ticketNo %></span>
-              <span class="ticket-status ticket-status--<%= activeTicket.status %>"><%= activeTicket.status %></span>
+              <span class="ticket-status ticket-status--<%= activeTicket.status %>"><%= statusLabel(activeTicket.status) %></span>
             </div>
             <h2 class="account-tickets-panel-subject"><%= activeTicket.subject %></h2>
             <p class="account-tickets-panel-meta"><%= activeTicket.category %> · <%= activeTicket.updatedAt %></p>

@@ -122,7 +122,7 @@ function getPlatformAnalytics(range = '30d', locale = 'en') {
     refunded: currentBookings.filter((b) => b.status === 'Refunded').length,
   };
 
-  const tripTypes = { leisure: 0, umrah: 0 };
+  const tripTypes = { leisure: 0, umrah: 0, hajj: 0 };
   companyTrips.forEach((trip) => {
     if (tripTypes[trip.type] !== undefined) tripTypes[trip.type] += 1;
   });
@@ -142,7 +142,7 @@ function getPlatformAnalytics(range = '30d', locale = 'en') {
   const categoryMap = {};
   currentBookings.forEach((booking) => {
     const trip = companyTrips.find((t) => t.id === booking.tripId);
-    const category = trip?.type === 'umrah' ? 'Umrah' : trip?.type === 'leisure' ? 'Leisure' : 'Other';
+    const category = trip?.type === 'hajj' ? 'Hajj' : trip?.type === 'umrah' ? 'Umrah' : trip?.type === 'leisure' ? 'Leisure' : 'Other';
     categoryMap[category] = (categoryMap[category] || 0) + 1;
   });
   const categoryBreakdown = Object.entries(categoryMap)
@@ -287,7 +287,7 @@ function getPlatformAnalytics(range = '30d', locale = 'en') {
 
 function getChartData(metric, range = '30d', locale = 'en') {
   const analytics = getPlatformAnalytics(range, locale);
-  const tripTypeLabels = locale === 'ar' ? ['ترفيهية', 'عمرة'] : ['Leisure', 'Umrah'];
+  const tripTypeLabels = locale === 'ar' ? ['ترفيهية', 'عمرة', 'حج'] : ['Leisure', 'Umrah', 'Hajj'];
   const statusLabels = locale === 'ar'
     ? ['مؤكدة', 'قيد الانتظار', 'ملغاة', 'مستردة']
     : ['Confirmed', 'Pending', 'Cancelled', 'Refunded'];
@@ -326,7 +326,7 @@ function getChartData(metric, range = '30d', locale = 'en') {
   if (metric === 'trip-types') {
     return {
       labels: tripTypeLabels,
-      data: [analytics.tripTypes.leisure, analytics.tripTypes.umrah],
+      data: [analytics.tripTypes.leisure, analytics.tripTypes.umrah, analytics.tripTypes.hajj],
       label: tripsLabel,
     };
   }

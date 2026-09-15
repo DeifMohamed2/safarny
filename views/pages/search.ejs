@@ -11,7 +11,7 @@
       <span class="text-orange-500"><%= total %> <%= total === 1 ? t('filter.tripSingular', 'trip') : t('filter.tripsFound', 'trips') %></span>
       <% const place = filters.destination || filters.q; %>
       <% if (place) { %>
-        <span class="text-sky-950"> <%= t('filter.matchingIn', 'in') %> <%= place %></span>
+        <span class="text-sky-950"> <%= t('filter.matchingIn', 'in') %> <%= typeof destinationLabel === 'function' ? destinationLabel(place) : place %></span>
       <% } else if (typeof hasActiveFilters !== 'undefined' && hasActiveFilters) { %>
         <span class="text-sky-950"> <%= t('filter.thatMatch', 'that match your search') %></span>
       <% } %>

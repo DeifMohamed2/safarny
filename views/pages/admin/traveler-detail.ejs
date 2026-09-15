@@ -13,7 +13,7 @@
         <h2 class="admin-title"><%= traveler.userName %></h2>
         <p class="admin-subtitle"><%= traveler.email %> · <%= traveler.phone || '—' %></p>
         <div class="adm-traveler-badges">
-          <span class="admin-status admin-status--<%= traveler.status || 'active' %>"><%= traveler.status || 'active' %></span>
+          <span class="admin-status admin-status--<%= traveler.status || 'active' %>"><%= statusLabel(traveler.status || 'active') %></span>
           <% if (traveler.city) { %><span class="adm-traveler-chip"><%= traveler.city %>, <%= traveler.country || 'Egypt' %></span><% } %>
           <span class="adm-traveler-chip"><%= t('admin.travelers.joined', 'Joined') %> <%= traveler.createdAt %></span>
         </div>
@@ -32,7 +32,7 @@
 
 <div class="adm-traveler-kpis">
   <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.kpi.bookings', 'Bookings') %></p><p class="adm-traveler-kpi-value"><%= stats.bookings %></p><span class="adm-traveler-kpi-sub"><%= stats.confirmed %> <%= t('admin.travelers.confirmed', 'confirmed') %></span></article>
-  <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.travelers.totalSpent', 'Total spent') %></p><p class="adm-traveler-kpi-value"><%= formatPrice(stats.totalSpent) %></p><span class="adm-traveler-kpi-sub">EGP</span></article>
+  <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.travelers.totalSpent', 'Total spent') %></p><p class="adm-traveler-kpi-value"><%= formatPrice(stats.totalSpent) %></p><span class="adm-traveler-kpi-sub"><%= t('shared.egp', 'EGP') %></span></article>
   <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.travelers.favorites', 'Favorites') %></p><p class="adm-traveler-kpi-value"><%= stats.favorites %></p><span class="adm-traveler-kpi-sub"><%= t('admin.travelers.savedTrips', 'saved trips') %></span></article>
   <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.support.title', 'Support') %></p><p class="adm-traveler-kpi-value"><%= stats.tickets %></p><span class="adm-traveler-kpi-sub"><%= t('admin.travelers.tickets', 'tickets') %></span></article>
   <article class="adm-traveler-kpi"><p class="adm-traveler-kpi-label"><%= t('admin.reviews.title', 'Reviews') %></p><p class="adm-traveler-kpi-value"><%= stats.reviews %></p><span class="adm-traveler-kpi-sub"><%= t('admin.travelers.written', 'written') %></span></article>
@@ -55,8 +55,8 @@
                   <td><%= b.tripName %></td>
                   <td><%= b.company ? b.company.title : '—' %></td>
                   <td class="admin-muted-sm"><%= b.bookingDate %> → <%= b.tripDate %></td>
-                  <td><%= formatPrice(b.totalPrice) %> EGP</td>
-                  <td><span class="admin-status admin-status--<%= String(b.status).toLowerCase() %>"><%= b.status %></span></td>
+                  <td><%= formatPrice(b.totalPrice) %> <%= t('shared.egp', 'EGP') %></td>
+                  <td><span class="admin-status admin-status--<%= String(b.status).toLowerCase() %>"><%= statusLabel(b.status) %></span></td>
                 </tr>
               <% }) %>
             </tbody>
@@ -75,9 +75,9 @@
             <article class="adm-traveler-fav-card">
               <img src="<%= trip.image %>" alt="" class="adm-traveler-fav-img" />
               <div class="adm-traveler-fav-body">
-                <p class="adm-traveler-fav-title"><%= trip.title %></p>
-                <p class="admin-muted-sm"><%= trip.destination %></p>
-                <p class="adm-traveler-fav-price"><%= formatPrice(trip.price) %> EGP</p>
+                <p class="adm-traveler-fav-title" dir="auto"><%= tripTitle(trip) %></p>
+                <p class="admin-muted-sm"><%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %></p>
+                <p class="adm-traveler-fav-price"><%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></p>
               </div>
             </article>
           <% }) %>
@@ -97,7 +97,7 @@
                 <a href="/admin/support/<%= encodeURIComponent(ticket.globalId || ticket.id) %>" class="adm-traveler-ticket-item">
                   <span class="adm-traveler-ticket-no"><%= ticket.ticketNo %></span>
                   <span class="adm-traveler-ticket-subject"><%= ticket.subject %></span>
-                  <span class="admin-status admin-status--<%= ticket.status %>"><%= ticket.status %></span>
+                  <span class="admin-status admin-status--<%= ticket.status %>"><%= statusLabel(ticket.status) %></span>
                 </a>
               </li>
             <% }) %>
@@ -115,7 +115,7 @@
               <li class="adm-traveler-review-item">
                 <div class="adm-traveler-review-head">
                   <span class="adm-traveler-review-stars"><% for (var s = 1; s <= 5; s++) { %><span class="<%= s <= review.rating ? 'is-filled' : '' %>">★</span><% } %></span>
-                  <span class="admin-status admin-status--<%= review.status %>"><%= review.status %></span>
+                  <span class="admin-status admin-status--<%= review.status %>"><%= statusLabel(review.status) %></span>
                 </div>
                 <p class="adm-traveler-review-msg"><%= review.message %></p>
               </li>
@@ -135,7 +135,7 @@
         <dt><%= t('admin.travelers.destinations', 'Preferred destinations') %></dt>
         <dd><%= profile.preferredDestinations.length ? profile.preferredDestinations.join(', ') : '—' %></dd>
         <dt><%= t('admin.travelers.lastActive', 'Last active') %></dt><dd><%= profile.lastActiveAt || '—' %></dd>
-        <dt><%= t('admin.travelers.avgBooking', 'Avg. booking') %></dt><dd><%= formatPrice(stats.avgBookingValue) %> EGP</dd>
+        <dt><%= t('admin.travelers.avgBooking', 'Avg. booking') %></dt><dd><%= formatPrice(stats.avgBookingValue) %> <%= t('shared.egp', 'EGP') %></dd>
       </dl>
       <div class="adm-traveler-notify">
         <p class="adm-traveler-notify-label"><%= t('admin.travelers.notifications', 'Notifications') %></p>

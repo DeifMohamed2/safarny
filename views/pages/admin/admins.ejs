@@ -49,7 +49,7 @@
                 <img src="<%= admin.avatar || '/user.png' %>" alt="" class="adm-people-avatar adm-people-avatar--admin" width="40" height="40" />
                 <div>
                   <a href="/admin/admins/<%= admin.id %>" class="adm-people-name"><%= admin.userName %></a>
-                  <p class="adm-people-meta"><span class="admin-status admin-status--admin">admin</span></p>
+                  <p class="adm-people-meta"><span class="admin-status admin-status--admin"><%= roleLabel('admin') %></span></p>
                 </div>
               </div>
             </td>
@@ -57,7 +57,7 @@
             <td><%= admin.phone || '—' %></td>
             <td class="admin-muted-sm"><%= admin.createdAt %></td>
             <td class="admin-muted-sm"><%= admin.lastLoginAt || '—' %></td>
-            <td><span class="admin-status admin-status--<%= admin.status || 'active' %>"><%= admin.status || 'active' %></span></td>
+            <td><span class="admin-status admin-status--<%= admin.status || 'active' %>"><%= statusLabel(admin.status || 'active') %></span></td>
             <td>
               <div class="adm-people-actions">
                 <a href="/admin/admins/<%= admin.id %>" class="adm-btn adm-btn--sm adm-btn--ghost"><%= t('admin.actions.view', 'View') %></a>

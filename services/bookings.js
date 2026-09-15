@@ -2,7 +2,7 @@ const { Booking, nextSeq } = require('../models');
 const { toDoc, toDocs } = require('../lib/document');
 const { normalizeStatus, titleCaseStatus } = require('../lib/status');
 const { paginateList } = require('../lib/paginate');
-const { toCompanyBooking, enrichBookingDetail, toTravelerBooking, companyBaseAmount } = require('../presenters/booking');
+const { toCompanyBooking, toAdminBooking, enrichBookingDetail, enrichAdminBookingDetail, toTravelerBooking, companyBaseAmount } = require('../presenters/booking');
 const tripService = require('./trips');
 
 function parseDate(value) {
@@ -51,6 +51,7 @@ async function getCompanyBooking(id, companyId) {
 
 function filterBookingsList(items, filters = {}, companyId) {
   const status = String(filters.status || 'all');
+  const paymentStatus = String(filters.paymentStatus || 'all');
   const q = String(filters.q || '').trim().toLowerCase();
   const tripId = String(filters.tripId || 'all');
   const filterCompanyId = String(filters.companyId || companyId || 'all');
@@ -63,11 +64,12 @@ function filterBookingsList(items, filters = {}, companyId) {
   let next = items.filter((booking) => {
     if (filterCompanyId !== 'all' && String(booking.companyId) !== String(filterCompanyId)) return false;
     if (status !== 'all' && normalizeStatus(booking.status) !== normalizeStatus(status)) return false;
+    if (paymentStatus !== 'all' && String(booking.paymentStatus || 'unpaid') !== paymentStatus) return false;
     if (tripId !== 'all' && booking.tripId !== tripId) return false;
     const rangeValue = dateField === 'trip' ? booking.tripDate : booking.bookingDate;
     if (!inDateRange(rangeValue, dateFrom, endDate)) return false;
     if (q) {
-      const haystack = `${booking.tripName} ${booking.customerName} ${booking.customerEmail} ${booking.customerPhone} ${booking.id} ${booking.code}`.toLowerCase();
+      const haystack = `${booking.tripName} ${booking.customerName} ${booking.customerEmail} ${booking.customerPhone} ${booking.id} ${booking.code} ${booking.referenceCode || ''}`.toLowerCase();
       if (!haystack.includes(q)) return false;
     }
     return true;
@@ -87,7 +89,7 @@ function filterBookingsList(items, filters = {}, companyId) {
 
 async function getAllBookings(filters = {}) {
   const items = toDocs(await Booking.find().lean());
-  return filterBookingsList(items, filters).map(toCompanyBooking);
+  return filterBookingsList(items, filters).map(toAdminBooking);
 }
 
 async function getBookingsByCompany(companyId, filters = {}) {
@@ -154,21 +156,47 @@ async function returnSeatsIfNeeded(previous, nextStatus) {
   }
 }
 
+const COMPANY_CANCEL_REASONS = ['traveler_request', 'operational', 'overbooking', 'duplicate', 'invalid_details', 'other'];
+
 async function updateBookingStatus(id, companyId, status, { byUserId, note } = {}) {
+  if (normalizeStatus(status) !== 'cancelled') {
+    return { ok: false, code: 'FORBIDDEN', message: 'Companies can only cancel bookings.' };
+  }
+  return cancelCompanyBooking(id, companyId, { byUserId, reason: 'other', note });
+}
+
+async function cancelCompanyBooking(id, companyId, { byUserId, reason, note } = {}) {
   const booking = await getCompanyBooking(id, companyId);
-  if (!booking) return null;
-  const match = ['pending', 'confirmed', 'cancelled'].find((item) => item === normalizeStatus(status));
-  if (!match) return null;
-  await returnSeatsIfNeeded(booking, match);
+  if (!booking) return { ok: false, code: 'NOT_FOUND' };
+  const current = normalizeStatus(booking.status);
+  if (current === 'cancelled' || current === 'refunded') {
+    return { ok: false, code: 'ALREADY_CLOSED', message: 'This booking is already closed.' };
+  }
+  const reasonId = COMPANY_CANCEL_REASONS.includes(String(reason || '')) ? String(reason) : '';
+  if (!reasonId) return { ok: false, code: 'REASON_REQUIRED', message: 'Choose a cancellation reason.' };
+  const extra = String(note || '').trim();
+  if (reasonId === 'other' && extra.length < 4) {
+    return { ok: false, code: 'NOTE_REQUIRED', message: 'Please explain the cancellation reason.' };
+  }
+  const historyNote = extra ? `${reasonId}: ${extra}` : reasonId;
+  await returnSeatsIfNeeded(booking, 'cancelled');
   const updated = await Booking.findByIdAndUpdate(
     String(id),
     {
-      $set: { status: match },
-      $push: { statusHistory: historyEntry(match, note, byUserId, `Booking ${titleCaseStatus(match).toLowerCase()}`) },
+      $set: {
+        status: 'cancelled',
+        cancelReason: reasonId,
+        cancelNote: extra,
+        cancelledBy: 'company',
+        cancelledAt: new Date(),
+      },
+      $push: {
+        statusHistory: historyEntry('cancelled', historyNote, byUserId, 'Cancelled by company'),
+      },
     },
     { new: true }
   ).lean();
-  return toCompanyBooking(toDoc(updated));
+  return { ok: true, booking: toCompanyBooking(toDoc(updated)) };
 }
 
 async function adminUpdateBookingStatus(id, status, reason, byUserId) {
@@ -179,6 +207,12 @@ async function adminUpdateBookingStatus(id, status, reason, byUserId) {
   await returnSeatsIfNeeded(booking, match);
   const $set = { status: match };
   if (reason) $set.adminNote = String(reason);
+  if (match === 'cancelled') {
+    $set.cancelReason = $set.cancelReason || 'admin';
+    $set.cancelNote = String(reason || '');
+    $set.cancelledBy = 'admin';
+    $set.cancelledAt = new Date();
+  }
   const updated = await Booking.findByIdAndUpdate(
     String(id),
     {
@@ -505,9 +539,13 @@ module.exports = {
   getBookingListMetaForCompany,
   enrichBookingForList,
   enrichBookingDetail,
+  enrichAdminBookingDetail,
   toCompanyBooking,
+  toAdminBooking,
   toTravelerBooking,
+  COMPANY_CANCEL_REASONS,
   updateBookingStatus,
+  cancelCompanyBooking,
   adminUpdateBookingStatus,
   getDashboardStats,
   buildMonthlyBookingSeries,
@@ -518,6 +556,7 @@ module.exports = {
   confirmBookingFromPayment,
   rejectBookingPayment,
   markPaymentResubmitted,
+  returnSeatsIfNeeded,
   paginateList,
   isConfirmed,
 };

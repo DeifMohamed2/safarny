@@ -25,7 +25,10 @@
         <div><dt><%= t('checkout.bookingCode', 'Booking code') %></dt><dd><strong><%= booking.code %></strong></dd></div>
         <div><dt><%= t('checkout.total', 'Total') %></dt><dd><%= formatPrice(booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></dd></div>
         <div><dt><%= t('checkout.travelDate', 'Travel date') %></dt><dd><%= booking.travelDate %></dd></div>
-        <div><dt><%= t('checkout.paymentStatus', 'Payment status') %></dt><dd><span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus %>"><%= booking.paymentStatus %></span></dd></div>
+        <div><dt><%= t('checkout.paymentStatus', 'Payment status') %></dt><dd><span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus %>"><%= statusLabel(booking.paymentStatus) %></span></dd></div>
+        <% if (refund && refund.status && refund.status !== 'cancelled') { %>
+          <div><dt><%= t('checkout.refund.status', 'Refund status') %></dt><dd><span class="checkout-payment-badge checkout-payment-badge--<%= refund.status %>"><%= statusLabel(refund.status) %></span></dd></div>
+        <% } %>
         <% if (payment && payment.methodLabel) { %>
           <div><dt><%= t('checkout.paymentMethod', 'Payment method') %></dt><dd><%= payment.methodLabel %></dd></div>
         <% } %>
@@ -61,7 +64,99 @@
         </form>
       <% } %>
 
+      <% if (refund && ['requested','approved','processing','declined','refunded'].includes(refund.status)) { %>
+        <div class="checkout-refund-status checkout-refund-status--<%= refund.status %>">
+          <p class="checkout-refund-kicker"><%= t('checkout.refund.status', 'Refund status') %></p>
+          <strong><%= statusLabel(refund.status) %></strong>
+          <p>
+            <% if (refund.status === 'requested') { %><%= t('checkout.refund.requested', 'Refund requested — we will review it shortly.') %>
+            <% } else if (refund.status === 'approved' || refund.status === 'processing') { %><%= t('checkout.refund.approved', 'Refund approved. We will send the transfer next.') %>
+            <% } else if (refund.status === 'declined') { %><%= t('checkout.refund.declined', 'Refund declined.') %> <%= refund.reviewNote || '' %>
+            <% } else { %><%= t('checkout.refund.refunded', 'Refund paid.') %><% } %>
+          </p>
+        </div>
+      <% } %>
+
+      <% if (typeof refundWindowClosed !== 'undefined' && refundWindowClosed) { %>
+        <p class="checkout-refund-closed"><%= t('checkout.refund.closed', 'Refunds close on the trip start date and cannot be requested after that.') %></p>
+      <% } %>
+
+      <% if (typeof canRefund !== 'undefined' && canRefund) { %>
+        <form method="post" action="/bookings/<%= booking.code %>/refund" class="checkout-refund-form" data-refund-form>
+          <div class="checkout-refund-head">
+            <p class="checkout-refund-kicker"><%= t('checkout.refund.status', 'Refund') %></p>
+            <h2 class="checkout-refund-title"><%= t('checkout.refund.title', 'Request a refund') %></h2>
+            <p class="checkout-refund-hint"><%= t('checkout.refund.hint', 'We review every request. If approved, Safarny sends the money back to the account you enter here.') %></p>
+          </div>
+
+          <div class="checkout-refund-grid">
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.refund.amount', 'Amount') %></span>
+              <span class="checkout-money">
+                <input type="number" min="1" max="<%= booking.totalPrice %>" name="amount" class="checkout-input" value="<%= booking.totalPrice %>" required />
+                <em><%= t('shared.egp', 'EGP') %></em>
+              </span>
+              <span class="checkout-field-hint"><%= t('checkout.refund.amountHint', 'You can request the full booking total or less.') %></span>
+            </label>
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.refund.reason', 'Reason') %></span>
+              <select name="reasonCategory" class="checkout-input checkout-input--select" required>
+                <% (typeof refundReasons !== 'undefined' ? refundReasons : []).forEach(function(reason) { %>
+                  <option value="<%= reason.id %>"><%= t('checkout.refund.reasons.' + reason.id, reason.label) %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label class="checkout-field checkout-field--full">
+              <span class="checkout-label"><%= t('checkout.refund.details', 'Tell us more') %></span>
+              <textarea name="reason" class="checkout-input checkout-textarea" rows="3" placeholder="<%= t('checkout.refund.detailsPlaceholder', 'Optional — anything that helps us review this faster') %>"></textarea>
+            </label>
+          </div>
+
+          <div class="checkout-refund-dest">
+            <p class="checkout-refund-dest-title"><%= t('checkout.refund.payback', 'Refund destination') %></p>
+            <label class="checkout-field">
+              <span class="checkout-label"><%= t('checkout.refund.method', 'Where should we send it?') %></span>
+              <select name="method" class="checkout-input checkout-input--select" data-refund-method required>
+                <% (typeof refundMethods !== 'undefined' ? refundMethods : []).forEach(function(method) { %>
+                  <option value="<%= method.id %>"><%= payoutMethodLabel(method.id) %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label class="checkout-field" data-refund-wallet>
+              <span class="checkout-label"><%= t('checkout.refund.wallet', 'Wallet / mobile number') %></span>
+              <input name="walletNumber" class="checkout-input" inputmode="tel" placeholder="<%= t('checkout.refund.walletPlaceholder', '01xxxxxxxxx') %>" />
+            </label>
+            <label class="checkout-field" data-refund-instapay hidden>
+              <span class="checkout-label"><%= t('company.settings.instapayIpa', 'InstaPay IPA') %></span>
+              <input name="instapayIpa" class="checkout-input" placeholder="@username" />
+            </label>
+            <div class="checkout-refund-bank" data-refund-bank hidden>
+              <label class="checkout-field">
+                <span class="checkout-label"><%= t('admin.finance.bankName', 'Bank name') %></span>
+                <input name="bankName" class="checkout-input" />
+              </label>
+              <label class="checkout-field">
+                <span class="checkout-label"><%= t('admin.finance.bankAccountName', 'Account name') %></span>
+                <input name="accountName" class="checkout-input" />
+              </label>
+              <label class="checkout-field checkout-field--full">
+                <span class="checkout-label"><%= t('admin.finance.bankAccountNumber', 'Account number') %></span>
+                <input name="accountNumber" class="checkout-input" />
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="trip-details-book-btn checkout-submit"><%= t('checkout.refund.submit', 'Submit refund request') %></button>
+        </form>
+      <% } %>
+
       <div class="checkout-confirmation-actions">
+        <% if (booking.paymentStatus === 'verified') { %>
+          <a href="/bookings/<%= booking.code %>/invoice" class="account-btn account-btn--secondary"><%= t('checkout.invoice', 'Download invoice') %></a>
+        <% } %>
+        <% if (refund && refund.status === 'refunded') { %>
+          <a href="/bookings/<%= booking.code %>/credit-note" class="account-btn account-btn--secondary"><%= t('checkout.creditNote', 'Download credit note') %></a>
+        <% } %>
         <a href="/booking-history" class="account-btn account-btn--secondary"><%= t('checkout.viewHistory', 'View booking history') %></a>
         <a href="/trips/<%= booking.tripId %>" class="account-btn account-btn--primary"><%= t('checkout.backToTrip', 'Back to trip') %></a>
       </div>

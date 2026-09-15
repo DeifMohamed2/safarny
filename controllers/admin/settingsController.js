@@ -13,7 +13,6 @@ async function page(req, res) {
 async function update(req, res) {
   await settingsService.updateSettings({
     commissionRate: req.body.commissionRate,
-    currency: req.body.currency,
     defaultLocale: req.body.defaultLocale,
     autoApproveTrips: req.body.autoApproveTrips === 'on',
     maintenanceMode: req.body.maintenanceMode === 'on',
@@ -24,9 +23,28 @@ async function update(req, res) {
 }
 
 async function destinations(req, res) {
-  if (req.body.action === 'add') await settingsService.addDestination(req.body.name);
-  if (req.body.action === 'remove') await settingsService.removeDestination(req.body.name);
-  res.redirect('/admin/settings');
+  const action = String(req.body.action || '').trim();
+  if (action === 'add' || action === 'save') {
+    const payload = {
+      nameEn: req.body.nameEn || req.body.name,
+      nameAr: req.body.nameAr,
+      country: req.body.country,
+      group: req.body.group,
+    };
+    if (req.body.id) await settingsService.updateDestination(req.body.id, payload);
+    else await settingsService.addDestination(payload);
+  }
+  if (action === 'update') {
+    await settingsService.updateDestination(req.body.id, {
+      nameEn: req.body.nameEn,
+      nameAr: req.body.nameAr,
+      country: req.body.country,
+      group: req.body.group,
+    });
+  }
+  if (action === 'remove') await settingsService.removeDestination(req.body.id || req.body.name);
+  req.session.flash = { type: 'success', message: res.locals.t('admin.settings.destinationsSaved', 'Destinations updated.') };
+  res.redirect('/admin/settings#destinations');
 }
 
 async function categories(req, res) {

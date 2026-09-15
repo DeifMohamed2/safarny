@@ -27,7 +27,7 @@ async function list(req, res) {
     q: req.query.q,
     companyId: req.query.companyId || 'all',
     type: req.query.type || 'all',
-    sort: req.query.sort || 'bookings',
+    sort: req.query.sort || 'newest',
   };
   let items = await Promise.all((await tripService.getAllTrips(filters)).map((t) => enrichTripForAdmin(t)));
   if (filters.sort === 'revenue') items.sort((a, b) => b.revenue - a.revenue);
@@ -102,11 +102,45 @@ async function create(req, res) {
 }
 
 async function approvals(req, res) {
-  const pending = await Promise.all((await tripService.getPendingTrips()).map((t) => enrichTripForAdmin(t)));
+  const filters = {
+    q: String(req.query.q || '').trim(),
+    companyId: req.query.companyId || 'all',
+    type: req.query.type || 'all',
+    sort: req.query.sort || 'newest',
+  };
+  const companies = await companyService.listCompanies();
+  const companiesById = new Map(companies.map((c) => [String(c.id), c]));
+  let pending = await Promise.all(
+    (await tripService.getPendingTrips()).map((t) => enrichTripForAdmin(t, null, companiesById))
+  );
+  const totalPending = pending.length;
+
+  if (filters.companyId !== 'all') {
+    pending = pending.filter((t) => String(t.companyId) === String(filters.companyId));
+  }
+  if (filters.type !== 'all') {
+    pending = pending.filter((t) => String(t.type || 'leisure') === filters.type);
+  }
+  if (filters.q) {
+    const q = filters.q.toLowerCase();
+    pending = pending.filter((t) => {
+      const haystack = `${t.title || ''} ${t.titleAr || ''} ${t.destination || ''} ${t.companyName || ''} ${t.category || ''} ${t.type || ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+
+  if (filters.sort === 'price') pending.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+  else if (filters.sort === 'company') pending.sort((a, b) => String(a.companyName || '').localeCompare(String(b.companyName || '')));
+  else pending.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
   withLayout(res, 'pages/admin/trip-approvals', {
     title: res.locals.t('admin.trips.approvals', 'Trip approvals'),
     adminActive: 'trips',
     trips: pending,
+    totalPending,
+    filters,
+    companies: companies.map((c) => ({ id: c.id, title: c.title })),
+    hasActiveFilters: Boolean(filters.q || filters.companyId !== 'all' || filters.type !== 'all'),
   });
 }
 

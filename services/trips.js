@@ -1,4 +1,4 @@
-const { Trip } = require('../models');
+const { Trip, Company } = require('../models');
 const { toDoc, toDocs } = require('../lib/document');
 const { parseMediaList } = require('../lib/trip-media');
 const {
@@ -17,7 +17,18 @@ const {
 } = require('../lib/trip-form-helpers');
 const { toPublicTrip } = require('../presenters/trip');
 const { paginateSimple } = require('../lib/paginate');
+const { normalizeTripType, tripTypeMatches, isSacredTripType, categoryFromTripType, tripTitle } = require('../lib/helpers');
+const {
+  findDestination,
+  canonicalDestination,
+  sameDestination,
+  searchDestinations,
+  destinationLabel,
+  countryLabel,
+  matchesDestinationRecord,
+} = require('../lib/destinations');
 const companyService = require('./companies');
+const settingsService = require('./settings');
 
 const localImages = [
   '/assets/trip/trip.jpg',
@@ -28,6 +39,22 @@ const localImages = [
 ];
 
 const PUBLIC_STATUSES = ['active', 'sold-out'];
+const CATALOG_TTL_MS = 120_000;
+const SUGGEST_TTL_MS = 20_000;
+
+let catalogCache = { value: null, at: 0, inflight: null };
+let suggestMemo = new Map();
+
+function invalidateCatalogCache() {
+  catalogCache = { value: null, at: 0, inflight: null };
+  suggestMemo.clear();
+}
+
+function finishSeatUpdate(trip) {
+  if (!trip) return null;
+  invalidateCatalogCache();
+  return toDoc(trip);
+}
 
 async function listTrips(filter = {}) {
   return toDocs(await Trip.find(filter).lean());
@@ -39,7 +66,9 @@ async function getTripById(id) {
 }
 
 async function companyMap() {
-  const companies = await companyService.listCompanies();
+  const companies = toDocs(
+    await Company.find({}, { markupType: 1, markupPercent: 1, markupFixed: 1, commissionRate: 1 }).lean()
+  );
   return Object.fromEntries(companies.map((company) => [String(company.id), company]));
 }
 
@@ -55,11 +84,22 @@ async function getPublicTripById(id) {
 }
 
 async function catalog() {
-  const [trips, companies] = await Promise.all([
-    listTrips({ status: { $in: PUBLIC_STATUSES } }),
-    companyMap(),
-  ]);
-  return trips.map((trip) => presentPublic(trip, companies));
+  const now = Date.now();
+  if (catalogCache.value && now - catalogCache.at < CATALOG_TTL_MS) return catalogCache.value;
+  if (catalogCache.inflight) return catalogCache.inflight;
+  catalogCache.inflight = (async () => {
+    const [trips, companies] = await Promise.all([
+      listTrips({ status: { $in: PUBLIC_STATUSES } }),
+      companyMap(),
+    ]);
+    const value = trips.map((trip) => presentPublic(trip, companies));
+    catalogCache = { value, at: Date.now(), inflight: null };
+    return value;
+  })().catch((error) => {
+    catalogCache.inflight = null;
+    throw error;
+  });
+  return catalogCache.inflight;
 }
 
 function text(value) {
@@ -164,21 +204,24 @@ function matchesGuests(trip, guests, dateValue) {
   return dated.some((entry) => leftoverSpotsForDate(trip, entry) >= needed);
 }
 
-function matchesDestination(trip, destination) {
+function matchesDestination(trip, destination, list = []) {
   const needle = text(destination);
   if (!needle) return true;
+  if (sameDestination(trip.destination, destination, list)) return true;
   const dest = text(trip.destination);
   const loc = text(trip.location);
   return dest === needle || dest.includes(needle) || loc.includes(needle) || needle.includes(dest);
 }
 
-function matchesQuery(trip, q) {
+function matchesQuery(trip, q, list = []) {
   const query = text(q);
   if (!query) return true;
   const haystack = [trip.title, trip.titleAr, trip.location, trip.category, trip.destination, trip.about, trip.description]
     .map(text)
     .join(' ');
-  return haystack.includes(query);
+  if (haystack.includes(query)) return true;
+  const record = findDestination(list, trip.destination);
+  return Boolean(record && matchesDestinationRecord(record, q));
 }
 
 async function filterTrips(filters = {}) {
@@ -198,16 +241,17 @@ async function filterTrips(filters = {}) {
   const effectiveType = text(type || tripType);
   const dest = text(destination);
   const query = text(q);
-  const queryIsDestination = Boolean(dest && query && dest === query);
+  const settings = await settingsService.getSettings();
+  const list = settings.destinations || [];
+  const queryIsDestination = Boolean(dest && query && sameDestination(dest, query, list));
   const minPrice = parseAmount(priceFrom);
   const maxPrice = parseAmount(priceTo);
   const all = await catalog();
   return all.filter((trip) => {
     if (truthyFlag(offersOnly) && !trip.offer) return false;
-    if (effectiveType === 'umrah' && trip.type !== 'umrah') return false;
-    if (effectiveType === 'leisure' && trip.type === 'umrah') return false;
-    if (!matchesDestination(trip, destination)) return false;
-    if (!queryIsDestination && !matchesQuery(trip, q)) return false;
+    if (effectiveType && !tripTypeMatches(trip.type, effectiveType)) return false;
+    if (!matchesDestination(trip, destination, list)) return false;
+    if (!queryIsDestination && !matchesQuery(trip, q, list)) return false;
     if (!matchesGuests(trip, guests, date)) return false;
     if (!matchesBeds(trip, beds)) return false;
     const price = lowestTripPrice(trip);
@@ -219,20 +263,37 @@ async function filterTrips(filters = {}) {
   });
 }
 
-function popularDestinations(all) {
-  return [...new Set(all.map((trip) => trip.destination))]
-    .map((name) => ({
-      name,
-      count: all.filter((trip) => trip.destination === name).length,
-    }))
-    .sort((a, b) => b.count - a.count);
+function popularDestinations(all, list = [], lang = 'en') {
+  const counts = new Map();
+  all.forEach((trip) => {
+    const name = trip.destination;
+    if (!name) return;
+    const record = findDestination(list, name);
+    const key = record ? record.nameEn : name;
+    const current = counts.get(key);
+    if (current) {
+      current.count += 1;
+      return;
+    }
+    counts.set(key, {
+      name: key,
+      nameEn: record ? record.nameEn : name,
+      nameAr: record ? record.nameAr : name,
+      label: destinationLabel(name, lang, list),
+      count: 1,
+    });
+  });
+  return [...counts.values()].sort((a, b) => b.count - a.count);
 }
 
-function mapDeal(trip) {
+function mapDeal(trip, lang = 'en', list = []) {
   return {
     id: trip.id,
-    title: trip.title,
-    destination: trip.destination,
+    title: tripTitle(trip, lang),
+    titleAr: String(trip.titleAr || '').trim(),
+    destination: destinationLabel(trip.destination, lang, list),
+    destinationEn: trip.destination,
+    destinationAr: destinationLabel(trip.destination, 'ar', list),
     location: trip.location,
     price: trip.price,
     image: trip.image,
@@ -241,29 +302,60 @@ function mapDeal(trip) {
   };
 }
 
-async function suggestTrips(q, limit = 6, extraFilters = {}) {
-  const all = await catalog();
+async function suggestTrips(q, limit = 6, extraFilters = {}, lang = 'en') {
   const query = String(q || '').trim();
-  const scopedFilters = { ...extraFilters, q: undefined, destination: extraFilters.destination };
-  const scoped = await filterTrips(scopedFilters);
-  const destSource = scoped.length ? scoped : all;
+  const tripType = extraFilters.type || extraFilters.tripType;
+  const memoKey = `${lang}|${String(tripType || '')}|${query.toLowerCase()}|${limit}|${truthyFlag(extraFilters.offersOnly) ? '1' : '0'}`;
+  const memoHit = suggestMemo.get(memoKey);
+  if (memoHit && Date.now() - memoHit.at < SUGGEST_TTL_MS) return memoHit.value;
+  const [all, settings] = await Promise.all([catalog(), settingsService.getSettings()]);
+  const list = settings.destinations || [];
+  const scoped = all.filter((trip) => {
+    if (tripType && !tripTypeMatches(trip.type, tripType)) return false;
+    if (truthyFlag(extraFilters.offersOnly) && !trip.offer) return false;
+    return true;
+  });
+  const tripDests = popularDestinations(scoped, list, lang);
+
+  const mapCatalogHit = (item) => {
+    const counted = tripDests.find((row) => sameDestination(row.name, item.nameEn, list));
+    return {
+      name: item.nameEn,
+      nameEn: item.nameEn,
+      nameAr: item.nameAr,
+      label: destinationLabel(item, lang, list),
+      count: counted ? counted.count : 0,
+    };
+  };
 
   if (!query) {
     const deals = scoped.filter((trip) => trip.offer).slice(0, limit);
     const featured = deals.length ? deals : scoped.slice(0, limit);
-    return {
+    const catalogTop = searchDestinations(list, '', tripType).slice(0, 8).map(mapCatalogHit);
+    const merged = [...tripDests, ...catalogTop.filter((item) => !tripDests.some((row) => row.name === item.name))];
+    const value = {
       popular: true,
-      destinations: popularDestinations(destSource).slice(0, 6),
-      deals: featured.map(mapDeal),
+      destinations: merged.slice(0, 8),
+      deals: featured.map((trip) => mapDeal(trip, lang, list)),
     };
+    suggestMemo.set(memoKey, { at: Date.now(), value });
+    return value;
   }
 
   const needle = query.toLowerCase();
-  const destinations = popularDestinations(destSource)
-    .filter((item) => item.name.toLowerCase().includes(needle))
-    .slice(0, 6);
-  const deals = (await filterTrips({ ...extraFilters, q: query })).slice(0, limit).map(mapDeal);
-  return { popular: false, destinations, deals };
+  const catalogHits = searchDestinations(list, query, tripType).slice(0, 8).map(mapCatalogHit);
+  const extraTripHits = tripDests.filter((item) => {
+    const hay = `${item.nameEn} ${item.nameAr} ${item.label}`.toLowerCase();
+    return hay.includes(needle) && !catalogHits.some((row) => row.name === item.name);
+  });
+  const destinations = [...catalogHits, ...extraTripHits].slice(0, 8);
+  const deals = scoped
+    .filter((trip) => matchesQuery(trip, query, list))
+    .slice(0, limit)
+    .map((trip) => mapDeal(trip, lang, list));
+  const value = { popular: false, destinations, deals };
+  suggestMemo.set(memoKey, { at: Date.now(), value });
+  return value;
 }
 
 function filterTripsByCompany(items, companyId, filters = {}) {
@@ -279,7 +371,7 @@ function filterTripsByCompany(items, companyId, filters = {}) {
 
   let next = items.filter((trip) => String(trip.companyId) === String(companyId));
   if (status !== 'all') next = next.filter((trip) => trip.status === status);
-  if (destination !== 'all') next = next.filter((trip) => trip.destination === destination);
+  if (destination !== 'all') next = next.filter((trip) => sameDestination(trip.destination, destination));
   if (type !== 'all') next = next.filter((trip) => trip.type === type);
   if (offer === 'yes') next = next.filter((trip) => trip.offer);
   if (offer === 'no') next = next.filter((trip) => !trip.offer);
@@ -356,20 +448,43 @@ async function getCompanyTrip(id, companyId) {
   return trip;
 }
 
-function buildTripDoc(companyId, payload, existing = null) {
+function resolveTripStatus(payload, existing, actor) {
+  const requested = String(payload?.status || '').toLowerCase();
+  const current = String(existing?.status || '');
+  if (actor === 'admin') {
+    if (current === 'sold-out' && requested !== 'active' && requested !== 'draft' && requested !== 'pending') {
+      return 'sold-out';
+    }
+    if (['draft', 'pending', 'active', 'rejected'].includes(requested)) return requested;
+    return current || 'active';
+  }
+  if (!existing) return requested === 'draft' ? 'draft' : 'pending';
+  if (current === 'sold-out') return 'sold-out';
+  if (current === 'rejected') return requested === 'draft' ? 'draft' : 'pending';
+  if (current === 'active') return requested === 'draft' ? 'draft' : 'active';
+  return requested === 'draft' ? 'draft' : 'pending';
+}
+
+async function buildTripDoc(companyId, payload, existing = null, options = {}) {
   const normalized = normalizeTripPayload({ ...(existing || {}), ...payload });
   const images = parseMediaList(normalized.images, existing?.images || []);
   const videos = parseMediaList(normalized.videos, existing?.videos || []);
+  const actor = options.actor || 'company';
+  const settings = await settingsService.getSettings();
+  const list = settings.destinations || [];
+  const destRecord = findDestination(list, normalized.destination);
+  const destination = destRecord ? destRecord.nameEn : canonicalDestination(normalized.destination, list);
+  const country = destRecord
+    ? countryLabel(destRecord.country, 'en')
+    : (isSacredTripType(normalized.type) ? 'Saudi Arabia' : 'Egypt');
   return {
     companyId: String(companyId),
     title: normalized.title,
     titleAr: normalized.titleAr || '',
-    destination: normalized.destination,
-    location: `${normalized.destination}, ${normalized.type === 'umrah' ? 'Saudi Arabia' : 'Egypt'}`,
-    category: normalized.type === 'umrah'
-      ? (normalized.category && normalized.category !== 'Leisure' ? normalized.category : 'Umrah Package')
-      : (normalized.category || 'Leisure'),
-    type: normalized.type === 'umrah' ? 'umrah' : 'leisure',
+    destination,
+    location: `${destination}, ${country}`,
+    category: categoryFromTripType(normalized.type),
+    type: normalizeTripType(normalized.type),
     description: normalized.description || '',
     descriptionAr: normalized.descriptionAr || '',
     about: normalized.description || '',
@@ -383,7 +498,7 @@ function buildTripDoc(companyId, payload, existing = null) {
     beds: Number(normalized.beds) || 2,
     priceMode: normalized.priceMode === 'per-date' ? 'per-date' : 'shared',
     roomTypes: normalized.roomTypes || [],
-    schedule: normalized.schedule || 'daily',
+    schedule: normalized.schedule || 'custom',
     includedServices: normalized.includedServices || '',
     includedList: normalized.includedList || [],
     itinerary: normalized.itinerary || [],
@@ -391,31 +506,34 @@ function buildTripDoc(companyId, payload, existing = null) {
     cancellationPolicy: normalized.cancellationPolicy || '',
     images: images.length ? images : existing?.images?.length ? existing.images : [localImages[0]],
     videos,
-    status: normalized.status || existing?.status || 'draft',
+    status: resolveTripStatus(payload, existing, actor),
     offer: 'offer' in payload ? payload.offer === 'on' || payload.offer === true : Boolean(existing?.offer),
-    markupType: payload.markupType || existing?.markupType || 'inherit',
-    markupPercent: Number(payload.markupPercent ?? existing?.markupPercent) || 0,
-    markupFixed: Number(payload.markupFixed ?? existing?.markupFixed) || 0,
+    markupType: actor === 'admin' ? (payload.markupType || existing?.markupType || 'inherit') : (existing?.markupType || 'inherit'),
+    markupPercent: actor === 'admin' ? (Number(payload.markupPercent ?? existing?.markupPercent) || 0) : (Number(existing?.markupPercent) || 0),
+    markupFixed: actor === 'admin' ? (Number(payload.markupFixed ?? existing?.markupFixed) || 0) : (Number(existing?.markupFixed) || 0),
   };
 }
 
 async function createCompanyTrip(companyId, payload) {
   const id = `ct-${Date.now()}`;
-  const data = buildTripDoc(companyId, payload);
+  const data = await buildTripDoc(companyId, payload, null, { actor: 'company' });
   const created = await Trip.create({ _id: id, ...data });
+  invalidateCatalogCache();
   return toDoc(created);
 }
 
 async function updateCompanyTrip(id, companyId, payload) {
   const trip = await getCompanyTrip(id, companyId);
   if (!trip) return null;
-  const data = buildTripDoc(companyId, payload, trip);
+  const data = await buildTripDoc(companyId, payload, trip, { actor: 'company' });
   const updated = await Trip.findByIdAndUpdate(String(id), { $set: data }, { new: true }).lean();
+  invalidateCatalogCache();
   return toDoc(updated);
 }
 
 async function deleteCompanyTrip(id, companyId) {
   const result = await Trip.deleteOne({ _id: String(id), companyId: String(companyId) });
+  if (result.deletedCount > 0) invalidateCatalogCache();
   return result.deletedCount > 0;
 }
 
@@ -460,6 +578,7 @@ async function approveTrip(id) {
     { $set: { status: 'active' }, $unset: { rejectionReason: 1 } },
     { new: true }
   ).lean();
+  invalidateCatalogCache();
   return toDoc(updated);
 }
 
@@ -469,16 +588,19 @@ async function rejectTrip(id, reason) {
     { $set: { status: 'rejected', rejectionReason: String(reason || 'Rejected by admin.') } },
     { new: true }
   ).lean();
+  invalidateCatalogCache();
   return toDoc(updated);
 }
 
 async function setTripFeatured(id, featured) {
   const updated = await Trip.findByIdAndUpdate(String(id), { $set: { featured: Boolean(featured) } }, { new: true }).lean();
+  invalidateCatalogCache();
   return toDoc(updated);
 }
 
 async function adminDeleteTrip(id) {
   const result = await Trip.deleteOne({ _id: String(id) });
+  if (result.deletedCount > 0) invalidateCatalogCache();
   return result.deletedCount > 0;
 }
 
@@ -492,13 +614,20 @@ async function bulkApproveTrips(ids = []) {
 }
 
 async function adminCreateTrip(companyId, payload) {
-  return createCompanyTrip(companyId, payload);
+  const id = `ct-${Date.now()}`;
+  const data = await buildTripDoc(companyId, { ...payload, status: payload.status || 'active' }, null, { actor: 'admin' });
+  const created = await Trip.create({ _id: id, ...data });
+  invalidateCatalogCache();
+  return toDoc(created);
 }
 
 async function adminUpdateTrip(id, payload) {
   const trip = await getTripById(id);
   if (!trip) return null;
-  return updateCompanyTrip(id, trip.companyId, payload);
+  const data = await buildTripDoc(trip.companyId, payload, trip, { actor: 'admin' });
+  const updated = await Trip.findByIdAndUpdate(String(id), { $set: data }, { new: true }).lean();
+  invalidateCatalogCache();
+  return toDoc(updated);
 }
 
 function resolveTripDates(trip, locale = 'en') {
@@ -571,7 +700,7 @@ async function decrementSeats(tripId, dateId, seats, options = {}) {
       await Trip.updateOne({ _id: trip._id, status: 'active' }, { $set: { status: 'sold-out' } });
       trip.status = 'sold-out';
     }
-    return toDoc(trip);
+    return finishSeatUpdate(trip);
   }
 
   const filter = dateId
@@ -586,7 +715,7 @@ async function decrementSeats(tripId, dateId, seats, options = {}) {
     await Trip.updateOne({ _id: trip._id, status: 'active' }, { $set: { status: 'sold-out' } });
     trip.status = 'sold-out';
   }
-  return toDoc(trip);
+  return finishSeatUpdate(trip);
 }
 
 async function incrementSeats(tripId, dateId, seats, options = {}) {
@@ -616,7 +745,7 @@ async function incrementSeats(tripId, dateId, seats, options = {}) {
     if (trip && trip.status === 'sold-out' && (trip.availableSeats || 0) > 0) {
       await Trip.updateOne({ _id: trip._id, status: 'sold-out' }, { $set: { status: 'active' } });
     }
-    return toDoc(trip);
+    return finishSeatUpdate(trip);
   }
 
   const filter = dateId
@@ -629,7 +758,7 @@ async function incrementSeats(tripId, dateId, seats, options = {}) {
   if (trip && trip.status === 'sold-out' && (trip.availableSeats || 0) > 0) {
     await Trip.updateOne({ _id: trip._id, status: 'sold-out' }, { $set: { status: 'active' } });
   }
-  return toDoc(trip);
+  return finishSeatUpdate(trip);
 }
 
 module.exports = {

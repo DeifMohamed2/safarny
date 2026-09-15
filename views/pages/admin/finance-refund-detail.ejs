@@ -1,0 +1,93 @@
+<%- include('../../partials/admin-shell-start') %>
+<div class="admin-header">
+  <div>
+    <a href="/admin/finance/refunds" class="admin-back"><%= t('admin.finance.refunds.title', 'Refunds') %></a>
+    <h2 class="admin-title"><%= refund.id %></h2>
+    <p class="admin-subtitle"><%= refund.customerName %> · <%= refund.tripName %></p>
+  </div>
+  <span class="admin-status admin-status--<%= refund.status %> admin-status--lg"><%= statusLabel(refund.status) %></span>
+</div>
+
+<div class="admin-grid-2">
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.finance.refunds.details', 'Refund details') %></h3>
+    <dl class="admin-dl">
+      <dt><%= t('admin.finance.booking', 'Booking') %></dt><dd><a href="/admin/bookings/<%= refund.bookingId %>" class="admin-link"><%= refund.bookingId %></a></dd>
+      <dt><%= t('admin.table.company', 'Company') %></dt><dd><%= refund.companyName %></dd>
+      <dt><%= t('admin.finance.refunds.requested', 'Requested') %></dt><dd><%= formatPrice(refund.requestedAmount) %> <%= t('shared.egp', 'EGP') %></dd>
+      <dt><%= t('admin.finance.refunds.approved', 'Approved') %></dt><dd><%= refund.approvedAmount ? formatPrice(refund.approvedAmount) + ' ' + t('shared.egp', 'EGP') : '—' %></dd>
+      <dt><%= t('admin.finance.refunds.reason', 'Reason') %></dt><dd><%= refund.reasonLabel %><% if (refund.reason) { %><br/><span class="admin-muted"><%= refund.reason %></span><% } %></dd>
+      <dt><%= t('admin.finance.method', 'Method') %></dt><dd><%= refund.methodLabel || refund.method %></dd>
+      <dt><%= t('admin.finance.transferRef', 'Transfer reference') %></dt><dd><%= refund.reference || '—' %></dd>
+      <% if (refund.reviewNote) { %>
+        <dt><%= t('admin.finance.reviewNote', 'Review note') %></dt><dd><%= refund.reviewNote %></dd>
+      <% } %>
+      <% if (Number(refund.platformFeeRefunded || 0) > 0) { %>
+        <dt><%= t('admin.finance.refunds.feeReversed', 'Platform fee reversed') %></dt>
+        <dd><%= formatPrice(refund.platformFeeRefunded) %> <%= t('shared.egp', 'EGP') %></dd>
+      <% } %>
+      <% if (refund.companyClawback) { %>
+        <dt><%= t('admin.finance.refunds.clawback', 'Company clawback') %></dt><dd><%= formatPrice(refund.companyClawback) %> <%= t('shared.egp', 'EGP') %></dd>
+      <% } %>
+    </dl>
+  </div>
+  <div class="admin-panel">
+    <h3 class="admin-panel-title"><%= t('admin.finance.refunds.destination', 'Send refund to') %></h3>
+    <dl class="admin-dl">
+      <% const dest = refund.destination || {}; %>
+      <% if (dest.instapayIpa) { %><dt>IPA</dt><dd><%= dest.instapayIpa %></dd><% } %>
+      <% if (dest.walletNumber) { %><dt><%= t('checkout.senderPhone', 'Wallet / phone') %></dt><dd><%= dest.walletNumber %></dd><% } %>
+      <% if (dest.bankName) { %><dt><%= t('admin.finance.bankName', 'Bank') %></dt><dd><%= dest.bankName %></dd><% } %>
+      <% if (dest.accountName) { %><dt><%= t('admin.finance.bankAccountName', 'Account name') %></dt><dd><%= dest.accountName %></dd><% } %>
+      <% if (dest.accountNumber) { %><dt><%= t('admin.finance.bankAccountNumber', 'Account') %></dt><dd><%= dest.accountNumber %></dd><% } %>
+      <% if (dest.iban) { %><dt>IBAN</dt><dd><%= dest.iban %></dd><% } %>
+    </dl>
+    <% if (refund.proof && refund.proof.viewUrl) { %>
+      <div class="admin-finance-proof-actions mt-3">
+        <a href="<%= refund.proof.viewUrl %>" target="_blank" rel="noopener" class="admin-link"><%= t('admin.finance.viewProof', 'View proof') %></a>
+      </div>
+    <% } %>
+    <% if (refund.status === 'refunded') { %>
+      <a href="/admin/finance/refunds/<%= refund.id %>/credit-note" class="adm-btn adm-btn--primary adm-btn--sm mt-3"><%= t('admin.finance.refunds.creditNote', 'Download credit note') %></a>
+    <% } %>
+  </div>
+</div>
+
+<% if (refund.status === 'requested' || refund.status === 'approved') { %>
+  <div class="admin-grid-2 mt-4">
+    <div class="admin-panel">
+      <h3 class="admin-panel-title"><%= t('admin.finance.refunds.approve', 'Approve') %></h3>
+      <form method="post" action="/admin/finance/refunds/<%= refund.id %>/approve" class="admin-form">
+        <label class="admin-label"><%= t('admin.finance.refunds.approvedAmount', 'Approved amount') %></label>
+        <input type="number" min="1" name="approvedAmount" class="admin-input" value="<%= refund.approvedAmount || refund.requestedAmount %>" required />
+        <label class="admin-label mt-3"><%= t('admin.finance.reviewNote', 'Note') %></label>
+        <textarea name="reviewNote" class="admin-textarea" rows="2"><%= refund.reviewNote || '' %></textarea>
+        <button type="submit" class="adm-btn adm-btn--primary mt-3"><%= t('admin.finance.refunds.approve', 'Approve') %></button>
+      </form>
+    </div>
+    <div class="admin-panel">
+      <h3 class="admin-panel-title"><%= t('admin.finance.refunds.decline', 'Decline') %></h3>
+      <form method="post" action="/admin/finance/refunds/<%= refund.id %>/decline" class="admin-form">
+        <label class="admin-label"><%= t('admin.finance.rejectNote', 'Reason (required)') %></label>
+        <textarea name="reviewNote" class="admin-textarea" rows="3" required></textarea>
+        <button type="submit" class="adm-btn adm-btn--danger mt-3"><%= t('admin.finance.refunds.decline', 'Decline') %></button>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<% if (refund.status === 'approved' || refund.status === 'processing') { %>
+  <div class="admin-panel mt-4">
+    <h3 class="admin-panel-title"><%= t('admin.finance.refunds.recordPaid', 'Record outgoing transfer') %></h3>
+    <form method="post" action="/admin/finance/refunds/<%= refund.id %>/paid" enctype="multipart/form-data" class="admin-form">
+      <label class="admin-label"><%= t('admin.finance.transferRef', 'Transfer reference') %></label>
+      <input name="reference" class="admin-input" required value="<%= refund.reference || '' %>" />
+      <label class="admin-label mt-3"><%= t('admin.finance.proof', 'Proof') %></label>
+      <input type="file" name="proof" accept="image/jpeg,image/png,image/webp,application/pdf" class="admin-input" />
+      <label class="admin-label mt-3"><%= t('admin.finance.payouts.note', 'Note') %></label>
+      <textarea name="note" class="admin-textarea" rows="2"></textarea>
+      <button type="submit" class="adm-btn adm-btn--primary mt-3"><%= t('admin.finance.refunds.markPaid', 'Mark refunded') %></button>
+    </form>
+  </div>
+<% } %>
+<%- include('../../partials/admin-shell-end') %>

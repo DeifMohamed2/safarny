@@ -8,7 +8,7 @@
         <ul class="partner-points">
           <li>
             <span aria-hidden="true">✓</span>
-            <%= t('partner.point1', 'Publish leisure and Umrah packages with photos, dates, and room prices.') %>
+            <%= t('partner.point1', 'Publish leisure and Umrah & Hajj packages with photos, dates, and room prices.') %>
           </li>
           <li>
             <span aria-hidden="true">✓</span>
@@ -113,6 +113,7 @@
             <input type="checkbox" required />
             <span><%= t('auth.acceptTermsPrefix', 'By signing up, you accept our') %> <a href="/terms"><%= t('auth.termsAndConditions', 'Terms and Conditions') %></a></span>
           </label>
+          <p class="partner-payout-note"><%= t('partner.payoutAfterSignup', 'After you create your account, add a payout method in Settings. Safarny cannot verify the company until that is saved.') %></p>
 
           <button type="submit" class="partner-submit">
             <%= t('partner.submit', 'Create company account') %>

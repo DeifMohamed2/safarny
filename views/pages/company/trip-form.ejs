@@ -3,7 +3,7 @@
 <header class="company-header" data-scroll-reveal>
   <div>
     <h1 class="company-title"><%= editing ? t('company.trips.editTitle', 'Edit trip') : t('company.trips.createTitle', 'Create trip') %></h1>
-    <p class="company-subtitle"><%= t('company.trips.formHint', 'Fill in both English and Arabic details when possible.') %></p>
+    <p class="company-subtitle"><%= t('company.trips.formHint', 'Set the rooms you sell, add departure dates, then photos and the trip story.') %></p>
   </div>
   <a href="<%= editing ? '/company/trips/' + trip.id : '/company/trips' %>" class="cp-btn cp-btn--ghost"><%= t('company.back', 'Back') %></a>
 </header>

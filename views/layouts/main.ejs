@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>" dir="<%= dir %>">
+<html lang="<%= typeof lang !== 'undefined' ? lang : 'en' %>" dir="<%= typeof dir !== 'undefined' ? dir : 'ltr' %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -36,13 +36,25 @@
   </head>
   <body class="min-h-dvh bg-white overflow-x-hidden antialiased">
     <div id="toast-stack" class="toast-stack">
-      <% if (flash) { %>
-        <div class="toast">
-          <p class="font-semibold text-[#122445]"><%= flash.message %></p>
+      <% if (typeof flash !== 'undefined' && flash) { %>
+        <div class="toast" role="status">
+          <div class="toast-body">
+            <p class="font-semibold text-[#122445]"><%= flash.message %></p>
+          </div>
+          <button type="button" class="toast-close" data-toast-close aria-label="<%= t('shared.close', 'Close') %>">×</button>
         </div>
       <% } %>
     </div>
     <%- include('../partials/navbar') %>
+    <% if (typeof isCompany !== 'undefined' && isCompany && !payoutReady && company && company.verification !== 'verified') { %>
+      <div class="site-payout-banner" role="alert">
+        <div class="site-payout-banner-inner">
+          <strong><%= t('company.settings.payoutRequiredTitle', 'Add a payout method to verify your account') %></strong>
+          <span><%= t('company.settings.payoutRequiredBody', 'Safarny cannot verify your company until you save how you want to get paid.') %></span>
+          <a href="/company/settings#payout-details"><%= t('company.settings.payoutRequiredAction', 'Add payout method') %></a>
+        </div>
+      </div>
+    <% } %>
     <main>
       <%- body %>
     </main>

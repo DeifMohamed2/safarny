@@ -36,7 +36,7 @@
     <span class="adm-reviews-kpi-icon adm-reviews-kpi-icon--avg" aria-hidden="true">☆</span>
     <div>
       <p class="adm-reviews-kpi-label"><%= t('admin.reviews.avgRating', 'Avg. rating') %></p>
-      <p class="adm-reviews-kpi-value"><%= stats.avgRating %><span class="adm-reviews-kpi-suffix">/5</span></p>
+      <p class="adm-reviews-kpi-value"><% if (stats.published) { %><%= stats.avgRating %><span class="adm-reviews-kpi-suffix">/5</span><% } else { %>—<% } %></p>
     </div>
   </article>
   <article class="adm-reviews-kpi adm-reviews-kpi--warn">
@@ -133,7 +133,7 @@
         <% reviews.forEach(function(review) { %>
           <article class="adm-review-card adm-review-card--<%= review.status %>">
             <header class="adm-review-card-top">
-              <span class="admin-status admin-status--<%= review.status %>"><%= review.status %></span>
+              <span class="admin-status admin-status--<%= review.status %>"><%= statusLabel(review.status) %></span>
               <time class="adm-review-date" datetime="<%= review.createdAt %>"><%= reviewDate(review.createdAt) %></time>
             </header>
 
@@ -154,7 +154,12 @@
 
             <div class="adm-review-trip">
               <% if (review.company) { %>
-                <img src="<%= review.company.image || '/assets/companies/company.png' %>" alt="" class="adm-review-company-logo" width="28" height="28" />
+                <% const reviewLogo = companyLogoUrl(review.company.image); %>
+                <% if (reviewLogo) { %>
+                  <img src="<%= reviewLogo %>" alt="" class="adm-review-company-logo" width="28" height="28" />
+                <% } else { %>
+                  <span class="adm-review-company-logo adm-review-company-logo--fallback"><%= initials(review.company.title) || 'C' %></span>
+                <% } %>
                 <div class="adm-review-trip-meta">
                   <a href="/admin/companies/<%= review.company.id %>" class="adm-review-company"><%= review.company.title %></a>
                   <% if (review.tripTitle) { %>

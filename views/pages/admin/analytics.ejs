@@ -16,7 +16,7 @@
     { key: 'avgOrder', label: t('admin.kpi.avgOrder', 'Avg. order'), value: formatPrice(analytics.kpis.avgOrder.value) + ' ' + analytics.currency, delta: analytics.kpis.avgOrder.delta, hint: t('admin.analytics.kpiAvgHint', 'Per confirmed booking') },
     { key: 'conversion', label: t('admin.analytics.conversion', 'Conversion'), value: analytics.kpis.conversion.value + '%', delta: analytics.kpis.conversion.delta, hint: t('admin.analytics.kpiConversionHint', 'Confirmed vs total') },
     { key: 'users', label: t('admin.kpi.users', 'Travelers'), value: analytics.kpis.users.value, delta: analytics.kpis.users.delta, hint: t('admin.analytics.kpiUsersHint', 'Registered accounts') },
-    { key: 'rating', label: t('admin.analytics.avgRating', 'Avg. rating'), value: analytics.kpis.avgRating.value + ' ★', delta: analytics.kpis.avgRating.delta, hint: t('admin.analytics.kpiRatingHint', 'Across all reviews') },
+    { key: 'rating', label: t('admin.analytics.avgRating', 'Avg. rating'), value: analytics.kpis.avgRating.display || (analytics.kpis.avgRating.value ? analytics.kpis.avgRating.value + ' ★' : '—'), delta: analytics.kpis.avgRating.delta, hint: t('admin.analytics.kpiRatingHint', 'Published traveler reviews') },
     { key: 'tickets', label: t('admin.analytics.openTickets', 'Open tickets'), value: analytics.kpis.openTickets.value, delta: analytics.kpis.openTickets.delta, hint: t('admin.analytics.kpiTicketsHint', 'Needs attention') },
   ];
   const funnel = analytics.bookingFunnel || {};
@@ -181,7 +181,7 @@
             <li class="adm-analytics-dest-item">
               <div class="adm-analytics-dest-meta">
                 <span class="adm-analytics-dest-rank">#<%= i + 1 %></span>
-                <span class="adm-analytics-dest-name"><%= dest.name %></span>
+                <span class="adm-analytics-dest-name"><%= typeof destinationLabel === 'function' ? destinationLabel(dest.name) : dest.name %></span>
                 <span class="adm-analytics-dest-count"><%= dest.count %> <%= t('admin.kpi.bookings', 'bookings') %></span>
               </div>
               <div class="adm-analytics-dest-track">
@@ -236,7 +236,7 @@
               <td><%= b.tripName %></td>
               <td><%= b.companyName || b.companyId %></td>
               <td><%= formatPrice(b.totalPrice) %> <%= analytics.currency %></td>
-              <td><span class="admin-status admin-status--<%= b.status.toLowerCase() %>"><%= b.status %></span></td>
+              <td><span class="admin-status admin-status--<%= b.status.toLowerCase() %>"><%= statusLabel(b.status) %></span></td>
               <td class="admin-muted"><%= b.bookingDate %></td>
             </tr>
           <% }) %>

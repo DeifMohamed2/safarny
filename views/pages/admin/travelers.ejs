@@ -74,10 +74,10 @@
               </div>
             </td>
             <td><strong><%= traveler.bookingCount %></strong><% if (traveler.confirmedBookings) { %> <span class="admin-muted-sm">(<%= traveler.confirmedBookings %> <%= t('admin.travelers.confirmed', 'confirmed') %>)</span><% } %></td>
-            <td><%= formatPrice(traveler.totalSpent) %> EGP</td>
+            <td><%= formatPrice(traveler.totalSpent) %> <%= t('shared.egp', 'EGP') %></td>
             <td><%= traveler.favoriteCount %></td>
             <td class="admin-muted-sm"><%= traveler.lastActiveAt || traveler.createdAt %></td>
-            <td><span class="admin-status admin-status--<%= traveler.status || 'active' %>"><%= traveler.status || 'active' %></span></td>
+            <td><span class="admin-status admin-status--<%= traveler.status || 'active' %>"><%= statusLabel(traveler.status || 'active') %></span></td>
             <td>
               <div class="adm-people-actions">
                 <a href="/admin/travelers/<%= traveler.id %>" class="adm-btn adm-btn--sm adm-btn--ghost"><%= t('admin.actions.view', 'View') %></a>

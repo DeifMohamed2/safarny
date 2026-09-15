@@ -1,0 +1,93 @@
+<%- include('../../partials/company-shell-start', { companyActive: 'finance' }) %>
+  <header class="company-header">
+    <div>
+      <h2 class="company-title"><%= t('company.finance.title', 'Finance') %></h2>
+      <p class="company-subtitle"><%= t('company.finance.subtitle', 'What you earned, what is waiting, and what Safarny already paid out.') %></p>
+    </div>
+  </header>
+
+  <% if (payoutReady && !payoutVerified) { %>
+    <div class="cp-verify-banner"><%= t('company.finance.payoutUnverified', 'Your payout details are saved and waiting for Safarny to verify them.') %></div>
+  <% } %>
+
+  <div class="company-stats">
+    <% const cards = [
+      { key: 'earned', label: t('company.finance.earned', 'Earned'), value: formatPrice(stats.earned) + ' ' + t('shared.egp', 'EGP'), hint: t('company.finance.earnedHint', 'Confirmed bookings at your rate') },
+      { key: 'awaiting', label: t('company.finance.awaiting', 'Awaiting payout'), value: formatPrice(stats.awaiting) + ' ' + t('shared.egp', 'EGP'), hint: t('company.finance.awaitingHint', 'Confirmed, not yet paid out') },
+      { key: 'paid', label: t('company.finance.paidOut', 'Paid out'), value: formatPrice(stats.paidOut) + ' ' + t('shared.egp', 'EGP'), hint: t('company.finance.paidHint', 'Already transferred to you') },
+      { key: 'clawback', label: t('company.finance.deductions', 'Refund deductions'), value: formatPrice(stats.clawback) + ' ' + t('shared.egp', 'EGP'), hint: t('company.finance.deductionsHint', 'Taken from a later payout if a refund hits a paid booking') },
+    ]; %>
+    <% cards.forEach(function(card, index) { %>
+      <article class="company-stat-card" style="--load-delay: <%= 0.05 * (index + 1) %>s">
+        <p class="company-stat-label"><%= card.label %></p>
+        <p class="company-stat-value"><%= card.value %></p>
+        <p class="company-stat-hint"><%= card.hint %></p>
+      </article>
+    <% }) %>
+  </div>
+
+  <section class="company-panel mt-4">
+    <div class="company-panel-head">
+      <h2><%= t('company.finance.payouts', 'Payout history') %></h2>
+    </div>
+    <% if (!payouts.length) { %>
+      <p class="company-muted"><%= t('company.finance.noPayouts', 'No payouts yet. Confirmed bookings appear here after Safarny pays you.') %></p>
+    <% } else { %>
+      <div class="company-table-wrap">
+        <table class="company-table">
+          <thead>
+            <tr>
+              <th><%= t('company.finance.payoutId', 'Payout') %></th>
+              <th><%= t('admin.table.amount', 'Amount') %></th>
+              <th><%= t('admin.finance.method', 'Method') %></th>
+              <th><%= t('admin.table.status', 'Status') %></th>
+              <th><%= t('admin.finance.transferRef', 'Reference') %></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% payouts.forEach(function(payout) { %>
+              <tr>
+                <td><a href="/company/finance/payouts/<%= payout.id %>" class="company-inline-link"><%= payout.id %></a></td>
+                <td><%= formatPrice(payout.netPayable) %> <%= t('shared.egp', 'EGP') %></td>
+                <td class="company-muted"><%= payout.methodLabel || payout.method || '—' %></td>
+                <td><span class="company-status company-status--<%= payout.status %>"><%= t('admin.status.' + payout.status, statusLabel(payout.status)) %></span></td>
+                <td><%= payout.reference || '—' %></td>
+                <td>
+                  <% if (payout.status === 'paid') { %>
+                    <a href="/company/finance/payouts/<%= payout.id %>/statement" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('company.finance.statement', 'Statement') %></a>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="company-panel mt-4">
+    <div class="company-panel-head">
+      <h2><%= t('company.finance.awaitingBookings', 'Bookings awaiting payout') %></h2>
+    </div>
+    <% if (!unsettled.length) { %>
+      <p class="company-muted"><%= t('company.finance.noneAwaiting', 'Nothing waiting.') %></p>
+    <% } else { %>
+      <div class="company-table-wrap">
+        <table class="company-table">
+          <thead><tr><th>ID</th><th><%= t('admin.table.trip', 'Trip') %></th><th><%= t('admin.table.customer', 'Customer') %></th><th><%= t('admin.table.amount', 'Your amount') %></th></tr></thead>
+          <tbody>
+            <% unsettled.forEach(function(booking) { %>
+              <tr>
+                <td><a href="/company/bookings/<%= booking.id %>" class="company-inline-link"><%= booking.code || booking.id %></a></td>
+                <td><%= booking.tripName %></td>
+                <td><%= booking.customerName %></td>
+                <td><%= formatPrice(booking.payableToCompany) %> <%= t('shared.egp', 'EGP') %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+<%- include('../../partials/company-shell-end') %>

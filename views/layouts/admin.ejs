@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>" dir="<%= dir %>">
+<html lang="<%= typeof lang !== 'undefined' ? lang : 'en' %>" dir="<%= typeof dir !== 'undefined' ? dir : 'ltr' %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,7 +31,7 @@
   </head>
   <body class="admin-app antialiased">
     <div id="adm-toast-stack" class="adm-toast-stack" aria-live="polite" aria-atomic="true"></div>
-    <% if (flash) { %>
+    <% if (typeof flash !== 'undefined' && flash) { %>
       <script type="application/json" id="adm-flash-payload"><%- JSON.stringify(flash) %></script>
     <% } %>
     <%- body %>

@@ -4,6 +4,7 @@
     { id: 'dashboard', href: '/company/dashboard', label: t('company.nav.dashboard', 'Dashboard'), icon: 'home' },
     { id: 'trips', href: '/company/trips', label: t('company.nav.trips', 'Trips'), icon: 'trips' },
     { id: 'bookings', href: '/company/bookings', label: t('company.nav.bookings', 'Bookings'), icon: 'bookings' },
+    { id: 'finance', href: '/company/finance', label: t('company.nav.finance', 'Finance'), icon: 'finance' },
     { id: 'support', href: '/company/support', label: t('company.nav.support', 'Support'), icon: 'support' },
     { id: 'settings', href: '/company/settings', label: t('company.nav.settings', 'Settings'), icon: 'settings' },
   ];
@@ -11,16 +12,18 @@
     dashboard: t('company.dashboard.title', 'Dashboard'),
     trips: t('company.trips.title', 'Trips'),
     bookings: t('company.bookings.title', 'Bookings'),
+    finance: t('company.finance.title', 'Finance'),
     support: t('company.support.title', 'Support'),
     settings: t('company.settings.title', 'Settings'),
   };
   const pageTitle = titles[activeSection] || t('company.portal', 'Company portal');
   const companyName = company ? company.title : user.userName;
-  const companyLogo = company && company.image ? company.image : (user.avatar || '/user.png');
+  const companyLogo = companyLogoUrl(company && company.image);
   function navIcon(name) {
     if (name === 'home') return '<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>';
     if (name === 'trips') return '<rect x="4" y="6" width="16" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 6V5a4 4 0 0 1 8 0v1M8 12h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>';
     if (name === 'bookings') return '<path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>';
+    if (name === 'finance') return '<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>';
     if (name === 'support') return '<path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>';
     if (name === 'chat') return '<path d="M5 18.5 6.2 15A7.5 7.5 0 1 1 12 19.5H7.5L5 18.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>';
     return '<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M12 5v2M12 17v2M5 12h2M17 12h2M7.2 7.2l1.4 1.4M15.4 15.4l1.4 1.4M7.2 16.8l1.4-1.4M15.4 8.6l1.4-1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>';
@@ -37,7 +40,11 @@
     </div>
 
     <div class="cp-company">
-      <img src="<%= companyLogo %>" alt="" class="cp-company-logo" />
+      <% if (companyLogo) { %>
+        <img src="<%= companyLogo %>" alt="" class="cp-company-logo" />
+      <% } else { %>
+        <span class="cp-company-logo cp-company-logo--fallback" aria-hidden="true"><%= initials(companyName) || 'C' %></span>
+      <% } %>
       <div class="cp-company-meta">
         <p class="cp-company-name"><%= companyName %></p>
         <p class="cp-company-mail"><%= user.email %></p>
@@ -97,12 +104,33 @@
           </div>
         </div>
         <div class="cp-user">
-          <img src="<%= companyLogo %>" alt="" />
+          <% if (companyLogo) { %>
+            <img src="<%= companyLogo %>" alt="" />
+          <% } else { %>
+            <span class="cp-user-fallback" aria-hidden="true"><%= initials(companyName) || 'C' %></span>
+          <% } %>
           <span><%= companyName %></span>
         </div>
       </div>
     </header>
     <div class="cp-content" data-cp-content>
+      <% if (typeof isCompany !== 'undefined' && isCompany && !payoutReady && company && company.verification !== 'verified') { %>
+        <div class="cp-payout-banner" role="alert">
+          <div class="cp-payout-banner-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M12 8v5M12 16.2v.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="cp-payout-banner-copy">
+            <h2><%= t('company.settings.payoutRequiredTitle', 'Add a payout method to verify your account') %></h2>
+            <p><%= t('company.settings.payoutRequiredBody', 'Safarny cannot verify your company until you save how you want to get paid. Fill this in once — it appears until it is complete.') %></p>
+            <% if (activeSection !== 'settings') { %>
+              <a href="/company/settings#payout-details" class="cp-payout-banner-btn"><%= t('company.settings.payoutRequiredAction', 'Add payout method') %></a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
       <% if (company && company.verification === 'pending') { %>
         <div class="cp-verify-banner"><%= t('partner.pendingBanner', 'Your company is under review. You can set up trips now — they go live after Safarny verifies your account.') %></div>
       <% } else if (company && company.verification === 'rejected') { %>

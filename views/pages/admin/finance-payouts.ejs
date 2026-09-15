@@ -1,0 +1,176 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  function filterQuery(overrides) {
+    const q = Object.assign({}, filters, overrides || {});
+    return Object.keys(q).filter(function(k) { return q[k] && q[k] !== 'all'; }).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+  const exportQs = filterQuery();
+  const dueCompanies = (overview && overview.dueCompanies) || [];
+  const inProgress = (queue && ((queue.draftCount || 0) + (queue.processingCount || 0))) || 0;
+%>
+<div class="admin-payout-page">
+  <div class="admin-payout-head">
+    <div>
+      <a href="/admin/finance" class="admin-back"><%= t('admin.finance.title', 'Finance') %></a>
+      <h2 class="admin-payout-id"><%= t('admin.finance.payouts.title', 'Payouts') %></h2>
+      <p class="admin-payout-kicker"><%= t('admin.finance.payouts.subtitle', 'Pay companies the unpaid balance from verified bookings.') %></p>
+    </div>
+    <div class="admin-payout-head-actions">
+      <a href="/admin/finance/payouts/export.csv<%= exportQs ? '?' + exportQs : '' %>" class="adm-btn adm-btn--secondary adm-btn--sm"><%= t('admin.finance.exportCsv', 'Export CSV') %></a>
+      <a href="/admin/finance/payouts/new" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.finance.payouts.create', 'Create payout') %></a>
+    </div>
+  </div>
+
+  <div class="admin-payout-kpis">
+    <article class="admin-payout-kpi admin-payout-kpi--warn">
+      <span><%= t('admin.finance.payouts.unsettledNow', 'Not settled yet') %></span>
+      <strong><%= formatPrice(overview.unsettledPayable) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+      <em><%= overview.unsettledBookings || 0 %> <%= t('admin.finance.payouts.unsettledBookingsHint', 'confirmed bookings still unpaid to companies') %></em>
+    </article>
+    <article class="admin-payout-kpi admin-payout-kpi--ok">
+      <span><%= t('admin.finance.payouts.settledToDate', 'Settled so far') %></span>
+      <strong><%= formatPrice(overview.settledPayable) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+      <em><%= overview.settledBookings || 0 %> <%= t('admin.finance.payouts.settledBookingsHint', 'confirmed bookings already paid out') %></em>
+    </article>
+    <article class="admin-payout-kpi">
+      <span><%= t('admin.finance.payouts.companiesWaiting', 'Companies not settled') %></span>
+      <strong><%= overview.unsettledCompanies || 0 %></strong>
+      <em><%= overview.readyCompanies || 0 %> <%= t('admin.finance.payouts.readyToPay', 'ready to pay') %><% if (overview.blockedCompanies) { %> · <%= overview.blockedCompanies %> <%= t('admin.finance.payouts.needDetails', 'need payout details') %><% } %></em>
+    </article>
+    <article class="admin-payout-kpi">
+      <span><%= t('admin.finance.payoutsInProgress', 'Payouts in progress') %></span>
+      <strong><%= inProgress %></strong>
+      <em><%= (queue && queue.draftCount) || 0 %> <%= t('admin.finance.draft', 'draft') %> · <%= (queue && queue.processingCount) || 0 %> <%= t('admin.finance.processing', 'processing') %></em>
+    </article>
+  </div>
+
+  <section class="admin-panel admin-payout-card">
+    <div class="admin-panel-head">
+      <div>
+        <h3 class="admin-panel-title"><%= t('admin.finance.payouts.dueTitle', 'Companies still unpaid') %></h3>
+        <p class="admin-muted-sm"><%= t('admin.finance.payouts.dueHint', 'These companies have confirmed bookings that have not been paid out yet.') %></p>
+      </div>
+      <% if (dueCompanies.length) { %>
+        <a href="/admin/finance/payouts/new" class="admin-link"><%= t('admin.finance.payouts.payFromQueue', 'Pay from queue') %> →</a>
+      <% } %>
+    </div>
+    <% if (!dueCompanies.length) { %>
+      <p class="admin-muted"><%= t('admin.finance.payouts.allCaughtUp', 'Every confirmed company balance is settled.') %></p>
+    <% } else { %>
+      <div class="admin-table-wrap">
+        <table class="admin-table admin-table--finance">
+          <thead>
+            <tr>
+              <th><%= t('admin.table.company', 'Company') %></th>
+              <th><%= t('admin.finance.unsettledPayable', 'Still to settle') %></th>
+              <th><%= t('admin.finance.payouts.settledToDate', 'Settled so far') %></th>
+              <th><%= t('admin.finance.payouts.bookings', 'Bookings') %></th>
+              <th><%= t('admin.finance.payouts.destination', 'Pay to') %></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% dueCompanies.forEach(function(row) { %>
+              <tr>
+                <td>
+                  <a href="/admin/companies/<%= row.companyId %>" class="admin-link"><strong><%= row.companyName %></strong></a>
+                </td>
+                <td><strong><%= formatPrice(row.unsettledPayable) %> <%= t('shared.egp', 'EGP') %></strong></td>
+                <td class="admin-muted-sm"><%= formatPrice(row.settledPayable) %> <%= t('shared.egp', 'EGP') %></td>
+                <td class="admin-muted-sm"><%= row.unsettledCount %> <%= t('admin.finance.payouts.open', 'open') %> / <%= row.bookingCount %></td>
+                <td>
+                  <% if (row.payoutReady) { %>
+                    <span class="admin-status admin-status--verified"><%= t('admin.finance.payoutVerifiedOn', 'Verified') %></span>
+                    <span class="admin-muted-sm"> · <%= row.method ? t('paymentMethods.' + row.method, row.method.replace(/_/g, ' ')) : '—' %></span>
+                  <% } else { %>
+                    <span class="admin-status admin-status--pending"><%= t('admin.finance.payoutUnverified', 'Not verified') %></span>
+                  <% } %>
+                </td>
+                <td class="admin-table-actions">
+                  <a href="/admin/finance/payouts/new?companyId=<%= encodeURIComponent(row.companyId) %>" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.finance.payouts.pay', 'Pay') %></a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <form method="get" class="admin-filters admin-filters--finance" data-admin-filters>
+    <div class="admin-filters-row">
+      <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.finance.payouts.search', 'Search payout ID, company, reference...') %>" class="admin-input admin-input--search" autocomplete="off" />
+      <select name="status" class="admin-input">
+        <option value="all"><%= t('admin.filter.allStatus', 'All status') %></option>
+        <% ['draft','processing','paid','failed','cancelled'].forEach(function(s) { %>
+          <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= t('admin.status.' + s, s) %></option>
+        <% }) %>
+      </select>
+      <select name="companyId" class="admin-input">
+        <option value="all"><%= t('admin.filter.allCompanies', 'All companies') %></option>
+        <% (typeof companies !== 'undefined' ? companies : []).forEach(function(company) { %>
+          <option value="<%= company.id %>" <%= String(filters.companyId) === String(company.id) ? 'selected' : '' %>><%= company.title %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="admin-filters-row admin-filters-row--secondary">
+      <label class="admin-filter-date"><span><%= t('admin.finance.dateFrom', 'From') %></span><input type="date" name="dateFrom" value="<%= filters.dateFrom || '' %>" class="admin-input admin-input--sm" /></label>
+      <label class="admin-filter-date"><span><%= t('admin.finance.dateTo', 'To') %></span><input type="date" name="dateTo" value="<%= filters.dateTo || '' %>" class="admin-input admin-input--sm" /></label>
+      <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
+      <% if (hasActiveFilters) { %>
+        <a href="/admin/finance/payouts" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.filter.clear', 'Clear') %></a>
+      <% } %>
+    </div>
+  </form>
+
+  <% if (typeof queue !== 'undefined') { %>
+    <div class="admin-payout-queue">
+      <a href="/admin/finance/payouts?status=draft" class="admin-payout-chip <%= filters.status === 'draft' ? 'is-active' : '' %>"><%= t('admin.finance.payouts.queueDraft', 'Draft') %> <strong><%= queue.draftCount || 0 %></strong></a>
+      <a href="/admin/finance/payouts?status=processing" class="admin-payout-chip <%= filters.status === 'processing' ? 'is-active' : '' %>"><%= t('admin.finance.payouts.queueProcessing', 'Processing') %> <strong><%= queue.processingCount || 0 %></strong></a>
+      <a href="/admin/finance/payouts?status=failed" class="admin-payout-chip <%= filters.status === 'failed' ? 'is-active' : '' %>"><%= t('admin.finance.payouts.queueFailed', 'Failed') %> <strong><%= queue.failedCount || 0 %></strong></a>
+      <a href="/admin/finance/payouts?status=paid" class="admin-payout-chip <%= filters.status === 'paid' ? 'is-active' : '' %>"><%= t('admin.status.paid', 'Paid') %></a>
+    </div>
+  <% } %>
+
+  <div class="admin-panel-head admin-payout-history-head">
+    <h3 class="admin-panel-title"><%= t('admin.finance.payouts.history', 'Payout history') %></h3>
+    <% if (typeof meta !== 'undefined' && meta.total !== undefined) { %>
+      <p class="admin-results-meta"><%= meta.total %> <%= t('admin.finance.payouts.results', 'payouts') %></p>
+    <% } %>
+  </div>
+
+  <% if (!payouts.length) { %>
+    <%- include('../../partials/admin-empty') %>
+  <% } else { %>
+    <div class="admin-table-wrap admin-panel">
+      <table class="admin-table admin-table--finance">
+        <thead>
+          <tr>
+            <th><%= t('admin.finance.payouts.id', 'Payout') %></th>
+            <th><%= t('admin.table.company', 'Company') %></th>
+            <th><%= t('admin.finance.method', 'Method') %></th>
+            <th><%= t('admin.table.amount', 'Amount') %></th>
+            <th><%= t('admin.table.status', 'Status') %></th>
+            <th><%= t('admin.finance.payouts.bookings', 'Bookings') %></th>
+            <th><%= t('admin.table.updated', 'Updated') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% payouts.forEach(function(payout) { %>
+            <tr data-href="/admin/finance/payouts/<%= encodeURIComponent(payout.id) %>" class="admin-support-row">
+              <td><a href="/admin/finance/payouts/<%= encodeURIComponent(payout.id) %>" class="admin-link"><%= payout.id %></a></td>
+              <td><strong><%= payout.companyName %></strong></td>
+              <td class="admin-muted-sm"><%= payout.methodLabel || payout.method || '—' %></td>
+              <td><strong><%= formatPrice(payout.netPayable) %> <%= t('shared.egp', 'EGP') %></strong></td>
+              <td><span class="admin-status admin-status--<%= payout.status %>"><%= t('admin.status.' + payout.status, statusLabel(payout.status)) %></span></td>
+              <td><%= (payout.bookingIds || []).length %></td>
+              <td class="admin-muted-sm"><%= payout.updatedAtLabel || payout.createdAtLabel %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
+  <% } %>
+</div>
+<%- include('../../partials/admin-shell-end') %>

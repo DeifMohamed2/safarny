@@ -52,8 +52,8 @@
     const typeEl = qs('#checkout-summary-type');
     const lang = document.documentElement.lang || 'en';
     const hintTemplate = lang === 'ar'
-      ? '{room} · {n} ضيوف لكل غرفة · حتى {max} غرف'
-      : '{room} · sleeps {n} per room · up to {max} rooms';
+      ? '{room} · تسع {n} · حتى {max} غرف · {price} ج.م للغرفة'
+      : '{room} · sleeps {n} · up to {max} rooms · {price} EGP per room';
     const typeNames = {
       single: lang === 'ar' ? 'فردية' : 'Single',
       double: lang === 'ar' ? 'مزدوجة' : 'Double',
@@ -79,7 +79,7 @@
       return rooms.find((item) => item.type === typeId) || rooms[0] || {
         type: typeId,
         occupancy: Number(root.dataset.occupancy || 2),
-        price: Number(root.dataset.perPerson || 0),
+        price: Number(root.dataset.roomPrice || root.dataset.perPerson || 0),
         maxRooms: Number(roomsInput?.dataset.maxRooms || 1),
       };
     }
@@ -100,7 +100,7 @@
       const rooms = date.rooms || [];
       const current = roomTypeSelect.value || root.dataset.roomType;
       roomTypeSelect.innerHTML = rooms.map((item) => {
-        const label = `${typeNames[item.type] || item.type} · ${formatPrice(item.price)} ${document.documentElement.lang === 'ar' ? 'ج.م' : 'EGP'}`;
+        const label = typeNames[item.type] || item.type;
         return `<option value="${item.type}">${label}</option>`;
       }).join('');
       if (rooms.some((item) => item.type === current)) roomTypeSelect.value = current;
@@ -124,12 +124,13 @@
       }
       if (plusBtn) plusBtn.disabled = maxRooms <= 0 || Number(roomsInput?.value || 1) >= maxRooms;
       if (minusBtn) minusBtn.disabled = maxRooms <= 0 || Number(roomsInput?.value || 1) <= 1;
-      if (submitBtn) submitBtn.disabled = maxRooms <= 0;
+      updateSubmitState();
       if (hintEl) {
         hintEl.textContent = hintTemplate
           .replace('{room}', typeNames[room.type] || root.dataset.roomLabel || 'Room')
           .replace('{n}', String(room.occupancy || 1))
-          .replace('{max}', String(maxRooms || 0));
+          .replace('{max}', String(maxRooms || 0))
+          .replace('{price}', formatPrice(room.price || 0));
       }
     }
 
@@ -137,12 +138,12 @@
       const rooms = Math.max(1, Number(roomsInput?.value) || 1);
       const guests = guestCountForRooms(rooms);
       const room = selectedRoom();
-      const perPerson = Number(room.price) || 0;
+      const roomPrice = Number(room.price) || 0;
       if (roomsEl) roomsEl.textContent = String(rooms);
       if (guestsEl) guestsEl.textContent = String(guests);
-      if (priceEl) priceEl.textContent = formatPrice(perPerson);
+      if (priceEl) priceEl.textContent = formatPrice(roomPrice);
       if (typeEl) typeEl.textContent = typeNames[room.type] || room.type;
-      if (totalEl) totalEl.textContent = formatPrice(perPerson * guests);
+      if (totalEl) totalEl.textContent = formatPrice(roomPrice * rooms);
       if (plusBtn) plusBtn.disabled = rooms >= selectedMaxRooms();
       if (minusBtn) minusBtn.disabled = rooms <= 1;
     }
@@ -202,10 +203,29 @@
     const proofInput = qs('#checkout-proof');
     const proofLabel = qs('#checkout-proof-label');
     const dropzone = qs('#checkout-dropzone');
+    function updateSubmitState() {
+      if (!submitBtn) return;
+      const hasProof = Boolean(proofInput?.files?.[0]);
+      const bookable = selectedMaxRooms() > 0;
+      submitBtn.disabled = !bookable || !hasProof;
+    }
+
+    const proofTitle = qs('.checkout-dropzone-title', root);
+
     proofInput?.addEventListener('change', () => {
       const file = proofInput.files?.[0];
-      if (proofLabel && file) proofLabel.textContent = file.name;
+      if (proofLabel) {
+        proofLabel.textContent = file
+          ? file.name
+          : (lang === 'ar' ? 'لقطة شاشة أو PDF (بحد أقصى 10 ميجابايت)' : 'Screenshot or PDF (max 10MB)');
+      }
+      if (proofTitle) {
+        proofTitle.textContent = file
+          ? (lang === 'ar' ? 'تم رفع الإثبات' : 'Proof uploaded')
+          : (lang === 'ar' ? 'رفع إثبات الدفع' : 'Upload payment proof');
+      }
       dropzone?.classList.toggle('has-file', Boolean(file));
+      updateSubmitState();
     });
 
     qsa('[data-scroll-reveal]', root).forEach((el, index) => {
@@ -215,6 +235,7 @@
     fillRoomTypes();
     updateRoomCap();
     syncTotals();
+    updateSubmitState();
   }
 
   document.addEventListener('DOMContentLoaded', initCheckout);

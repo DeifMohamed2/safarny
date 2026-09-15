@@ -57,7 +57,7 @@
           <select name="destination" class="company-input company-input--sm" data-trip-auto-submit>
             <option value="all" <%= filters.destination === 'all' ? 'selected' : '' %>><%= t('company.tripStatus.all', 'All') %></option>
             <% meta.destinations.forEach(function(destination) { %>
-              <option value="<%= destination %>" <%= filters.destination === destination ? 'selected' : '' %>><%= destination %></option>
+              <option value="<%= destination %>" <%= filters.destination === destination ? 'selected' : '' %>><%= typeof destinationLabel === 'function' ? destinationLabel(destination) : destination %></option>
             <% }) %>
           </select>
         </label>
@@ -68,6 +68,7 @@
             <option value="all" <%= filters.type === 'all' ? 'selected' : '' %>><%= t('company.tripStatus.all', 'All') %></option>
             <option value="leisure" <%= filters.type === 'leisure' ? 'selected' : '' %>><%= t('company.trips.typeLeisure', 'Leisure') %></option>
             <option value="umrah" <%= filters.type === 'umrah' ? 'selected' : '' %>><%= t('company.trips.typeUmrah', 'Umrah') %></option>
+            <option value="hajj" <%= filters.type === 'hajj' ? 'selected' : '' %>><%= t('company.trips.typeHajj', 'Hajj') %></option>
           </select>
         </label>
 
@@ -198,14 +199,14 @@
           <div class="company-trip-row-main">
             <div class="company-trip-row-head">
               <div>
-                <span class="company-status company-status--<%= trip.status %>"><%= t('company.tripStatus.' + trip.status, trip.status) %></span>
-                <h3><a href="/company/trips/<%= trip.id %>"><%= trip.title %></a></h3>
+                <span class="company-status company-status--<%= trip.status %>"><%= statusLabel(trip.status) %></span>
+                <h3><a href="/company/trips/<%= trip.id %>" dir="auto"><%= tripTitle(trip) %></a></h3>
               </div>
               <strong class="company-trip-price"><%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></strong>
             </div>
             <p class="company-trip-row-meta">
-              <span><%= trip.destination %></span>
-              <span><%= trip.category %></span>
+              <span><%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %></span>
+              <span><%= typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : trip.category %></span>
               <span><%= trip.days %> <%= t('shared.days', 'Days') %> / <%= trip.nights %> <%= t('shared.nights', 'Nights') %></span>
               <span><%= trip.startDate %></span>
             </p>
@@ -232,28 +233,28 @@
           <a href="/company/trips/<%= trip.id %>" class="company-trip-media">
             <img src="<%= trip.images[0] %>" alt="" class="company-trip-img" />
             <div class="company-trip-media-badges">
-              <span class="company-status company-status--<%= trip.status %>"><%= t('company.tripStatus.' + trip.status, trip.status) %></span>
+              <span class="company-status company-status--<%= trip.status %>"><%= statusLabel(trip.status) %></span>
               <% if (trip.offer) { %><span class="company-trip-badge company-trip-badge--offer"><%= t('company.trips.offerBadge', 'Offer') %></span><% } %>
               <% if (trip.isLowStock && !trip.isSoldOut) { %><span class="company-trip-badge company-trip-badge--warn"><%= t('company.trips.lowStock', 'Low stock') %></span><% } %>
             </div>
           </a>
           <div class="company-trip-body">
             <div class="company-trip-top">
-              <span class="company-trip-category"><%= trip.category %></span>
+              <span class="company-trip-category"><%= typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : trip.category %></span>
               <span class="company-trip-price"><%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></span>
             </div>
-            <h3><a href="/company/trips/<%= trip.id %>"><%= trip.title %></a></h3>
+            <h3><a href="/company/trips/<%= trip.id %>" dir="auto"><%= tripTitle(trip) %></a></h3>
             <p class="company-trip-location">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z" stroke="currentColor" stroke-width="1.6"/>
                 <circle cx="12" cy="11" r="2.5" stroke="currentColor" stroke-width="1.6"/>
               </svg>
-              <%= trip.destination %>
+              <%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %>
             </p>
             <div class="company-trip-meta-line">
               <span><%= trip.days %>d / <%= trip.nights %>n</span>
               <span><%= trip.startDate %></span>
-              <span class="company-trip-type"><%= trip.type === 'umrah' ? t('company.trips.typeUmrah', 'Umrah') : t('company.trips.typeLeisure', 'Leisure') %></span>
+              <span class="company-trip-type"><%= typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : trip.category %></span>
             </div>
             <div class="company-trip-capacity-wrap">
               <div class="company-trip-capacity-head">

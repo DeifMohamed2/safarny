@@ -2,9 +2,9 @@ const fs = require('fs');
 const companyService = require('../services/companies');
 const tripService = require('../services/trips');
 const bookingService = require('../services/bookings');
-const paymentService = require('../services/payments');
 const ticketService = require('../services/tickets');
 const { wantsJson } = require('../middleware/auth');
+const { companyLogoUrl } = require('../lib/helpers');
 const {
   tripMediaUpload,
   validateUploadedFile,
@@ -34,6 +34,19 @@ const {
   hasBothDocs,
   uploadErrorMessage,
 } = require('../lib/company-docs');
+const payoutService = require('../services/payouts');
+const invoiceService = require('../services/invoices');
+const ledger = require('../services/ledger');
+const {
+  COMPANY_PAYOUT_METHODS,
+  parseCompanyPayoutDetails,
+  validateCompanyPayoutDetails,
+  payoutDetailsComplete,
+  payoutDetailsVerified,
+  destinationLines,
+  destinationFields,
+  payoutMethodLabel,
+} = require('../lib/payout-details');
 
 function companyId(req) {
   return req.session.user.companyId;
@@ -146,11 +159,14 @@ async function createTrip(req, res) {
     req.session.flash = { type: 'error', message: 'Title and destination are required.' };
     return res.redirect('/company/trips/new');
   }
-  if (res.locals.company?.verification !== 'verified' && req.body.status === 'active') {
-    req.body.status = 'pending';
-  }
+  req.body.status = req.body.intent === 'draft' ? 'draft' : 'pending';
   await tripService.createCompanyTrip(companyId(req), req.body);
-  req.session.flash = { type: 'success', message: 'Trip created.' };
+  req.session.flash = {
+    type: 'success',
+    message: req.body.status === 'draft'
+      ? res.locals.t('company.form.draftSaved', 'Trip saved as a draft.')
+      : res.locals.t('company.form.submittedForReview', 'Trip submitted for review.'),
+  };
   res.redirect('/company/trips');
 }
 
@@ -185,12 +201,16 @@ async function editTripForm(req, res) {
 }
 
 async function editTrip(req, res) {
-  if (res.locals.company?.verification !== 'verified' && req.body.status === 'active') {
-    req.body.status = 'pending';
-  }
+  if (req.body.intent === 'draft') req.body.status = 'draft';
+  else if (req.body.intent === 'review') req.body.status = 'pending';
   const trip = await tripService.updateCompanyTrip(req.params.id, companyId(req), req.body);
   if (!trip) return res.status(404).render('pages/not-found', { title: 'Not found' });
-  req.session.flash = { type: 'success', message: 'Trip updated.' };
+  req.session.flash = {
+    type: 'success',
+    message: req.body.status === 'draft'
+      ? res.locals.t('company.form.draftSaved', 'Trip saved as a draft.')
+      : res.locals.t('company.form.tripUpdated', 'Trip updated.'),
+  };
   res.redirect(`/company/trips/${trip.id}`);
 }
 
@@ -244,33 +264,29 @@ async function bookings(req, res) {
 async function bookingDetails(req, res) {
   const booking = await bookingService.getCompanyBooking(req.params.id, companyId(req));
   if (!booking) return res.status(404).render('pages/not-found', { title: 'Not found' });
-  const [trip, payment] = await Promise.all([
-    tripService.getCompanyTrip(booking.tripId, companyId(req)),
-    booking.paymentId
-      ? paymentService.getPaymentById(booking.paymentId)
-      : paymentService.getPaymentByBookingId(booking.id),
-  ]);
+  const trip = await tripService.getCompanyTrip(booking.tripId, companyId(req));
   withLayout(res, 'pages/company/booking-details', {
     title: `Booking ${booking.id}`,
     companyActive: 'bookings',
     booking: bookingService.enrichBookingDetail(booking, trip),
     trip,
-    payment,
+    cancelReasons: bookingService.COMPANY_CANCEL_REASONS,
   });
 }
 
-async function updateBookingStatus(req, res) {
-  const status = String(req.body.status || '');
-  if (!['Pending', 'Confirmed', 'Cancelled'].includes(status)) {
-    req.session.flash = { type: 'error', message: 'Invalid status.' };
+async function cancelBooking(req, res) {
+  const result = await bookingService.cancelCompanyBooking(req.params.id, companyId(req), {
+    byUserId: req.session.user.id,
+    reason: req.body.reason,
+    note: req.body.note,
+  });
+  if (result.code === 'NOT_FOUND') return res.status(404).render('pages/not-found', { title: 'Not found' });
+  if (!result.ok) {
+    req.session.flash = { type: 'error', message: result.message || 'Could not cancel this booking.' };
     return res.redirect(`/company/bookings/${req.params.id}`);
   }
-  const booking = await bookingService.updateBookingStatus(req.params.id, companyId(req), status, {
-    byUserId: req.session.user.id,
-  });
-  if (!booking) return res.status(404).render('pages/not-found', { title: 'Not found' });
-  req.session.flash = { type: 'success', message: 'Booking updated.' };
-  res.redirect(`/company/bookings/${booking.id}`);
+  req.session.flash = { type: 'success', message: res.locals.t('company.bookings.cancelSuccess', 'Booking cancelled. Safarny will handle any payment follow-up.') };
+  res.redirect(`/company/bookings/${result.booking.id}`);
 }
 
 function chatRedirect(req, res) {
@@ -382,6 +398,7 @@ function settingsPage(req, res) {
     title: 'Settings',
     companyActive: 'settings',
     logoMaxBytes: LOGO_MAX_BYTES,
+    payoutMethods: COMPANY_PAYOUT_METHODS,
   });
 }
 
@@ -442,17 +459,100 @@ function uploadVerificationDocs(req, res) {
 }
 
 async function updateSettings(req, res) {
-  const cid = companyId(req);
-  const current = await companyService.getCompanyById(cid);
-  await companyService.updateCompany(cid, {
+  await companyService.updateCompany(companyId(req), {
     title: req.body.title,
     description: req.body.description,
     location: req.body.location,
     contactNumber: req.body.contactNumber,
-    image: req.body.image || current?.image,
+    image: companyLogoUrl(req.body.image),
   });
   req.session.flash = { type: 'success', message: 'Company profile updated.' };
   res.redirect('/company/settings');
+}
+
+async function updatePayoutDetails(req, res) {
+  const parsed = parseCompanyPayoutDetails(req.body);
+  const check = validateCompanyPayoutDetails(parsed);
+  if (!check.ok) {
+    req.session.flash = { type: 'error', message: res.locals.t(check.messageKey, check.message) };
+    return res.redirect('/company/settings#payout-details');
+  }
+  await companyService.updateCompany(companyId(req), {
+    payoutDetails: {
+      ...check.details,
+      verifiedAt: null,
+      verifiedBy: '',
+    },
+  });
+  req.session.flash = { type: 'success', message: res.locals.t('company.settings.payoutSaved', 'Payout details saved. Safarny will review them before the next payout.') };
+  res.redirect('/company/settings#payout-details');
+}
+
+async function financePage(req, res) {
+  const cid = companyId(req);
+  const company = res.locals.company;
+  const [payouts, unsettled, balance] = await Promise.all([
+    payoutService.listPayoutsForCompany(cid),
+    payoutService.listUnsettledBookings(cid),
+    ledger.balanceForCompany(cid),
+  ]);
+  const meta = await bookingService.getBookingListMetaForCompany(cid);
+  withLayout(res, 'pages/company/finance', {
+    title: res.locals.t('company.finance.title', 'Finance'),
+    companyActive: 'finance',
+    payouts: payouts.map((payout) => {
+      const { grossCollected, platformFee, ...safe } = payout;
+      return {
+        ...safe,
+        methodLabel: payoutMethodLabel(payout.method || payout.destination?.method, res.locals.t),
+      };
+    }),
+    unsettled,
+    stats: {
+      earned: meta.earningsBase || balance.earned,
+      awaiting: meta.unsettledBase || 0,
+      paidOut: meta.settledBase || balance.paidOut,
+      clawback: balance.clawback || 0,
+    },
+    payoutReady: payoutDetailsComplete(company?.payoutDetails),
+    payoutVerified: payoutDetailsVerified(company?.payoutDetails),
+  });
+}
+
+async function financePayoutDetail(req, res) {
+  const payout = await payoutService.getPayoutById(req.params.id);
+  if (!payout || String(payout.companyId) !== String(companyId(req))) {
+    return res.status(404).render('pages/not-found', { title: 'Payout not found' });
+  }
+  const bookings = await Promise.all((payout.bookingIds || []).map((id) => bookingService.getCompanyBooking(id, companyId(req))));
+  const {
+    grossCollected: _grossCollected,
+    platformFee: _platformFee,
+    ...safePayout
+  } = payout;
+  withLayout(res, 'pages/company/finance-payout', {
+    title: payout.id,
+    companyActive: 'finance',
+    payout: {
+      ...safePayout,
+      methodLabel: payoutMethodLabel(payout.method || payout.destination?.method, res.locals.t),
+      destinationLines: destinationLines(payout.destination || {}, res.locals.t),
+      destinationFields: destinationFields(payout.destination || {}, res.locals.t),
+    },
+    bookings: bookings.filter(Boolean).map(bookingService.toCompanyBooking),
+  });
+}
+
+async function financePayoutStatement(req, res) {
+  const payout = await payoutService.getPayoutById(req.params.id);
+  if (!payout || String(payout.companyId) !== String(companyId(req))) {
+    return res.status(404).render('pages/not-found', { title: 'Payout not found' });
+  }
+  const ok = await invoiceService.streamStatement(res, payout);
+  if (!ok) {
+    req.session.flash = { type: 'error', message: 'Statement is available after the payout is paid.' };
+    res.redirect(`/company/finance/payouts/${payout.id}`);
+  }
 }
 
 module.exports = {
@@ -468,7 +568,7 @@ module.exports = {
   deleteTrip,
   bookings,
   bookingDetails,
-  updateBookingStatus,
+  cancelBooking,
   chatRedirect,
   newSupportForm,
   createSupport,
@@ -479,4 +579,8 @@ module.exports = {
   uploadLogo,
   uploadVerificationDocs,
   updateSettings,
+  updatePayoutDetails,
+  financePage,
+  financePayoutDetail,
+  financePayoutStatement,
 };

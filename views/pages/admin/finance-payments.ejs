@@ -102,7 +102,7 @@
             </td>
             <td><%= payment.methodLabel %></td>
             <td><%= formatPrice(payment.amount) %> <%= payment.currency %></td>
-            <td><span class="admin-status admin-status--<%= payment.status %>"><%= payment.status %></span></td>
+            <td><span class="admin-status admin-status--<%= payment.status %>"><%= statusLabel(payment.status) %></span></td>
             <td>
               <% if (payment.proof && payment.proof.viewUrl) { %>
                 <div class="admin-finance-proof-actions">

@@ -1,5 +1,20 @@
 const { createTranslator, supportedLangs } = require('../lib/i18n');
-const { formatPrice, bedTypeLabel, roomTypeLabel, initials, navItems } = require('../lib/helpers');
+const {
+  formatPrice,
+  bedTypeLabel,
+  roomTypeLabel,
+  initials,
+  companyLogoUrl,
+  companyReviewCount,
+  formatCompanyRating,
+  navItems,
+  tripTypeLabel,
+  isSacredTripType,
+  localizedText,
+  tripTitle,
+  tripDescription,
+} = require('../lib/helpers');
+const { destinationLabel, destinationsForTripType, canonicalDestination, formatDestinationLocation, countryOptions, groupLabel } = require('../lib/destinations');
 const {
   occupancyOf,
   maxGuestsForDate,
@@ -10,19 +25,64 @@ const {
 } = require('../lib/trip-form-helpers');
 const { findById } = require('../services/users');
 const { getCompanyById } = require('../services/companies');
+const { getSettings } = require('../services/settings');
 const { countPendingTrips } = require('../services/trips');
 const { countOpenTickets } = require('../services/tickets');
 const { countSubmittedPayments } = require('../services/payments');
+const { countActivePayouts } = require('../services/payouts');
+const { countOpenRefunds } = require('../services/refunds');
 const { groupedTripItinerary, staySummary } = require('../lib/itinerary');
-const { getSettings } = require('../services/settings');
+const { payoutDetailsComplete } = require('../lib/payout-details');
+
+function ensureViewLocals(req, res) {
+  const lang = supportedLangs.includes(req.session?.lang)
+    ? req.session.lang
+    : (res.locals.lang === 'ar' ? 'ar' : 'en');
+  res.locals.lang = lang;
+  res.locals.isRtl = lang === 'ar';
+  res.locals.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  res.locals.t = typeof res.locals.t === 'function' ? res.locals.t : createTranslator(lang);
+  if (typeof res.locals.flash === 'undefined') res.locals.flash = null;
+  if (typeof res.locals.user === 'undefined') res.locals.user = null;
+  if (typeof res.locals.authenticated === 'undefined') res.locals.authenticated = false;
+  if (typeof res.locals.isCompany === 'undefined') res.locals.isCompany = false;
+  if (typeof res.locals.isAdmin === 'undefined') res.locals.isAdmin = false;
+  if (typeof res.locals.payoutReady === 'undefined') res.locals.payoutReady = true;
+  if (typeof res.locals.company === 'undefined') res.locals.company = null;
+  if (typeof res.locals.currentPath === 'undefined') res.locals.currentPath = req.path || '/';
+  if (typeof res.locals.query === 'undefined') res.locals.query = req.query || {};
+  if (typeof res.locals.navItems === 'undefined') res.locals.navItems = navItems;
+  if (typeof res.locals.favorites === 'undefined') res.locals.favorites = [];
+  if (typeof res.locals.adminBadges === 'undefined') {
+    res.locals.adminBadges = { trips: 0, support: 0, finance: 0, payouts: 0, refunds: 0 };
+  }
+  if (typeof res.locals.formatPrice !== 'function') res.locals.formatPrice = formatPrice;
+  if (typeof res.locals.tripTitle !== 'function') {
+    res.locals.tripTitle = (trip) => tripTitle(trip, lang);
+  }
+  if (typeof res.locals.isActive !== 'function') {
+    res.locals.isActive = (path) => {
+      const current = req.path || '/';
+      if (path === '/') return current === '/';
+      return current === path || current.startsWith(`${path}/`);
+    };
+  }
+}
 
 async function attachLocals(req, res, next) {
   try {
-    const lang = supportedLangs.includes(req.session.lang) ? req.session.lang : 'en';
-    req.session.lang = lang;
-    req.session.favorites = req.session.favorites || [];
+    ensureViewLocals(req, res);
+    const lang = res.locals.lang;
+    if (req.session) {
+      req.session.lang = lang;
+      req.session.favorites = req.session.favorites || [];
+    }
 
-    let sessionUser = req.session.user || null;
+    if (req.path === '/api/suggest' || req.path === '/api/search-preview') {
+      return next();
+    }
+
+    let sessionUser = req.session?.user || null;
     if (sessionUser?.id) {
       const fresh = await findById(sessionUser.id);
       if (!fresh || fresh.status === 'suspended') {
@@ -59,6 +119,47 @@ async function attachLocals(req, res, next) {
     res.locals.isCompany = isCompany;
     res.locals.isAdmin = isAdmin;
     res.locals.company = isCompany && sessionUser.companyId ? await getCompanyById(sessionUser.companyId) : null;
+    const t = res.locals.t;
+    const pickLabel = (keys, fallback) => {
+      for (const key of keys) {
+        const translated = t(key, '\0');
+        if (translated && translated !== '\0' && translated !== key) return translated;
+      }
+      return fallback;
+    };
+    res.locals.payoutReady = isCompany ? payoutDetailsComplete(res.locals.company?.payoutDetails) : true;
+    res.locals.payoutDetailsComplete = payoutDetailsComplete;
+    res.locals.statusLabel = (value) => {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+      const key = raw.toLowerCase();
+      const alt = key.replace(/-/g, '_');
+      const hyph = key.replace(/_/g, '-');
+      const titled = raw.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+      return pickLabel([
+        `status.${key}`,
+        `status.${alt}`,
+        `status.${hyph}`,
+        `admin.status.${key}`,
+        `company.bookingStatus.${key}`,
+        `company.tripStatus.${key}`,
+        `tickets.status${raw.charAt(0).toUpperCase()}${key.slice(1)}`,
+      ], titled);
+    };
+    res.locals.roleLabel = (value) => {
+      const key = String(value || '').trim().toLowerCase();
+      if (!key) return '';
+      return pickLabel([`admin.role.${key}`, `status.${key}`], key);
+    };
+    res.locals.payoutMethodLabel = (value) => {
+      const key = String(value || '').trim();
+      if (!key) return '';
+      return pickLabel([
+        `paymentMethods.${key}`,
+        `company.settings.payoutMethods.${key}`,
+        `checkout.methods.${key}`,
+      ], key.replace(/_/g, ' '));
+    };
     res.locals.favorites = req.session.favorites;
     res.locals.currentPath = req.path;
     res.locals.query = req.query;
@@ -72,25 +173,41 @@ async function attachLocals(req, res, next) {
     res.locals.maxGuestsForDate = (trip, dateEntry) => maxGuestsForDate(trip, dateEntry);
     res.locals.clampGuestCount = (trip, dateEntry, guests) => clampGuestCount(trip, dateEntry, guests);
     res.locals.occupancySleepsLabel = (beds) => occupancySleepsLabel(beds, res.locals.t);
-    res.locals.groupItinerary = (trip) => groupedTripItinerary(trip, lang);
-    res.locals.staySummary = (trip) => staySummary(trip?.itinerary || [], lang);
+    res.locals.groupItinerary = (trip) => groupedTripItinerary(trip, lang, settings.destinations);
+    res.locals.staySummary = (trip) => staySummary(trip?.itinerary || [], lang, settings.destinations);
     res.locals.initials = initials;
+    res.locals.companyReviewCount = companyReviewCount;
+    res.locals.formatCompanyRating = formatCompanyRating;
+    res.locals.tripTypeLabel = (type) => tripTypeLabel(type, res.locals.t);
+    res.locals.isSacredTripType = isSacredTripType;
+    res.locals.companyLogoUrl = companyLogoUrl;
     res.locals.navItems = navItems;
     res.locals.destinations = settings.destinations || [];
+    res.locals.destinationLabel = (value) => destinationLabel(value, lang, settings.destinations);
+    res.locals.destinationLocation = (value) => formatDestinationLocation(value, lang, settings.destinations);
+    res.locals.destinationsForType = (type) => destinationsForTripType(settings.destinations, type);
+    res.locals.canonicalDestination = (value) => canonicalDestination(value, settings.destinations);
+    res.locals.destinationCountryOptions = countryOptions(lang);
+    res.locals.destinationGroupLabel = (group) => groupLabel(group, lang);
+    res.locals.localizedText = (en, ar) => localizedText(en, ar, lang);
+    res.locals.tripTitle = (trip) => tripTitle(trip, lang);
+    res.locals.tripDescription = (trip) => tripDescription(trip, lang);
     res.locals.isActive = (path) => {
       if (path === '/') return req.path === '/';
       return req.path === path || req.path.startsWith(`${path}/`);
     };
 
     if (isAdmin) {
-      const [trips, support, finance] = await Promise.all([
+      const [trips, support, finance, payouts, refunds] = await Promise.all([
         countPendingTrips(),
         countOpenTickets(),
         countSubmittedPayments(),
+        countActivePayouts(),
+        countOpenRefunds(),
       ]);
-      res.locals.adminBadges = { trips, support, finance };
+      res.locals.adminBadges = { trips, support, finance, payouts, refunds };
     } else {
-      res.locals.adminBadges = { trips: 0, support: 0, finance: 0 };
+      res.locals.adminBadges = { trips: 0, support: 0, finance: 0, payouts: 0, refunds: 0 };
     }
 
     delete req.session.flash;
@@ -172,6 +289,7 @@ function regenerateSession(req, data = {}) {
 
 module.exports = {
   attachLocals,
+  ensureViewLocals,
   requireAuth,
   requireCompanyAuth,
   requireTravelerAuth,

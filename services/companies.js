@@ -1,5 +1,8 @@
-const { Company, nextSeq } = require('../models');
+const { Company, Trip, nextSeq } = require('../models');
 const { toDoc, toDocs } = require('../lib/document');
+const { companyLogoUrl } = require('../lib/helpers');
+const { payoutDetailsComplete } = require('../lib/payout-details');
+const { attachReviewStats, persistAllCompanyReviewStats } = require('./reviews');
 
 function ensureCompanyDefaults(company) {
   if (!company) return null;
@@ -10,22 +13,42 @@ function ensureCompanyDefaults(company) {
     commissionRate: 12,
     markupType: 'percent',
     markupFixed: 0,
+    payoutDetails: {},
     ...company,
     id: company.id || company._id,
+    image: companyLogoUrl(company.image),
   };
 }
 
 async function getCompanyById(id) {
   if (!id) return null;
-  return ensureCompanyDefaults(toDoc(await Company.findById(String(id)).lean()));
+  const company = ensureCompanyDefaults(toDoc(await Company.findById(String(id)).lean()));
+  return company ? attachReviewStats(company) : null;
 }
 
 async function listCompanies() {
-  return toDocs(await Company.find().lean()).map(ensureCompanyDefaults);
+  return attachReviewStats(toDocs(await Company.find().lean()).map(ensureCompanyDefaults));
+}
+
+async function refreshOperationalStats() {
+  await persistAllCompanyReviewStats();
+  const [companies, tripRows] = await Promise.all([
+    Company.find({}, { _id: 1 }).lean(),
+    Trip.aggregate([{ $group: { _id: '$companyId', count: { $sum: 1 } } }]),
+  ]);
+  const tripMap = new Map(tripRows.map((row) => [String(row._id), row.count]));
+  await Promise.all(companies.map((company) => Company.updateOne(
+    { _id: String(company._id) },
+    { $set: { packages: tripMap.get(String(company._id)) || 0 } }
+  )));
 }
 
 async function updateCompany(id, patch = {}) {
-  const company = await Company.findByIdAndUpdate(String(id), { $set: patch }, { new: true }).lean();
+  const next = { ...patch };
+  if (Object.prototype.hasOwnProperty.call(next, 'image')) {
+    next.image = companyLogoUrl(next.image);
+  }
+  const company = await Company.findByIdAndUpdate(String(id), { $set: next }, { new: true }).lean();
   return ensureCompanyDefaults(toDoc(company));
 }
 
@@ -69,6 +92,14 @@ async function filterCompaniesAdmin(filters = {}) {
 
 async function setCompanyVerification(id, verification) {
   if (!['pending', 'verified', 'rejected'].includes(verification)) return null;
+  if (verification === 'verified') {
+    const current = await getCompanyById(id);
+    if (!payoutDetailsComplete(current?.payoutDetails)) {
+      const error = new Error('PAYOUT_REQUIRED');
+      error.code = 'PAYOUT_REQUIRED';
+      throw error;
+    }
+  }
   return updateCompany(id, { verification });
 }
 
@@ -92,14 +123,14 @@ async function createCompany(payload = {}) {
   const company = ensureCompanyDefaults({
     _id: String(seq),
     id: String(seq),
-    image: payload.image || '/assets/companies/company.png',
+    image: companyLogoUrl(payload.image),
     title: String(payload.title || '').trim(),
     description: String(payload.description || '').trim(),
     location: String(payload.location || '').trim(),
-    years: Number(payload.years) || 1,
+    years: Number.isFinite(Number(payload.years)) ? Math.max(0, Number(payload.years)) : 0,
     packages: 0,
     reviews: 0,
-    rating: Number(payload.rating) || 4.5,
+    rating: 0,
     badges: String(payload.badges || '')
       .split(',')
       .map((s) => s.trim())
@@ -148,4 +179,5 @@ module.exports = {
   getCompanyStats,
   ensureCompanyDefaults,
   createCompany,
+  refreshOperationalStats,
 };

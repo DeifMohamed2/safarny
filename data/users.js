@@ -85,7 +85,7 @@ const users = [
   },
   {
     id: 'c1',
-    avatar: '/assets/companies/company.png',
+    avatar: '/user.png',
     userName: 'Red Sea Adventures',
     email: 'company@redsea.com',
     phone: '+201227375904',
@@ -97,7 +97,7 @@ const users = [
   },
   {
     id: 'c2',
-    avatar: '/assets/companies/company.png',
+    avatar: '/user.png',
     userName: 'Nile Heritage Tours',
     email: 'company@nileheritage.com',
     phone: '+201022334455',
@@ -109,7 +109,7 @@ const users = [
   },
   {
     id: 'c3',
-    avatar: '/assets/companies/company.png',
+    avatar: '/user.png',
     userName: 'Cairo Gate Travel',
     email: 'company@cairogate.com',
     phone: '+201033445566',
@@ -121,7 +121,7 @@ const users = [
   },
   {
     id: 'c5',
-    avatar: '/assets/companies/company.png',
+    avatar: '/user.png',
     userName: 'Haramain Umrah Co',
     email: 'company@haramain.com',
     phone: '+201055667788',

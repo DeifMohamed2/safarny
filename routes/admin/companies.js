@@ -13,4 +13,5 @@ router.post('/companies/:id/reject', c.reject);
 router.post('/companies/:id/suspend', c.suspend);
 router.post('/companies/:id/reactivate', c.reactivate);
 router.post('/companies/:id/commission', c.commission);
+router.post('/companies/:id/payout-verify', c.verifyPayout);
 module.exports = router;

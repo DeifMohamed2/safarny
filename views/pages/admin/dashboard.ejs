@@ -91,8 +91,8 @@
         <% analytics.pendingTrips.forEach(function(trip) { %>
           <div class="admin-queue-item">
             <div>
-              <p class="admin-queue-title"><%= trip.title %></p>
-              <p class="admin-muted"><%= trip.destination %> · <%= formatPrice(trip.price) %> EGP</p>
+              <p class="admin-queue-title" dir="auto"><%= tripTitle(trip) %></p>
+              <p class="admin-muted"><%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %> · <%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></p>
             </div>
             <div class="admin-queue-actions">
               <form method="post" action="/admin/trips/<%= trip.id %>/approve" class="inline">
@@ -112,7 +112,7 @@
     <ul class="admin-dest-list">
       <% analytics.topDestinations.forEach(function(dest) { %>
         <li class="admin-dest-item">
-          <span><%= dest.name %></span>
+          <span><%= typeof destinationLabel === 'function' ? destinationLabel(dest.name) : dest.name %></span>
           <span class="admin-dest-count"><%= dest.count %></span>
         </li>
       <% }) %>
@@ -134,8 +134,8 @@
             <tr>
               <td><a href="/admin/bookings/<%= b.id %>" class="admin-link"><%= b.id %></a></td>
               <td><%= b.customerName %></td>
-              <td><%= formatPrice(b.totalPrice) %> EGP</td>
-              <td><span class="admin-status admin-status--<%= b.status.toLowerCase() %>"><%= b.status %></span></td>
+              <td><%= formatPrice(b.totalPrice) %> <%= t('shared.egp', 'EGP') %></td>
+              <td><span class="admin-status admin-status--<%= b.status.toLowerCase() %>"><%= statusLabel(b.status) %></span></td>
             </tr>
           <% }) %>
         </tbody>

@@ -15,7 +15,7 @@
           <div class="company-support-detail-badges">
             <span class="company-support-no"><%= ticket.ticketNo %></span>
             <span class="company-ticket-status company-ticket-status--<%= ticket.status %>"><%= t(statusKey(ticket.status), ticket.status) %></span>
-            <span class="company-ticket-priority company-ticket-priority--<%= ticket.priority %>"><%= ticket.priority %></span>
+            <span class="company-ticket-priority company-ticket-priority--<%= ticket.priority %>"><%= statusLabel(ticket.priority) %></span>
           </div>
           <h1 class="company-title"><%= ticket.subject %></h1>
           <p class="company-subtitle"><%= ticket.category %> · <%= t('company.support.created', 'Created') %> <%= ticket.createdAt %></p>

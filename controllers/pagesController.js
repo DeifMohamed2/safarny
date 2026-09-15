@@ -3,7 +3,7 @@ const bookingService = require('../services/bookings');
 const reviewService = require('../services/reviews');
 const ticketService = require('../services/tickets');
 const userService = require('../services/users');
-const { buildPagination, pageUrl } = require('../lib/helpers');
+const { buildPagination, pageUrl, isSacredTripType } = require('../lib/helpers');
 const { wantsJson } = require('../middleware/auth');
 const { supportedLangs } = require('../lib/i18n');
 const {
@@ -16,6 +16,9 @@ const settingsService = require('../services/settings');
 const paymentService = require('../services/payments');
 const { PAYMENT_METHODS, isValidMethod } = require('../lib/payment-methods');
 const { paymentProofUpload, mapUploadedProof } = require('../lib/payment-proof');
+const refundService = require('../services/refunds');
+const invoiceService = require('../services/invoices');
+const { REFUND_METHODS, REFUND_REASONS } = require('../lib/payout-details');
 const companyService = require('../services/companies');
 const { resolveMarkup, applyMarkup } = require('../lib/markup');
 const {
@@ -72,6 +75,23 @@ function hasTripFilters(query = {}) {
   });
 }
 
+function sacredFilterType(query = {}) {
+  const type = String(query.tripType || query.type || '').trim().toLowerCase();
+  if (type === 'hajj' || type === 'umrah') return type;
+  return 'sacred';
+}
+
+function redirectIfSacredTripType(req, res) {
+  const type = String(req.query.tripType || req.query.type || '').trim().toLowerCase();
+  if (type !== 'umrah' && type !== 'hajj') return false;
+  const params = new URLSearchParams(req.query);
+  params.delete('type');
+  params.set('tripType', type);
+  const qs = params.toString();
+  res.redirect(qs ? `/umrah?${qs}` : '/umrah');
+  return true;
+}
+
 async function setLang(req, res) {
   const code = supportedLangs.includes(req.params.code) ? req.params.code : 'en';
   req.session.lang = code;
@@ -102,8 +122,8 @@ async function home(req, res) {
     tripService.catalog(),
     reviewService.getPublishedReviews(),
   ]);
-  const featuredTrips = allTrips.filter((trip) => trip.type !== 'umrah').slice(0, 6);
-  const umrahTrips = allTrips.filter((trip) => trip.type === 'umrah').slice(0, 8);
+  const featuredTrips = allTrips.filter((trip) => !isSacredTripType(trip.type)).slice(0, 6);
+  const umrahTrips = allTrips.filter((trip) => isSacredTripType(trip.type)).slice(0, 8);
   res.render('pages/home', {
     title: 'Safarny',
     featuredTrips,
@@ -116,7 +136,9 @@ async function home(req, res) {
 async function suggest(req, res) {
   const q = String(req.query.q || '').trim();
   const limit = Math.min(12, Math.max(1, Number(req.query.limit) || 6));
-  res.json({ ok: true, q, ...(await tripService.suggestTrips(q, limit, tripFilterParams(req.query))) });
+  const lang = req.query.lang === 'ar' || req.query.lang === 'en' ? req.query.lang : res.locals.lang;
+  res.set('Cache-Control', 'private, max-age=20');
+  res.json({ ok: true, q, ...(await tripService.suggestTrips(q, limit, tripFilterParams(req.query), lang)) });
 }
 
 async function searchPreview(req, res) {
@@ -125,13 +147,7 @@ async function searchPreview(req, res) {
 }
 
 async function search(req, res) {
-  if (String(req.query.tripType || req.query.type || '') === 'umrah') {
-    const params = new URLSearchParams(req.query);
-    params.delete('tripType');
-    params.delete('type');
-    const qs = params.toString();
-    return res.redirect(qs ? `/umrah?${qs}` : '/umrah');
-  }
+  if (redirectIfSacredTripType(req, res)) return;
   const filtered = await tripService.filterTrips(tripFilterParams(req.query));
   const ctx = listContext(req, filtered, 8);
   res.render('pages/search', {
@@ -144,15 +160,9 @@ async function search(req, res) {
 }
 
 async function trips(req, res) {
-  if (String(req.query.tripType || req.query.type || '') === 'umrah') {
-    const params = new URLSearchParams(req.query);
-    params.delete('tripType');
-    params.delete('type');
-    const qs = params.toString();
-    return res.redirect(qs ? `/umrah?${qs}` : '/umrah');
-  }
+  if (redirectIfSacredTripType(req, res)) return;
   const all = await tripService.catalog();
-  const leisure = all.filter((trip) => trip.type !== 'umrah');
+  const leisure = all.filter((trip) => !isSacredTripType(trip.type));
   const filtered = await tripService.filterTrips({ ...tripFilterParams(req.query), type: 'leisure' });
   const ctx = listContext(req, filtered, 12);
   res.render('pages/trips', {
@@ -166,13 +176,7 @@ async function trips(req, res) {
 }
 
 async function offers(req, res) {
-  if (String(req.query.tripType || req.query.type || '') === 'umrah') {
-    const params = new URLSearchParams(req.query);
-    params.delete('tripType');
-    params.delete('type');
-    const qs = params.toString();
-    return res.redirect(qs ? `/umrah?${qs}` : '/umrah');
-  }
+  if (redirectIfSacredTripType(req, res)) return;
   const filtered = await tripService.filterTrips({ ...tripFilterParams(req.query), offersOnly: true, type: 'leisure' });
   const ctx = listContext(req, filtered, 12);
   res.render('pages/offers', {
@@ -214,12 +218,13 @@ async function checkoutForm(req, res) {
   const rooms = clampRoomCount(trip, selectedDate, Number(req.query.rooms) || 1, roomType);
   const guestCount = guestsFromRooms(trip, selectedDate, rooms || 1, roomType);
   const settings = await settingsService.getSettings();
-  const perPerson = priceForRoomType(trip, selectedDate, roomType);
-  const total = perPerson * guestCount;
-  const roomHint = res.locals.t('checkout.roomLimitHint', '{room} · sleeps {n} per room · up to {max} rooms')
+  const roomPrice = priceForRoomType(trip, selectedDate, roomType);
+  const total = roomPrice * (rooms || 1);
+  const roomHint = res.locals.t('checkout.roomLimitHint', '{room} · sleeps {n} · up to {max} rooms · {price} EGP per room')
     .replace('{room}', roomTypeLabel(roomType, res.locals.t) || res.locals.bedTypeLabel(trip.beds))
     .replace('{n}', String(occupancy))
-    .replace('{max}', String(maxRooms));
+    .replace('{max}', String(maxRooms))
+    .replace('{price}', res.locals.formatPrice(roomPrice));
   res.render('pages/checkout', {
     title: res.locals.t('checkout.title', 'Checkout'),
     trip,
@@ -234,7 +239,8 @@ async function checkoutForm(req, res) {
     occupancy,
     canBook: maxRooms > 0,
     roomHint,
-    perPerson,
+    roomPrice,
+    perPerson: roomPrice,
     total,
     currency: settings.currency || 'EGP',
     paymentMethods: PAYMENT_METHODS,
@@ -276,8 +282,8 @@ function submitCheckout(req, res) {
     const roomCheck = validateRoomCount(trip, selected, rooms, roomType);
     if (!roomCheck.ok) {
       const message = roomCheck.code === 'OVER_ROOMS'
-        ? res.locals.t('occupancy.overRooms', 'Too many rooms for the available guest spots.')
-        : res.locals.t('occupancy.noSpots', 'Not enough guest spots available for that date.');
+        ? res.locals.t('occupancy.overRooms', 'Too many rooms for this date.')
+        : res.locals.t('occupancy.noSpots', 'No rooms left for that date.');
       req.session.flash = { type: 'error', message };
       return res.redirect(`/trips/${trip.id}/checkout?dateId=${selected?.id || ''}&roomType=${roomType}&rooms=${Math.min(rooms, roomCheck.maxRooms || 1)}`);
     }
@@ -286,8 +292,8 @@ function submitCheckout(req, res) {
     const company = rawTrip ? await companyService.getCompanyById(rawTrip.companyId) : null;
     const pricedTrip = ensureTripDefaults(rawTrip || trip);
     const rawDate = (pricedTrip.travelDates || []).find((item) => item.id === selected?.id) || selected;
-    const basePerPerson = priceForRoomType(pricedTrip, rawDate, roomType);
-    const split = applyMarkup(basePerPerson, resolveMarkup(pricedTrip, company || {}));
+    const baseRoomPrice = priceForRoomType(pricedTrip, rawDate, roomType);
+    const split = applyMarkup(baseRoomPrice, resolveMarkup(pricedTrip, company || {}));
     const result = await bookingService.createCheckoutBooking({
       trip,
       user: req.session.user,
@@ -297,9 +303,9 @@ function submitCheckout(req, res) {
       occupancy: roomCheck.occupancy,
       travelDateId: selected?.id,
       travelDateLabel: selected?.date,
-      totalPrice: split.total * roomCheck.guests,
-      basePrice: split.base * roomCheck.guests,
-      markupAmount: split.markup * roomCheck.guests,
+      totalPrice: split.total * roomCheck.rooms,
+      basePrice: split.base * roomCheck.rooms,
+      markupAmount: split.markup * roomCheck.rooms,
       paymentMethod: method,
       paymentPayload: {
         senderName: String(req.body.senderName || req.session.user.userName || '').trim(),
@@ -311,9 +317,9 @@ function submitCheckout(req, res) {
 
     if (!result.ok) {
       const message = result.code === 'OVER_ROOMS'
-        ? res.locals.t('occupancy.overRooms', 'Too many rooms for the available guest spots.')
+        ? res.locals.t('occupancy.overRooms', 'Too many rooms for this date.')
         : result.code === 'NO_SEATS'
-          ? res.locals.t('occupancy.noSpots', 'Not enough guest spots available for that date.')
+          ? res.locals.t('occupancy.noSpots', 'No rooms left for that date.')
           : 'Could not complete checkout. Please try again.';
       req.session.flash = { type: 'error', message };
       return res.redirect(`/trips/${trip.id}/checkout?dateId=${selected?.id || ''}&roomType=${roomType}&rooms=${rooms}`);
@@ -338,13 +344,22 @@ async function bookingConfirmation(req, res) {
     paymentService.getPaymentByBookingId(booking.id),
   ]);
   const presented = toTravelerBooking(booking, trip, res.locals.lang);
+  const refund = await refundService.getRefundByBookingId(booking.id);
+  const refundOpen = booking.paymentStatus === 'verified'
+    && !['cancelled', 'refunded'].includes(booking.status)
+    && !['requested', 'approved', 'processing', 'refunded'].includes(booking.refundStatus);
+  const refundWindowClosed = refundService.tripStartHasArrived(booking.tripDate);
   res.render('pages/booking-confirmation', {
     title: res.locals.t('checkout.confirmationTitle', 'Booking confirmation'),
     booking: presented,
-    rawBooking: booking,
     trip,
     payment,
+    refund,
+    refundMethods: REFUND_METHODS,
+    refundReasons: REFUND_REASONS,
     canResubmit: payment?.status === 'rejected',
+    canRefund: refundOpen && !refundWindowClosed,
+    refundWindowClosed: refundOpen && refundWindowClosed,
     scripts: payment?.status === 'rejected' ? '<script src="/js/checkout.js"></script>' : '',
   });
 }
@@ -386,6 +401,48 @@ function resubmitPayment(req, res) {
   });
 }
 
+async function requestRefund(req, res) {
+  const booking = await bookingService.getBookingByCode(req.params.code, req.session.user.id);
+  if (!booking) return res.status(404).render('pages/not-found', { title: 'Not found' });
+  const result = await refundService.requestRefund(booking, req.session.user.id, {
+    amount: req.body.amount,
+    reasonCategory: req.body.reasonCategory,
+    reason: req.body.reason,
+    method: req.body.method,
+    walletNumber: req.body.walletNumber,
+    instapayIpa: req.body.instapayIpa,
+    bankName: req.body.bankName,
+    accountName: req.body.accountName,
+    accountNumber: req.body.accountNumber,
+    iban: req.body.iban,
+  });
+  req.session.flash = result.ok
+    ? { type: 'success', message: 'Refund request submitted.' }
+    : { type: 'error', message: result.message };
+  res.redirect(`/bookings/${req.params.code}`);
+}
+
+async function downloadInvoice(req, res) {
+  const booking = await bookingService.getBookingByCode(req.params.code, req.session.user.id);
+  if (!booking) return res.status(404).render('pages/not-found', { title: 'Not found' });
+  const ok = await invoiceService.streamInvoice(res, booking);
+  if (!ok) {
+    req.session.flash = { type: 'error', message: 'Invoice is available after payment is verified.' };
+    res.redirect(`/bookings/${req.params.code}`);
+  }
+}
+
+async function downloadCreditNote(req, res) {
+  const booking = await bookingService.getBookingByCode(req.params.code, req.session.user.id);
+  if (!booking) return res.status(404).render('pages/not-found', { title: 'Not found' });
+  const refund = await refundService.getRefundByBookingId(booking.id);
+  const ok = await invoiceService.streamCreditNote(res, refund, booking);
+  if (!ok) {
+    req.session.flash = { type: 'error', message: 'Credit note is available after the refund is paid.' };
+    res.redirect(`/bookings/${req.params.code}`);
+  }
+}
+
 async function bookTrip(req, res) {
   const trip = await tripService.getPublicTripById(req.params.id);
   if (!trip) return res.status(404).json({ ok: false });
@@ -420,11 +477,12 @@ async function bookTrip(req, res) {
 }
 
 async function umrah(req, res) {
-  const filtered = await tripService.filterTrips({ ...tripFilterParams(req.query), type: 'umrah' });
+  const sacredType = sacredFilterType(req.query);
+  const filtered = await tripService.filterTrips({ ...tripFilterParams(req.query), type: sacredType });
   const ctx = listContext(req, filtered, 12);
-  const dests = [...new Set((await tripService.filterTrips({ type: 'umrah' })).map((trip) => trip.destination))].filter(Boolean);
+  const dests = [...new Set((await tripService.filterTrips({ type: 'sacred' })).map((trip) => trip.destination))].filter(Boolean);
   res.render('pages/umrah', {
-    title: 'Umrah',
+    title: res.locals.t('umrah.title', 'Umrah & Hajj'),
     ...ctx,
     filters: req.query,
     hasActiveFilters: hasTripFilters(req.query),
@@ -606,12 +664,6 @@ async function chatReply(req, res) {
   res.redirect(`/tickets?ticket=${req.params.id}`);
 }
 
-function newsletter(req, res) {
-  req.session.flash = { type: 'success', message: 'Thanks for subscribing.' };
-  if (wantsJson(req)) return res.json({ ok: true });
-  res.redirect(req.get('referer') || '/');
-}
-
 function companyRegister(req, res) {
   if (req.session.user?.role === 'company') return res.redirect('/company/dashboard');
   if (req.session.user?.role === 'admin') return res.redirect('/admin/companies');
@@ -647,6 +699,9 @@ module.exports = {
   submitCheckout,
   bookingConfirmation,
   resubmitPayment,
+  requestRefund,
+  downloadInvoice,
+  downloadCreditNote,
   bookTrip,
   umrah,
   profile,
@@ -660,7 +715,6 @@ module.exports = {
   newTicket,
   chatRedirect,
   chatReply,
-  newsletter,
   companyRegister,
   renderLegal,
 };

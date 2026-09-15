@@ -1,6 +1,6 @@
 <%
-  const isUmrah = trip.type === 'umrah';
-  const tripTypeLabel = isUmrah ? t('filter.umrah', 'Umrah') : t('filter.leisure', 'Leisure');
+  const sacredTrip = typeof isSacredTripType === 'function' ? isSacredTripType(trip.type) : trip.type === 'umrah';
+  const tripTypeText = typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : (sacredTrip ? t('filter.umrah', 'Umrah') : t('filter.leisure', 'Leisure'));
   const occupancy = typeof occupancyOf === 'function' ? occupancyOf(trip) : Math.min(4, Math.max(1, Number(trip.beds) || 2));
   const initialDate = tripDates[0];
   const initialMaxRooms = initialDate?.maxRooms ?? 0;
@@ -9,7 +9,7 @@
   const stayLine = typeof staySummary === 'function' ? staySummary(trip) : '';
   const includedItems = (trip.includedList && trip.includedList.length)
     ? trip.includedList.map(function(text) { return { text: text, custom: true }; })
-    : isUmrah
+    : sacredTrip
       ? [
           { key: 'visa', icon: 'M4 6h16v12H4zM8 10h8M8 14h5' },
           { key: 'hotel', icon: 'M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6' },
@@ -23,8 +23,8 @@
           { key: 'activities', icon: 'M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 17.8 5.7 21.2 8 14 2 9.4h7.6z' },
         ];
   const overviewItems = [
-    { label: t('tripDetails.tripType', 'Trip Type'), value: tripTypeLabel },
-    { label: t('tripDetails.destination', 'Destination'), value: trip.destination },
+    { label: t('tripDetails.tripType', 'Trip Type'), value: tripTypeText },
+    { label: t('tripDetails.destination', 'Destination'), value: typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination },
     { label: t('tripDetails.duration', 'Duration'), value: trip.days + ' ' + t('tripDetails.durationDays', 'Days') + ' / ' + trip.nights + ' ' + t('tripDetails.durationNights', 'Nights') },
     { label: t('tripDetails.roomOccupancy', 'Room occupancy'), value: trip.roomTypesLabel || occupancySleepsLabel(trip.beds) },
     { label: t('tripDetails.schedule', 'Schedule'), value: trip.frequency || t('tripDetails.scheduleDaily', 'Daily') },
@@ -32,13 +32,13 @@
   if (stayLine) overviewItems.splice(2, 0, { label: t('tripDetails.stayPlan', 'Stay plan'), value: stayLine });
 %>
 
-<section class="trip-details-page<%= isUmrah ? ' trip-details-page--umrah' : '' %>">
+<section class="trip-details-page<%= sacredTrip ? ' trip-details-page--umrah' : '' %>">
   <div class="trip-details-shell max-w-340 w-full px-4 pt-28 sm:pt-32 pb-10 sm:pb-16 mx-auto">
-    <a href="<%= isUmrah ? '/umrah' : '/trips' %>" class="trip-details-back animate-on-load" style="--load-delay: 0s">
+    <a href="<%= sacredTrip ? '/umrah' : '/trips' %>" class="trip-details-back animate-on-load" style="--load-delay: 0s">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <%= isUmrah ? t('umrah.back', 'Back to Umrah') : t('tripDetails.backToTrips', 'Back to trips') %>
+      <%= sacredTrip ? t('umrah.back', 'Back to Umrah & Hajj') : t('tripDetails.backToTrips', 'Back to trips') %>
     </a>
 
     <div class="trip-details-gallery animate-on-load" data-gallery style="--load-delay: 0.06s">
@@ -48,11 +48,11 @@
           class="trip-details-gallery-main"
           style="background-image: url('<%= trip.gallery[0] %>')"
           role="img"
-          aria-label="<%= trip.title %>"
+          aria-label="<%= tripTitle(trip) %>"
         ></div>
         <div class="trip-details-gallery-badges">
-          <span class="trip-details-pill trip-details-pill--dest"><%= trip.destination %></span>
-          <span class="trip-details-pill trip-details-pill--type"><%= tripTypeLabel %></span>
+          <span class="trip-details-pill trip-details-pill--dest"><%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %></span>
+          <span class="trip-details-pill trip-details-pill--type"><%= tripTypeText %></span>
         </div>
       </div>
       <div class="trip-details-gallery-thumbs-wrap" data-gallery-thumbs-wrap>
@@ -74,12 +74,12 @@
       <div class="trip-details-main">
         <header class="trip-details-header" data-scroll-reveal>
           <div class="trip-details-header-top">
-            <span class="trip-details-category"><%= isUmrah ? t('filter.umrah', 'Umrah') : trip.category %></span>
+            <span class="trip-details-category"><%= tripTypeText %></span>
             <% if (trip.discountPercent) { %>
               <span class="trip-details-save-badge"><%= t('tripDetails.save', 'Save') %> <%= trip.discountPercent %>%</span>
             <% } %>
           </div>
-          <h1 class="trip-details-title"><%= trip.title %></h1>
+          <h1 class="trip-details-title" dir="auto"><%= tripTitle(trip) %></h1>
           <ul class="trip-details-meta">
             <li>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="2.2" fill="currentColor"/></svg>
@@ -109,7 +109,7 @@
         <div class="trip-details-price-block" data-scroll-reveal style="--reveal-delay: 80ms">
           <div class="trip-details-price-main">
             <span class="trip-details-price-current"><%= trip.hasMultipleRoomTypes ? t('tripDetails.fromPrice', 'From') + ' ' : '' %><%= formatPrice(trip.price) %> <small><%= t('shared.egp', 'EGP') %></small></span>
-            <span class="trip-details-price-unit">/ <%= t('tripDetails.person', 'person') %></span>
+            <span class="trip-details-price-unit">/ <%= t('checkout.perRoom', 'room') %></span>
           </div>
           <% if (trip.oldPrice) { %>
             <span class="trip-details-price-old"><%= formatPrice(trip.oldPrice) %> <%= t('shared.egp', 'EGP') %></span>
@@ -118,7 +118,7 @@
 
         <section class="trip-details-section" data-scroll-reveal style="--reveal-delay: 120ms">
           <h2 class="trip-details-section-title"><%= t('tripDetails.aboutTrip', 'About This Trip') %></h2>
-          <p class="trip-details-about"><%= trip.about %></p>
+          <p class="trip-details-about" dir="auto"><%= tripDescription(trip) %></p>
         </section>
 
         <section class="trip-details-section" data-scroll-reveal style="--reveal-delay: 160ms">
@@ -221,7 +221,7 @@
                   data-occupancy="<%= room.occupancy %>"
                 >
                   <strong><%= roomTypeLabel(room.type) %></strong>
-                  <span><%= formatPrice(room.price || trip.price) %> <%= t('shared.egp', 'EGP') %> / <%= t('tripDetails.person', 'person') %></span>
+                  <span><%= formatPrice(room.price || trip.price) %> <%= t('shared.egp', 'EGP') %> / <%= t('checkout.perRoom', 'room') %></span>
                   <em><%= t('tripDetails.sleepsN', 'sleeps {n}').replace('{n}', String(room.occupancy)) %></em>
                 </button>
               <% }) %>
@@ -246,6 +246,6 @@
   title3: 'tripDetails.recommended.title2',
   description: 'tripDetails.recommended.description',
   actionText: 'tripDetails.recommended.seeMore',
-  actionLink: isUmrah ? '/umrah' : '/trips',
+  actionLink: sacredTrip ? '/umrah' : '/trips',
   trips: recommendedTrips
 }) %>

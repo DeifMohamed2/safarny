@@ -14,18 +14,25 @@
     return date.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   };
   const chipFields = [];
-  if (currentFilters.destination) chipFields.push({ key: 'destination', label: t('filter.destination', 'Destination'), value: currentFilters.destination });
+  if (currentFilters.destination) chipFields.push({ key: 'destination', label: t('filter.destination', 'Destination'), value: typeof destinationLabel === 'function' ? destinationLabel(currentFilters.destination) : currentFilters.destination });
   if (currentFilters.date) chipFields.push({ key: 'date', label: t('filter.date', 'Date'), value: formatChipDate(currentFilters.date) });
   if (currentFilters.guests && Number(currentFilters.guests) > 1) chipFields.push({ key: 'guests', label: t('filter.travelers', 'Travelers'), value: currentFilters.guests });
   if (currentFilters.beds) {
     const bedLabels = { '1': t('filter.bedSingle', 'Single'), '2': t('filter.bedDouble', 'Double'), '3': t('filter.bedTriple', 'Triple'), '4': t('filter.bedQuadruple', 'Quadruple') };
     chipFields.push({ key: 'beds', label: t('filter.beds', 'Bed type'), value: bedLabels[currentFilters.beds] || currentFilters.beds });
   }
-  if (currentFilters.tripType && !lockTripType) chipFields.push({ key: 'tripType', label: t('filter.tripType', 'Trip type'), value: currentFilters.tripType === 'umrah' ? t('filter.umrah', 'Umrah') : t('filter.leisure', 'Leisure') });
+  if (currentFilters.tripType && lockTripType !== 'leisure') {
+    const tripTypeLabels = {
+      leisure: t('filter.leisure', 'Leisure'),
+      umrah: t('filter.umrah', 'Umrah'),
+      hajj: t('filter.hajj', 'Hajj'),
+    };
+    chipFields.push({ key: 'tripType', label: t('filter.tripType', 'Trip type'), value: tripTypeLabels[currentFilters.tripType] || currentFilters.tripType });
+  }
   if (currentFilters.priceFrom || currentFilters.priceTo) {
     const from = currentFilters.priceFrom ? Number(currentFilters.priceFrom).toLocaleString() : '0';
     const to = currentFilters.priceTo ? Number(currentFilters.priceTo).toLocaleString() : t('filter.any', 'Any');
-    chipFields.push({ key: currentFilters.priceFrom ? 'priceFrom' : 'priceTo', label: t('filter.price', 'Price'), value: from + '–' + to + ' EGP' });
+    chipFields.push({ key: currentFilters.priceFrom ? 'priceFrom' : 'priceTo', label: t('filter.price', 'Price'), value: from + '–' + to + ' ' + t('shared.egp', 'EGP') });
   }
   if (currentFilters.duration) {
     const durationLabels = { '3-4': t('filter.durationShort', '3–4 days'), '5-7': t('filter.durationMedium', '5–7 days'), '8+': t('filter.durationLong', '8+ days') };
@@ -44,6 +51,25 @@
   data-offers-only="<%= offersOnly ? '1' : '' %>"
   novalidate
 >
+  <%
+    const destScope = lockTripType === 'umrah' ? 'sacred' : (lockTripType === 'leisure' ? 'leisure' : '');
+    const destIndexSource = typeof destinationsForType === 'function' && destScope
+      ? destinationsForType(destScope)
+      : (typeof destinations !== 'undefined' && destinations ? destinations : []);
+    const destIndex = destIndexSource.map(function(item) {
+      return {
+        name: item.nameEn,
+        nameEn: item.nameEn,
+        nameAr: item.nameAr,
+        label: (typeof lang !== 'undefined' && lang === 'ar')
+          ? (item.nameAr || item.nameEn || '')
+          : (item.nameEn || item.nameAr || ''),
+        aliases: item.aliases || [],
+        popular: Boolean(item.popular),
+      };
+    });
+  %>
+  <script type="application/json" data-dest-index><%- JSON.stringify(destIndex).replace(/</g, '\\u003c') %></script>
   <div class="booking-shell w-full max-w-340 animate-on-load <%= isHero ? 'pb-6' : 'booking-shell--list pb-4' %>" style="--load-delay: 0.15s">
     <div
       class="booking-widget <%= isHero ? 'is-hero' : 'is-list' %>"
@@ -62,7 +88,7 @@
             <input
               type="text"
               name="q"
-              value="<%= currentFilters.q || currentFilters.destination || '' %>"
+              value="<%= typeof destinationLabel === 'function' ? destinationLabel(currentFilters.destination || currentFilters.q || '') : (currentFilters.q || currentFilters.destination || '') %>"
               placeholder="<%= lockTripType === 'umrah' ? t('umrah.wherePlaceholder', 'Makkah, Madinah, or package') : t('filter.wherePlaceholder', 'City, destination, or trip') %>"
               autocomplete="off"
               data-filter-field
@@ -173,8 +199,18 @@
         <div class="filter-panel-clip">
           <div class="booking-more-inner">
             <div class="filter-panel-row">
-              <% if (lockTripType) { %>
-                <input type="hidden" name="tripType" value="<%= lockTripType %>" />
+              <% if (lockTripType === 'leisure') { %>
+                <input type="hidden" name="tripType" value="leisure" />
+              <% } else if (lockTripType === 'umrah') { %>
+              <div class="filter-field">
+                <span class="filter-field-label"><%= t('filter.tripType', 'Trip type') %></span>
+                <div class="filter-pills" role="group" aria-label="<%= t('filter.tripType', 'Trip type') %>" data-filter-pills="tripType">
+                  <button type="button" class="filter-pill <%= !currentFilters.tripType || currentFilters.tripType === 'sacred' ? 'is-active' : '' %>" data-pill-value="" aria-pressed="<%= !currentFilters.tripType || currentFilters.tripType === 'sacred' ? 'true' : 'false' %>"><%= t('filter.all', 'All') %></button>
+                  <button type="button" class="filter-pill <%= currentFilters.tripType === 'umrah' ? 'is-active' : '' %>" data-pill-value="umrah" aria-pressed="<%= currentFilters.tripType === 'umrah' ? 'true' : 'false' %>"><%= t('filter.umrah', 'Umrah') %></button>
+                  <button type="button" class="filter-pill <%= currentFilters.tripType === 'hajj' ? 'is-active' : '' %>" data-pill-value="hajj" aria-pressed="<%= currentFilters.tripType === 'hajj' ? 'true' : 'false' %>"><%= t('filter.hajj', 'Hajj') %></button>
+                </div>
+                <input type="hidden" name="tripType" value="<%= currentFilters.tripType || '' %>" data-filter-field />
+              </div>
               <% } else { %>
               <div class="filter-field">
                 <span class="filter-field-label"><%= t('filter.tripType', 'Trip type') %></span>
@@ -182,6 +218,7 @@
                   <button type="button" class="filter-pill <%= !currentFilters.tripType ? 'is-active' : '' %>" data-pill-value="" aria-pressed="<%= !currentFilters.tripType ? 'true' : 'false' %>"><%= t('filter.all', 'All') %></button>
                   <button type="button" class="filter-pill <%= currentFilters.tripType === 'leisure' ? 'is-active' : '' %>" data-pill-value="leisure" aria-pressed="<%= currentFilters.tripType === 'leisure' ? 'true' : 'false' %>"><%= t('filter.leisure', 'Leisure') %></button>
                   <button type="button" class="filter-pill <%= currentFilters.tripType === 'umrah' ? 'is-active' : '' %>" data-pill-value="umrah" aria-pressed="<%= currentFilters.tripType === 'umrah' ? 'true' : 'false' %>"><%= t('filter.umrah', 'Umrah') %></button>
+                  <button type="button" class="filter-pill <%= currentFilters.tripType === 'hajj' ? 'is-active' : '' %>" data-pill-value="hajj" aria-pressed="<%= currentFilters.tripType === 'hajj' ? 'true' : 'false' %>"><%= t('filter.hajj', 'Hajj') %></button>
                 </div>
                 <input type="hidden" name="tripType" value="<%= currentFilters.tripType || '' %>" data-filter-field />
               </div>
@@ -197,7 +234,7 @@
                 </div>
                 <div class="filter-price-range">
                   <label class="filter-price-box">
-                    <span class="filter-price-affix">EGP</span>
+                    <span class="filter-price-affix"><%= t('shared.egp', 'EGP') %></span>
                     <input
                       type="text"
                       inputmode="numeric"
@@ -212,7 +249,7 @@
                   </label>
                   <span class="filter-price-sep">–</span>
                   <label class="filter-price-box">
-                    <span class="filter-price-affix">EGP</span>
+                    <span class="filter-price-affix"><%= t('shared.egp', 'EGP') %></span>
                     <input
                       type="text"
                       inputmode="numeric"

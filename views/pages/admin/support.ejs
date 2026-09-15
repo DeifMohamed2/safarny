@@ -62,8 +62,8 @@
             <td>
               <span class="admin-status admin-status--<%= ticket.source %>"><%= ticket.sourceLabel %></span>
             </td>
-            <td><span class="admin-status admin-status--<%= ticket.priority %>"><%= ticket.priority %></span></td>
-            <td><span class="admin-status admin-status--<%= ticket.status %>"><%= ticket.status %></span></td>
+            <td><span class="admin-status admin-status--<%= ticket.priority %>"><%= statusLabel(ticket.priority) %></span></td>
+            <td><span class="admin-status admin-status--<%= ticket.status %>"><%= statusLabel(ticket.status) %></span></td>
             <td class="admin-muted-sm admin-support-updated"><%= ticket.updatedAt %></td>
           </tr>
         <% }) %>

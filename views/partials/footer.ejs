@@ -29,24 +29,6 @@
             </a>
           <% }) %>
         </nav>
-
-        <form action="/newsletter" method="post" class="w-full sm:w-80 flex flex-col gap-3">
-          <div class="flex items-center justify-between bg-white rounded-xl px-4 py-2 outline outline-1 outline-[#122445] gap-2">
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="<%= t('footer.email', 'Enter your email') %>"
-              class="flex-1 min-w-0 outline-none text-[#122445] text-sm"
-            />
-            <button type="submit" class="px-4 py-3 bg-[#263859] rounded-xl text-white text-lg capitalize shrink-0">
-              <%= t('footer.send', 'send') %>
-            </button>
-          </div>
-          <p class="text-white text-sm leading-5">
-            <%= t('footer.newsletter', 'Stay ahead with the latest updates, insights, and events from Macat Megatrons.') %>
-          </p>
-        </form>
       </div>
     </div>
     <div class="w-full h-px bg-indigo-300"></div>

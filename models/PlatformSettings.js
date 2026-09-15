@@ -26,7 +26,7 @@ const settingsSchema = new mongoose.Schema(
     defaultLocale: { type: String, default: 'en' },
     autoApproveTrips: { type: Boolean, default: false },
     maintenanceMode: { type: Boolean, default: false },
-    destinations: { type: [String], default: [] },
+    destinations: { type: [mongoose.Schema.Types.Mixed], default: [] },
     categories: { type: [String], default: [] },
     payoutAccounts: { type: payoutAccountsSchema, default: () => ({}) },
   },

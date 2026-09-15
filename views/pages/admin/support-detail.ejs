@@ -6,8 +6,8 @@
     <p class="admin-subtitle"><%= ticket.subject %></p>
   </div>
   <div class="admin-ticket-badges">
-    <span class="admin-status admin-status--<%= ticket.status %>"><%= ticket.status %></span>
-    <span class="admin-status admin-status--<%= ticket.priority %>"><%= ticket.priority %></span>
+    <span class="admin-status admin-status--<%= ticket.status %>"><%= statusLabel(ticket.status) %></span>
+    <span class="admin-status admin-status--<%= ticket.priority %>"><%= statusLabel(ticket.priority) %></span>
     <span class="admin-muted"><%= ticket.sourceLabel %></span>
   </div>
 </div>

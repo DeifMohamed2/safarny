@@ -50,7 +50,7 @@ const tripSchema = new mongoose.Schema(
     location: { type: String, default: '' },
     destination: { type: String, required: true, trim: true, index: true },
     category: { type: String, default: 'Leisure' },
-    type: { type: String, enum: ['leisure', 'umrah'], default: 'leisure', index: true },
+    type: { type: String, enum: ['leisure', 'umrah', 'hajj'], default: 'leisure', index: true },
     description: { type: String, default: '' },
     descriptionAr: { type: String, default: '' },
     about: { type: String, default: '' },

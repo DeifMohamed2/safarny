@@ -1,9 +1,10 @@
 <%- include('../../partials/company-shell-start', { companyActive: 'trips' }) %>
   <header class="company-header" data-scroll-reveal>
     <div>
-      <p class="company-kicker"><%= trip.destination %></p>
-      <h1 class="company-title"><%= trip.title %></h1>
-      <p class="company-subtitle"><%= trip.description %></p>
+      <p class="company-kicker"><%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %></p>
+      <h1 class="company-title" dir="auto"><%= tripTitle(trip) %></h1>
+      <% const tripCopy = tripDescription(trip); %>
+      <% if (tripCopy) { %><p class="company-subtitle" dir="auto"><%= tripCopy %></p><% } %>
     </div>
     <div class="company-header-actions">
       <a href="/company/trips/<%= trip.id %>/edit" class="cp-btn cp-btn--primary"><%= t('company.trips.edit', 'Edit') %></a>
@@ -15,7 +16,7 @@
 
   <div class="company-detail-hero" data-scroll-reveal>
     <img src="<%= trip.images[0] %>" alt="" />
-    <span class="company-status company-status--<%= trip.status %>"><%= t('company.tripStatus.' + trip.status, trip.status) %></span>
+    <span class="company-status company-status--<%= trip.status %>"><%= statusLabel(trip.status) %></span>
   </div>
 
   <% if (trip.images && trip.images.length > 1) { %>
@@ -82,8 +83,8 @@
               <tr>
                 <td><a href="/company/bookings/<%= booking.id %>"><%= booking.id %></a></td>
                 <td><%= booking.customerName %></td>
-                <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= booking.status %></span></td>
-                <td><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %></td>
+                <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= statusLabel(booking.status) %></span></td>
+                <td><%= formatPrice(booking.companyPayout || booking.basePrice) %></td>
               </tr>
             <% }) %>
           </tbody>

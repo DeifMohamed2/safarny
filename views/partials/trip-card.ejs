@@ -1,10 +1,11 @@
 <% const favorite = favorites.includes(String(trip.id)); %>
+<% const sacredTrip = typeof isSacredTripType === 'function' ? isSacredTripType(trip.type) : trip.type === 'umrah'; %>
 <article
-  class="trip-card <%= trip.type === 'umrah' ? 'trip-card--umrah' : '' %> <%= typeof cardClass !== 'undefined' ? cardClass : '' %>"
+  class="trip-card <%= sacredTrip ? 'trip-card--umrah' : '' %> <%= typeof cardClass !== 'undefined' ? cardClass : '' %>"
   <% if (typeof cardClass === 'undefined' || !String(cardClass).includes('trip-card--carousel')) { %>data-scroll-reveal<% } %>
 >
   <div class="trip-card-media">
-    <img src="<%= trip.image %>" alt="<%= trip.title %>" class="trip-card-img" loading="lazy" />
+    <img src="<%= trip.image %>" alt="<%= tripTitle(trip) %>" class="trip-card-img" loading="lazy" />
     <div class="trip-card-media-overlay" aria-hidden="true"></div>
     <div class="trip-card-badges">
       <% if (trip.discountPercent) { %>
@@ -25,11 +26,11 @@
 
   <div class="trip-card-body">
     <div class="trip-card-category">
-      <span class="trip-card-category-dot<%= trip.type === 'umrah' ? ' is-umrah' : '' %>" aria-hidden="true"></span>
-      <span class="trip-card-category-text"><%= trip.type === 'umrah' ? t('filter.umrah', 'Umrah') : trip.category %></span>
+      <span class="trip-card-category-dot<%= sacredTrip ? ' is-umrah' : '' %>" aria-hidden="true"></span>
+      <span class="trip-card-category-text"><%= typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : trip.category %></span>
     </div>
 
-    <h3 class="trip-card-title"><%= trip.title %></h3>
+    <h3 class="trip-card-title" dir="auto"><%= tripTitle(trip) %></h3>
     <% const cardStay = typeof staySummary === 'function' ? staySummary(trip) : ''; %>
     <% if (cardStay) { %>
       <p class="trip-card-stay"><%= cardStay %></p>
@@ -41,7 +42,7 @@
           <path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z" stroke="currentColor" stroke-width="1.6"/>
           <circle cx="12" cy="10" r="2.2" fill="currentColor"/>
         </svg>
-        <span><%= trip.location %></span>
+        <span><%= typeof destinationLocation === 'function' ? destinationLocation(trip.destination) : trip.location %></span>
       </li>
       <li>
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -77,7 +78,7 @@
       <div class="trip-card-price">
         <span class="trip-card-price-current">
           <%= trip.hasMultipleRoomTypes ? t('tripDetails.fromPrice', 'From') + ' ' : '' %><%= formatPrice(trip.price) %>
-          <small><%= t('shared.egp', 'EGP') %> / <%= t('tripDetails.person', 'person') %></small>
+          <small><%= t('shared.egp', 'EGP') %> / <%= t('checkout.perRoom', 'room') %></small>
         </span>
         <% if (trip.oldPrice) { %>
           <span class="trip-card-price-old"><%= formatPrice(trip.oldPrice) %> <%= t('shared.egp', 'EGP') %></span>

@@ -25,6 +25,10 @@ function companyBaseAmount(booking) {
 
 function toCompanyBooking(booking) {
   if (!booking) return null;
+  const {
+    markupAmount: _markupAmount,
+    ...safe
+  } = booking;
   const status = titleCaseStatus(booking.status);
   const seats = Number(booking.seats) || 0;
   const basePrice = companyBaseAmount(booking);
@@ -36,14 +40,18 @@ function toCompanyBooking(booking) {
     : null;
 
   return {
-    ...booking,
+    ...safe,
     id: booking.id || booking._id,
     status,
     bookingDate: isoDate(booking.bookingDate),
     tripDate: isoDate(booking.tripDate),
+    totalPrice: basePrice,
     basePrice,
     companyPayout: basePrice,
     pricePerSeat: seats ? Math.round(basePrice / seats) : basePrice,
+    pricePerRoom: (Number(booking.rooms) || 0) > 0
+      ? Math.round(basePrice / Number(booking.rooms))
+      : basePrice,
     daysUntilTrip,
     isUpcoming: daysUntilTrip !== null && daysUntilTrip >= 0,
     paymentMethod: booking.paymentMethod === 'legacy'
@@ -52,6 +60,9 @@ function toCompanyBooking(booking) {
     paymentMethodKey: booking.paymentMethod || 'legacy',
     paymentStatus: booking.paymentStatus || 'unpaid',
     paymentId: booking.paymentId || '',
+    refundStatus: booking.refundStatus || 'none',
+    refundedAmount: Number(booking.refundedAmount) || 0,
+    invoiceNumber: booking.invoiceNumber || '',
     referenceCode: booking.referenceCode || `SAF-${booking.code || booking.id || booking._id}`,
     statusHistory: (booking.statusHistory || []).map((item) => ({
       ...item,
@@ -61,8 +72,22 @@ function toCompanyBooking(booking) {
   };
 }
 
-function enrichBookingDetail(booking, trip = null) {
+function toAdminBooking(booking) {
+  if (!booking) return null;
   const presented = toCompanyBooking(booking);
+  const collected = Number(booking.totalPrice) || 0;
+  const seats = Number(booking.seats) || 0;
+  const rooms = Number(booking.rooms) || 0;
+  return {
+    ...presented,
+    totalPrice: collected,
+    markupAmount: Number(booking.markupAmount) || 0,
+    pricePerSeat: seats ? Math.round(collected / seats) : collected,
+    pricePerRoom: rooms > 0 ? Math.round(collected / rooms) : collected,
+  };
+}
+
+function withTripDetail(presented, trip) {
   if (!presented) return null;
   return {
     ...presented,
@@ -75,11 +100,20 @@ function enrichBookingDetail(booking, trip = null) {
   };
 }
 
+function enrichBookingDetail(booking, trip = null) {
+  return withTripDetail(toCompanyBooking(booking), trip);
+}
+
+function enrichAdminBookingDetail(booking, trip = null) {
+  return withTripDetail(toAdminBooking(booking), trip);
+}
+
 function toTravelerBooking(booking, trip = null, locale = 'en') {
   if (!booking) return null;
   const seats = Number(booking.seats) || 1;
+  const rooms = Number(booking.rooms) || 0;
   const totalPrice = Number(booking.totalPrice) || 0;
-  const perPerson = seats ? Math.round(totalPrice / seats) : totalPrice;
+  const perRoom = rooms > 0 ? Math.round(totalPrice / rooms) : totalPrice;
   const status = normalizeStatus(booking.status);
   const image = booking.image || trip?.images?.[0] || trip?.image || '/assets/trip/trip.jpg';
   const days = trip?.days;
@@ -98,12 +132,15 @@ function toTravelerBooking(booking, trip = null, locale = 'en') {
     travelDate: localeDate(booking.tripDate, locale),
     duration,
     adults: seats,
-    price: perPerson,
+    rooms,
+    price: perRoom,
     totalPrice,
     paymentStatus: booking.paymentStatus || 'unpaid',
     paymentMethod: booking.paymentMethod === 'legacy' ? '' : methodLabel(booking.paymentMethod),
     paymentMethodKey: booking.paymentMethod || 'legacy',
     code: booking.code || booking.id,
+    refundStatus: booking.refundStatus || 'none',
+    invoiceNumber: booking.invoiceNumber || '',
     image,
   };
 }
@@ -111,7 +148,9 @@ function toTravelerBooking(booking, trip = null, locale = 'en') {
 module.exports = {
   companyBaseAmount,
   toCompanyBooking,
+  toAdminBooking,
   enrichBookingDetail,
+  enrichAdminBookingDetail,
   toTravelerBooking,
   isoDate,
 };

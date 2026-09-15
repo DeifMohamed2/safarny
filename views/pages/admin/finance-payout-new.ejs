@@ -1,0 +1,185 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  const dueCompanies = (overview && overview.dueCompanies) || [];
+  const clawbackSum = (clawbacks || []).reduce(function(sum, row) { return sum + Number(row.amount || 0); }, 0);
+  const selectedPayable = (bookings || []).reduce(function(sum, booking) { return sum + Number(booking.payableToCompany || 0); }, 0);
+  const netPayable = Math.max(0, selectedPayable + clawbackSum);
+  const unsettledAmount = settlement ? settlement.unsettledPayable : 0;
+  const settledAmount = settlement ? settlement.settledPayable : 0;
+%>
+<div class="admin-payout-page admin-payout-page--create">
+  <div class="admin-payout-head">
+    <div>
+      <a href="/admin/finance/payouts" class="admin-back"><%= t('admin.finance.payouts.title', 'Payouts') %></a>
+      <h2 class="admin-payout-id"><%= t('admin.finance.payouts.create', 'Create payout') %></h2>
+      <p class="admin-payout-kicker"><%= t('admin.finance.payouts.createHint', 'Choose a company that still has an unpaid balance, then select the bookings to pay.') %></p>
+    </div>
+  </div>
+
+  <div class="admin-payout-kpis">
+    <article class="admin-payout-kpi admin-payout-kpi--warn">
+      <span><%= t('admin.finance.payouts.unsettledNow', 'Not settled yet') %></span>
+      <strong><%= formatPrice(overview.unsettledPayable) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+      <em><%= overview.unsettledBookings || 0 %> <%= t('admin.finance.payouts.unsettledBookingsHint', 'confirmed bookings still unpaid to companies') %></em>
+    </article>
+    <article class="admin-payout-kpi admin-payout-kpi--ok">
+      <span><%= t('admin.finance.payouts.settledToDate', 'Settled so far') %></span>
+      <strong><%= formatPrice(overview.settledPayable) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+      <em><%= overview.settledBookings || 0 %> <%= t('admin.finance.payouts.settledBookingsHint', 'confirmed bookings already paid out') %></em>
+    </article>
+    <article class="admin-payout-kpi">
+      <span><%= t('admin.finance.payouts.companiesWaiting', 'Companies not settled') %></span>
+      <strong><%= overview.unsettledCompanies || 0 %></strong>
+      <em><%= overview.readyCompanies || 0 %> <%= t('admin.finance.payouts.readyToPay', 'ready to pay') %><% if (overview.blockedCompanies) { %> · <%= overview.blockedCompanies %> <%= t('admin.finance.payouts.needDetails', 'need payout details') %><% } %></em>
+    </article>
+  </div>
+
+  <section class="admin-panel admin-payout-card">
+    <div class="admin-panel-head">
+      <div>
+        <h3 class="admin-panel-title"><%= t('admin.finance.payouts.dueTitle', 'Companies still unpaid') %></h3>
+        <p class="admin-muted-sm"><%= t('admin.finance.payouts.pickHint', 'Select a company to build the payout. Amounts shown are the company share still unpaid.') %></p>
+      </div>
+    </div>
+    <% if (!dueCompanies.length) { %>
+      <p class="admin-muted"><%= t('admin.finance.payouts.allCaughtUp', 'Every confirmed company balance is settled.') %></p>
+    <% } else { %>
+      <div class="admin-payout-picks">
+        <% dueCompanies.forEach(function(row) { %>
+          <a href="/admin/finance/payouts/new?companyId=<%= encodeURIComponent(row.companyId) %>" class="admin-payout-pick<%= String(companyId) === String(row.companyId) ? ' is-active' : '' %>">
+            <div class="admin-payout-pick-top">
+              <strong><%= row.companyName %></strong>
+              <% if (row.payoutReady) { %>
+                <span class="admin-status admin-status--verified"><%= t('admin.finance.payoutVerifiedOn', 'Verified') %></span>
+              <% } else { %>
+                <span class="admin-status admin-status--pending"><%= t('admin.finance.payoutUnverified', 'Not verified') %></span>
+              <% } %>
+            </div>
+            <p class="admin-payout-pick-amount"><%= formatPrice(row.unsettledPayable) %> <small><%= t('shared.egp', 'EGP') %></small></p>
+            <p class="admin-muted-sm"><%= row.unsettledCount %> <%= t('admin.finance.payouts.open', 'open') %> · <%= t('admin.finance.payouts.settledToDate', 'Settled so far') %>: <%= formatPrice(row.settledPayable) %> · <%= row.method ? t('paymentMethods.' + row.method, row.method.replace(/_/g, ' ')) : t('admin.finance.payouts.noDestination', 'No payout destination on file.') %></p>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+
+<% if (!company) { %>
+  <div class="admin-panel admin-payout-card">
+    <p class="admin-muted"><%= t('admin.finance.payouts.noCompany', 'Choose a company above to start a payout.') %></p>
+  </div>
+<% } else { %>
+  <div class="admin-payout-kpis">
+    <article class="admin-payout-kpi admin-payout-kpi--warn">
+      <span><%= company.title %> · <%= t('admin.finance.unsettledPayable', 'Still to settle') %></span>
+      <strong><%= formatPrice(unsettledAmount) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+      <em><%= settlement ? settlement.unsettledCount : bookings.length %> <%= t('admin.finance.payouts.open', 'open') %></em>
+    </article>
+    <article class="admin-payout-kpi admin-payout-kpi--ok">
+      <span><%= t('admin.finance.payouts.settledToDate', 'Settled so far') %></span>
+      <strong><%= formatPrice(settledAmount) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+      <em><%= settlement ? settlement.settledCount : 0 %> <%= t('admin.finance.payouts.settledBookingsHint', 'confirmed bookings already paid out') %></em>
+    </article>
+    <article class="admin-payout-kpi admin-payout-kpi--net">
+      <span><%= t('admin.finance.payouts.net', 'Net payable') %></span>
+      <strong data-payout-net-preview><%= formatPrice(netPayable) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+      <em><%= t('admin.finance.payouts.netHint', 'Selected company share minus refund clawbacks') %></em>
+    </article>
+  </div>
+
+  <div class="admin-payout-grid admin-payout-grid--2">
+    <div class="admin-panel admin-payout-card">
+      <h3 class="admin-panel-title"><%= t('admin.finance.payouts.destination', 'Pay to') %></h3>
+      <p class="admin-muted-sm"><%= methodLabel || t('admin.finance.payouts.noDestination', 'No payout destination on file.') %></p>
+      <% if (destinationFields && destinationFields.length) { %>
+        <dl class="admin-payout-facts">
+          <% destinationFields.forEach(function(field) { %>
+            <div>
+              <dt><%= field.label %></dt>
+              <dd class="admin-payout-value">
+                <span class="admin-payout-mono"><%= field.value %></span>
+                <button type="button" class="admin-copy" data-copy="<%= field.value %>" data-copied-label="<%= t('shared.copied', 'Copied') %>"><%= t('shared.copy', 'Copy') %></button>
+              </dd>
+            </div>
+          <% }) %>
+        </dl>
+      <% } %>
+      <a href="/admin/companies/<%= company.id %>" class="admin-link mt-3 inline-block"><%= t('admin.finance.payouts.viewCompany', 'Open company') %> →</a>
+    </div>
+    <div class="admin-panel admin-payout-card">
+      <h3 class="admin-panel-title"><%= t('admin.finance.payouts.adjustments', 'Pending clawbacks') %></h3>
+      <% if (!clawbacks.length) { %>
+        <p class="admin-muted"><%= t('admin.finance.payouts.noClawbacks', 'No refund clawbacks waiting on this company.') %></p>
+      <% } else { %>
+        <ul class="admin-settlement-list">
+          <% clawbacks.forEach(function(row) { %>
+            <li><span><%= row.label %></span><strong><%= formatPrice(row.amount) %> <%= t('shared.egp', 'EGP') %></strong></li>
+          <% }) %>
+        </ul>
+        <p class="admin-muted-sm"><%= t('admin.finance.payouts.clawbacksHint', 'Clawbacks will be deducted from the net payout.') %></p>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (!payoutReady) { %>
+    <div class="admin-panel admin-payout-card">
+      <p class="admin-payout-banner admin-payout-banner--failed"><%= t('admin.finance.payouts.unverified', 'This company has not verified payout details yet. Ask them to save bank or wallet details, then verify them on the company page.') %></p>
+    </div>
+  <% } else if (!bookings.length) { %>
+    <div class="admin-panel admin-payout-card">
+        <p class="admin-muted"><%= t('admin.finance.payouts.noBookings', 'No unsettled confirmed bookings ready for a new payout. They may already sit in a draft or processing payout.') %></p>
+        <a href="/admin/finance/payouts?companyId=<%= encodeURIComponent(company.id) %>" class="admin-link mt-3 inline-block"><%= t('admin.finance.payouts.viewHistory', 'View this company’s payouts') %> →</a>
+    </div>
+  <% } else { %>
+    <form method="post" action="/admin/finance/payouts" class="admin-panel admin-payout-card" data-payout-builder data-clawback="<%= clawbackSum %>" data-currency="<%= t('shared.egp', 'EGP') %>">
+      <input type="hidden" name="companyId" value="<%= company.id %>" />
+      <div class="admin-panel-head">
+        <div>
+          <h3 class="admin-panel-title"><%= t('admin.finance.payouts.includedBookings', 'Included bookings') %></h3>
+          <p class="admin-muted-sm"><%= t('admin.finance.payouts.bookingsHint', 'Uncheck a booking to leave it for a later payout.') %></p>
+        </div>
+        <span class="admin-muted-sm"><span data-payout-count><%= bookings.length %></span> / <%= bookings.length %></span>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table admin-table--finance">
+          <thead>
+            <tr>
+              <th><label class="admin-check"><input type="checkbox" data-payout-select-all checked /> <%= t('admin.finance.payouts.select', 'Select') %></label></th>
+              <th><%= t('admin.finance.booking', 'Booking') %></th>
+              <th><%= t('admin.table.customer', 'Customer') %></th>
+              <th><%= t('admin.bookings.travel', 'Travel') %></th>
+              <th><%= t('admin.finance.payableToCompany', 'Payable') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% bookings.forEach(function(booking) { %>
+              <tr>
+                <td>
+                  <input type="checkbox" name="bookingIds" value="<%= booking.id %>" checked data-payout-row data-payable="<%= booking.payableToCompany %>" />
+                </td>
+                <td>
+                  <a href="/admin/bookings/<%= booking.id %>" class="admin-link"><%= booking.code || booking.id %></a><br />
+                  <span class="admin-muted-sm"><%= booking.tripName %></span>
+                </td>
+                <td><%= booking.customerName %></td>
+                <td class="admin-muted-sm"><%= booking.tripDateLabel || booking.tripDate || '—' %></td>
+                <td><strong><%= formatPrice(booking.payableToCompany) %></strong></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <div class="admin-payout-bar">
+        <div class="admin-payout-bar-facts">
+          <p><%= t('admin.finance.payouts.selectedPayable', 'Selected payable') %>: <strong data-payout-total><%= formatPrice(selectedPayable) %></strong> <%= t('shared.egp', 'EGP') %></p>
+          <% if (clawbackSum) { %>
+            <p class="admin-muted-sm"><%= t('admin.finance.payouts.adjustments', 'Pending clawbacks') %>: <%= formatPrice(clawbackSum) %> <%= t('shared.egp', 'EGP') %></p>
+          <% } %>
+          <p><%= t('admin.finance.payouts.net', 'Net payable') %>: <strong data-payout-net><%= formatPrice(netPayable) %></strong> <%= t('shared.egp', 'EGP') %></p>
+        </div>
+        <button type="submit" class="adm-btn adm-btn--primary" data-payout-submit><%= t('admin.finance.payouts.createDraft', 'Create payout draft') %></button>
+      </div>
+    </form>
+  <% } %>
+<% } %>
+</div>
+<%- include('../../partials/admin-shell-end') %>

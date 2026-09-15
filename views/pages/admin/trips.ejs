@@ -36,6 +36,12 @@
       <option value="<%= c.id %>" <%= filters.companyId === c.id ? 'selected' : '' %>><%= c.title %></option>
     <% }) %>
   </select>
+  <select name="type" class="admin-input">
+    <option value="all"><%= t('filter.allTypes', 'All types') %></option>
+    <option value="leisure" <%= filters.type === 'leisure' ? 'selected' : '' %>><%= t('filter.leisure', 'Leisure') %></option>
+    <option value="umrah" <%= filters.type === 'umrah' ? 'selected' : '' %>><%= t('filter.umrah', 'Umrah') %></option>
+    <option value="hajj" <%= filters.type === 'hajj' ? 'selected' : '' %>><%= t('filter.hajj', 'Hajj') %></option>
+  </select>
   <select name="status" class="admin-input">
     <option value="all"><%= t('admin.filter.allStatus', 'All status') %></option>
     <% ['active','pending','draft','sold-out','rejected'].forEach(function(s) { %>
@@ -43,9 +49,9 @@
     <% }) %>
   </select>
   <select name="sort" class="admin-input">
+    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('admin.sort.newest', 'Newest') %></option>
     <option value="bookings" <%= filters.sort === 'bookings' ? 'selected' : '' %>><%= t('admin.sort.bookings', 'Most bookings') %></option>
     <option value="revenue" <%= filters.sort === 'revenue' ? 'selected' : '' %>><%= t('admin.sort.revenue', 'Highest revenue') %></option>
-    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('admin.sort.newest', 'Newest') %></option>
   </select>
   <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
 </form>
@@ -62,17 +68,32 @@
         <div class="admin-trip-row-body">
           <div class="admin-trip-row-head">
             <div>
-              <a href="/admin/trips/<%= trip.id %>" class="admin-trip-row-title"><%= trip.title %></a>
-              <p class="admin-muted"><%= trip.companyName %> · <%= trip.destination %> · <%= trip.type %></p>
+              <a href="/admin/trips/<%= trip.id %>" class="admin-trip-row-title" dir="auto"><%= tripTitle(trip) %></a>
+              <p class="admin-muted"><%= trip.companyName %> · <%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %> · <%= typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : trip.category %></p>
             </div>
-            <span class="admin-status admin-status--<%= trip.status %>"><%= trip.status %></span>
+            <span class="admin-status admin-status--<%= trip.status %>"><%= statusLabel(trip.status) %></span>
           </div>
           <div class="admin-trip-row-metrics">
-            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.table.price', 'Price') %></span><strong><%= formatPrice(trip.price) %> EGP</strong></div>
-            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.kpi.bookings', 'Bookings') %></span><strong><%= trip.bookingCount %></strong></div>
-            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.kpi.revenue', 'Revenue') %></span><strong><%= formatPrice(trip.revenue) %> EGP</strong></div>
-            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.profit', 'Profit') %></span><strong class="admin-text-profit"><%= formatPrice(trip.platformProfit) %> EGP</strong></div>
-            <div class="admin-trip-metric"><span class="admin-trip-metric-label"><%= t('admin.fillRate', 'Fill rate') %></span><strong><%= trip.fillRate %>%</strong></div>
+            <div class="admin-trip-metric">
+              <span class="admin-trip-metric-label"><%= t('admin.table.price', 'Price') %></span>
+              <strong class="admin-trip-metric-value"><%= formatPrice(trip.price) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+            </div>
+            <div class="admin-trip-metric">
+              <span class="admin-trip-metric-label"><%= t('admin.kpi.bookings', 'Bookings') %></span>
+              <strong class="admin-trip-metric-value"><%= trip.bookingCount %></strong>
+            </div>
+            <div class="admin-trip-metric">
+              <span class="admin-trip-metric-label"><%= t('admin.kpi.revenue', 'Revenue') %></span>
+              <strong class="admin-trip-metric-value"><%= formatPrice(trip.revenue) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+            </div>
+            <div class="admin-trip-metric admin-trip-metric--profit">
+              <span class="admin-trip-metric-label"><%= t('admin.profit', 'Profit') %></span>
+              <strong class="admin-trip-metric-value"><%= formatPrice(trip.platformProfit) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+            </div>
+            <div class="admin-trip-metric">
+              <span class="admin-trip-metric-label"><%= t('admin.fillRate', 'Fill rate') %></span>
+              <strong class="admin-trip-metric-value"><%= trip.fillRate %>%</strong>
+            </div>
           </div>
         </div>
         <div class="admin-trip-row-actions">

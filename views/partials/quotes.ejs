@@ -13,6 +13,9 @@
         <div class="flex items-center gap-4">
           <img src="<%= review.avatar %>" alt="<%= review.name %>" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-sky-950 object-cover" />
           <span class="text-black text-base sm:text-xl lg:text-2xl font-medium"><%= review.name %></span>
+          <% if (review.rating) { %>
+            <span class="text-orange-500 text-sm sm:text-base font-semibold">★ <%= review.rating %></span>
+          <% } %>
         </div>
         <p class="text-neutral-600 text-sm sm:text-base lg:text-lg"><%= review.message %></p>
       </article>

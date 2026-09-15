@@ -9,12 +9,12 @@
   <div class="saved-trip-card-body">
     <div class="saved-trip-card-head">
       <div class="saved-trip-card-text">
-        <span class="saved-trip-card-category"><%= trip.category %></span>
+        <span class="saved-trip-card-category"><%= typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : trip.category %></span>
         <h3 class="saved-trip-card-title">
-          <a href="/trips/<%= trip.id %>"><%= trip.title %></a>
+          <a href="/trips/<%= trip.id %>" dir="auto"><%= tripTitle(trip) %></a>
         </h3>
         <p class="saved-trip-card-meta">
-          <%= trip.location %> · <%= bedTypeLabel(trip.beds) %> · <%= trip.days %> <%= t('tripDetails.durationDays', 'Days') %> / <%= trip.nights %> <%= t('tripDetails.durationNights', 'Nights') %>
+          <%= typeof destinationLocation === 'function' ? destinationLocation(trip.destination) : trip.location %> · <%= bedTypeLabel(trip.beds) %> · <%= trip.days %> <%= t('tripDetails.durationDays', 'Days') %> / <%= trip.nights %> <%= t('tripDetails.durationNights', 'Nights') %>
         </p>
       </div>
       <button type="button" data-favorite="<%= trip.id %>" class="saved-trip-card-fav" aria-label="<%= t('shared.favorite', 'Favorite') %>">
@@ -26,7 +26,7 @@
     <div class="saved-trip-card-foot">
       <p class="saved-trip-card-price">
         <span class="saved-trip-card-price-value"><%= formatPrice(trip.price) %></span>
-        <span class="saved-trip-card-price-unit"><%= t('shared.egp', 'EGP') %> / <%= t('tripDetails.person', 'person') %></span>
+        <span class="saved-trip-card-price-unit"><%= t('shared.egp', 'EGP') %> / <%= t('checkout.perRoom', 'room') %></span>
       </p>
       <a href="/trips/<%= trip.id %>" class="saved-trip-card-link">
         <%= t('shared.viewDetails', 'View Details') %>

@@ -8,14 +8,17 @@ const { withLayout, audit } = require('./_helpers');
 async function list(req, res) {
   const filters = {
     status: req.query.status || 'all',
+    paymentStatus: req.query.paymentStatus || 'all',
     q: req.query.q,
     companyId: req.query.companyId || 'all',
+    sort: req.query.sort || 'newest',
   };
   const items = await bookingService.getAllBookings(filters);
   const { items: pageItems, pagination } = bookingService.paginateList(items, req.query.page, req.query.perPage || 15);
   const revenue = items
     .filter((b) => normalizeStatus(b.status) === 'confirmed')
     .reduce((s, b) => s + Number(b.totalPrice || 0), 0);
+  const companies = await companyService.listCompanies();
   const bookings = await Promise.all(pageItems.map(async (b) => ({ ...b, company: await companyService.getCompanyById(b.companyId) })));
   withLayout(res, 'pages/admin/bookings', {
     title: res.locals.t('admin.bookings.title', 'Bookings'),
@@ -23,8 +26,9 @@ async function list(req, res) {
     bookings,
     pagination,
     filters,
+    companies: companies.map((c) => ({ id: c.id, title: c.title })),
     revenue,
-    hasActiveFilters: filters.q || filters.status !== 'all' || filters.companyId !== 'all',
+    hasActiveFilters: Boolean(filters.q || filters.status !== 'all' || filters.companyId !== 'all' || filters.paymentStatus !== 'all'),
   });
 }
 
@@ -41,7 +45,7 @@ async function detail(req, res) {
   withLayout(res, 'pages/admin/booking-detail', {
     title: `Booking ${booking.id}`,
     adminActive: 'bookings',
-    booking: bookingService.enrichBookingDetail(booking, trip),
+    booking: bookingService.enrichAdminBookingDetail(booking, trip),
     company,
     trip,
     payment,

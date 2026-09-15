@@ -1,14 +1,37 @@
 <%- include('../../partials/admin-shell-start') %>
 <%
+  const currentView = typeof view !== 'undefined' ? view : 'table';
   function filterQuery(overrides) {
     const q = Object.assign({}, filters, overrides || {});
     return Object.keys(q).filter(function(k) { return q[k] && q[k] !== 'all'; }).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+  function verificationLabel(value) {
+    if (value === 'pending') return t('admin.status.pending', 'Pending');
+    if (value === 'rejected') return t('admin.status.rejected', 'Rejected');
+    return t('admin.status.verified', 'Verified');
+  }
+  function companyAddedDate(company) {
+    const value = company.createdAt || company.joinedAt;
+    return value ? String(value).slice(0, 10) : '—';
   }
 %>
 <div class="admin-header admin-header--compact">
   <div>
     <h2 class="admin-title"><%= t('admin.companies.title', 'Companies') %></h2>
-    <p class="admin-subtitle"><%= t('admin.companies.subtitle', 'Manage and verify travel companies') %></p>
+    <p class="admin-subtitle">
+      <%= t('admin.companies.subtitle', 'Manage and verify travel companies') %>
+      <% if (pendingCount) { %>
+        · <span class="admin-pending-count"><%= pendingCount %> <%= t('admin.companies.pendingReview', 'pending review') %></span>
+      <% } %>
+    </p>
+  </div>
+  <div class="admin-view-toggle" role="group" aria-label="<%= t('admin.companies.viewLabel', 'View') %>">
+    <a href="?<%= filterQuery({ view: 'table', page: 1 }) %>" class="admin-view-toggle-btn <%= currentView === 'table' ? 'is-active' : '' %>" aria-pressed="<%= currentView === 'table' ? 'true' : 'false' %>">
+      <%= t('admin.companies.viewTable', 'Table') %>
+    </a>
+    <a href="?<%= filterQuery({ view: 'cards', page: 1 }) %>" class="admin-view-toggle-btn <%= currentView === 'cards' ? 'is-active' : '' %>" aria-pressed="<%= currentView === 'cards' ? 'true' : 'false' %>">
+      <%= t('admin.companies.viewCards', 'Cards') %>
+    </a>
   </div>
 </div>
 
@@ -23,11 +46,12 @@
 <% } %>
 
 <form method="get" class="admin-filters" data-admin-filters>
+  <input type="hidden" name="view" value="<%= currentView %>" />
   <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.search', 'Search...') %>" class="admin-input" />
   <select name="verification" class="admin-input">
     <option value="all"><%= t('admin.filter.allVerification', 'All verification') %></option>
-    <option value="verified" <%= filters.verification === 'verified' ? 'selected' : '' %>><%= t('admin.status.verified', 'Verified') %></option>
     <option value="pending" <%= filters.verification === 'pending' ? 'selected' : '' %>><%= t('admin.status.pending', 'Pending') %></option>
+    <option value="verified" <%= filters.verification === 'verified' ? 'selected' : '' %>><%= t('admin.status.verified', 'Verified') %></option>
     <option value="rejected" <%= filters.verification === 'rejected' ? 'selected' : '' %>><%= t('admin.status.rejected', 'Rejected') %></option>
   </select>
   <select name="status" class="admin-input">
@@ -39,28 +63,34 @@
     <option value="activity" <%= filters.sort === 'activity' ? 'selected' : '' %>><%= t('admin.sort.activity', 'Most active') %></option>
     <option value="revenue" <%= filters.sort === 'revenue' ? 'selected' : '' %>><%= t('admin.sort.revenue', 'Highest revenue') %></option>
     <option value="bookings" <%= filters.sort === 'bookings' ? 'selected' : '' %>><%= t('admin.sort.bookings', 'Most bookings') %></option>
+    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('admin.sort.newest', 'Newest') %></option>
   </select>
   <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
 </form>
 
 <% if (!companies.length) { %>
   <%- include('../../partials/admin-empty', { title: t('admin.companies.empty', 'No companies found'), actionHref: hasActiveFilters ? '/admin/companies' : '', actionLabel: hasActiveFilters ? t('admin.filter.clear', 'Clear filters') : '' }) %>
-<% } else { %>
+<% } else if (currentView === 'cards') { %>
   <div class="admin-card-grid admin-card-grid--rich">
     <% companies.forEach(function(company) { %>
-      <a href="/admin/companies/<%= company.id %>" class="admin-company-card admin-company-card--rich">
-        <img src="<%= company.image %>" alt="" class="admin-company-card-img" />
+      <a href="/admin/companies/<%= company.id %>" class="admin-company-card admin-company-card--rich <%= company.verification === 'pending' ? 'is-pending' : '' %>">
+        <% const logoUrl = companyLogoUrl(company.image); %>
+        <% if (logoUrl) { %>
+          <img src="<%= logoUrl %>" alt="" class="admin-company-card-img" />
+        <% } else { %>
+          <div class="admin-company-card-img admin-company-card-img--placeholder"><%= initials(company.title) || 'C' %></div>
+        <% } %>
         <div class="admin-company-card-body">
           <h3><%= company.title %></h3>
-          <p class="admin-muted"><%= company.location %> · ★ <%= company.rating %></p>
+          <p class="admin-muted"><%= company.location %><% if (formatCompanyRating(company)) { %> · <%= formatCompanyRating(company) %><% } else { %> · <%= t('admin.companies.noReviewsYet', 'No reviews yet') %><% } %> · <%= t('admin.table.joined', 'Joined') %> <%= companyAddedDate(company) %></p>
           <div class="admin-company-metrics">
             <span><strong><%= company.activeTrips %></strong> <%= t('admin.kpi.trips', 'trips') %></span>
             <span><strong><%= company.bookingCount %></strong> <%= t('admin.kpi.bookings', 'bookings') %></span>
-            <span><strong><%= formatPrice(company.revenue) %></strong> EGP</span>
+            <span><strong><%= formatPrice(company.revenue) %></strong> <%= t('shared.egp', 'EGP') %></span>
           </div>
           <div class="admin-card-badges">
-            <span class="admin-status admin-status--<%= company.verification %>"><%= company.verification %></span>
-            <span class="admin-status admin-status--<%= company.status %>"><%= company.status %></span>
+            <span class="admin-status admin-status--<%= company.verification %>"><%= verificationLabel(company.verification) %></span>
+            <span class="admin-status admin-status--<%= company.status %>"><%= statusLabel(company.status) %></span>
             <% if (company.platformProfit) { %>
               <span class="admin-metric-pill admin-metric-pill--profit"><%= formatPrice(company.platformProfit) %> <%= t('admin.profit', 'profit') %></span>
             <% } %>
@@ -68,6 +98,59 @@
         </div>
       </a>
     <% }) %>
+  </div>
+  <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
+<% } else { %>
+  <div class="admin-table-wrap admin-panel">
+    <table class="admin-table admin-table--companies">
+      <thead>
+        <tr>
+          <th><%= t('admin.table.company', 'Company') %></th>
+          <th><%= t('admin.table.verification', 'Verification') %></th>
+          <th><%= t('admin.table.status', 'Status') %></th>
+          <th><%= t('admin.table.joined', 'Joined') %></th>
+          <th><%= t('admin.kpi.trips', 'Trips') %></th>
+          <th><%= t('admin.kpi.bookings', 'Bookings') %></th>
+          <th><%= t('admin.table.revenue', 'Revenue') %></th>
+          <th><%= t('admin.profit', 'Profit') %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% companies.forEach(function(company) { %>
+          <% const logoUrl = companyLogoUrl(company.image); %>
+          <tr class="admin-company-row <%= company.verification === 'pending' ? 'is-pending' : '' %>" data-href="/admin/companies/<%= company.id %>">
+            <td>
+              <div class="adm-people-cell-user">
+                <% if (logoUrl) { %>
+                  <img src="<%= logoUrl %>" alt="" class="adm-people-avatar" width="40" height="40" />
+                <% } else { %>
+                  <span class="adm-people-avatar adm-people-avatar--fallback" aria-hidden="true"><%= initials(company.title) || 'C' %></span>
+                <% } %>
+                <div>
+                  <a href="/admin/companies/<%= company.id %>" class="adm-people-name"><%= company.title %></a>
+                  <p class="adm-people-meta"><%= company.location %><% if (formatCompanyRating(company)) { %> · <%= formatCompanyRating(company) %><% } %></p>
+                </div>
+              </div>
+            </td>
+            <td><span class="admin-status admin-status--<%= company.verification %>"><%= verificationLabel(company.verification) %></span></td>
+            <td><span class="admin-status admin-status--<%= company.status %>"><%= statusLabel(company.status) %></span></td>
+            <td class="admin-muted-sm"><time datetime="<%= company.createdAt || company.joinedAt || '' %>"><%= companyAddedDate(company) %></time></td>
+            <td><strong><%= company.activeTrips %></strong> <span class="admin-muted-sm">/ <%= company.tripCount %></span></td>
+            <td><strong><%= company.bookingCount %></strong></td>
+            <td><%= formatPrice(company.revenue) %> <%= t('shared.egp', 'EGP') %></td>
+            <td><% if (company.platformProfit) { %><span class="admin-metric-pill admin-metric-pill--profit"><%= formatPrice(company.platformProfit) %></span><% } else { %><span class="admin-muted">—</span><% } %></td>
+            <td>
+              <div class="adm-people-actions">
+                <a href="/admin/companies/<%= company.id %>" class="adm-btn adm-btn--sm <%= company.verification === 'pending' ? 'adm-btn--primary' : 'adm-btn--ghost' %>">
+                  <%= company.verification === 'pending' ? t('admin.actions.review', 'Review') : t('admin.actions.view', 'View') %>
+                </a>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
   </div>
   <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
 <% } %>

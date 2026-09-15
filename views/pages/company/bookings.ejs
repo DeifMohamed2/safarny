@@ -158,6 +158,7 @@
             <th><%= t('company.bookings.date', 'Trip date') %></th>
             <th><%= t('company.bookings.seats', 'Seats') %></th>
             <th><%= t('company.bookings.status', 'Status') %></th>
+            <th><%= t('company.bookings.paymentReview', 'Payment review') %></th>
             <th><%= t('company.bookings.total', 'Total') %></th>
             <th></th>
           </tr>
@@ -184,8 +185,9 @@
               <td><%= booking.bookingDate %></td>
               <td><%= booking.tripDate %></td>
               <td><%= booking.seats %></td>
-              <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= t('company.bookingStatus.' + booking.status.toLowerCase(), booking.status) %></span></td>
-              <td><strong><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></strong></td>
+              <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= statusLabel(booking.status) %></span></td>
+              <td><span class="company-status company-status--<%= (booking.paymentStatus || 'unpaid').toLowerCase() %>"><%= t('company.paymentStatus.' + String(booking.paymentStatus || 'unpaid').toLowerCase(), statusLabel(booking.paymentStatus || 'unpaid')) %></span></td>
+              <td><strong><%= formatPrice(booking.companyPayout || booking.basePrice) %> <%= t('shared.egp', 'EGP') %></strong></td>
               <td><a href="/company/bookings/<%= booking.id %>" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('shared.viewDetails', 'View') %></a></td>
             </tr>
           <% }) %>

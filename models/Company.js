@@ -15,14 +15,14 @@ const verificationFileSchema = new mongoose.Schema(
 const companySchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
-    image: { type: String, default: '/assets/companies/company.png' },
+    image: { type: String, default: '' },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '', trim: true },
     location: { type: String, required: true, trim: true },
-    years: { type: Number, default: 1 },
+    years: { type: Number, default: 0 },
     packages: { type: Number, default: 0 },
     reviews: { type: Number, default: 0 },
-    rating: { type: Number, default: 4.5 },
+    rating: { type: Number, default: 0 },
     badges: { type: [String], default: [] },
     contactNumber: { type: String, default: '', trim: true },
     verification: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending', index: true },
@@ -34,6 +34,19 @@ const companySchema = new mongoose.Schema(
     verificationDocs: {
       commercialRegister: { type: verificationFileSchema, default: undefined },
       taxCard: { type: verificationFileSchema, default: undefined },
+    },
+    payoutDetails: {
+      method: { type: String, default: '' },
+      bankName: { type: String, default: '' },
+      accountName: { type: String, default: '' },
+      accountNumber: { type: String, default: '' },
+      iban: { type: String, default: '' },
+      swift: { type: String, default: '' },
+      walletProvider: { type: String, default: '' },
+      walletNumber: { type: String, default: '' },
+      instapayIpa: { type: String, default: '' },
+      verifiedAt: { type: Date, default: null },
+      verifiedBy: { type: String, default: '' },
     },
   },
   { timestamps: true }

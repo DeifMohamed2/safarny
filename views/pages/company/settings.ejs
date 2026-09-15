@@ -1,5 +1,6 @@
 <%
-  const logoUrl = company && company.image ? company.image : '/user.png';
+  const logoUrl = companyLogoUrl(company && company.image);
+  const logoInitials = initials(company && company.title) || 'C';
 %>
 <%- include('../../partials/company-shell-start', { companyActive: 'settings' }) %>
   <div class="company-settings-page" data-company-settings>
@@ -22,8 +23,9 @@
         <div class="company-settings-layout">
           <div class="company-logo-picker" data-company-logo-picker>
             <input type="hidden" name="image" value="<%= logoUrl %>" data-company-logo-input />
-            <div class="company-logo-picker-preview" data-company-logo-preview>
-              <img src="<%= logoUrl %>" alt="" data-company-logo-img />
+            <div class="company-logo-picker-preview<%= logoUrl ? '' : ' is-empty' %>" data-company-logo-preview data-company-initials="<%= logoInitials %>">
+              <img alt="" data-company-logo-img <% if (logoUrl) { %>src="<%= logoUrl %>"<% } else { %>hidden<% } %> />
+              <span class="company-logo-picker-fallback" data-company-logo-fallback <%= logoUrl ? 'hidden' : '' %>><%= logoInitials %></span>
               <div class="company-logo-picker-overlay" data-company-logo-overlay hidden>
                 <span class="company-logo-picker-spinner" aria-hidden="true"></span>
               </div>
@@ -50,7 +52,7 @@
             </div>
             <div class="company-logo-picker-actions">
               <button type="button" class="cp-btn cp-btn--secondary cp-btn--sm" data-company-logo-browse><%= t('company.form.browseFiles', 'Browse files') %></button>
-              <button type="button" class="cp-btn cp-btn--ghost cp-btn--sm" data-company-logo-remove><%= t('company.settings.removeLogo', 'Remove') %></button>
+              <button type="button" class="cp-btn cp-btn--ghost cp-btn--sm" data-company-logo-remove <%= logoUrl ? '' : 'disabled' %>><%= t('company.settings.removeLogo', 'Remove') %></button>
             </div>
             <p class="company-logo-picker-feedback" data-company-logo-feedback hidden role="alert"></p>
           </div>
@@ -128,6 +130,67 @@
         </div>
         <div class="company-form-actions">
           <button type="submit" class="cp-btn cp-btn--primary"><%= t('company.settings.docsSave', 'Upload documents') %></button>
+        </div>
+      </form>
+    </section>
+
+    <section id="payout-details" class="company-panel company-settings-payout" data-scroll-reveal style="--reveal-delay: 50ms">
+      <div class="company-form-section-head">
+        <div>
+          <h2 class="company-panel-title"><%= t('company.settings.payout', 'Payout details') %></h2>
+          <p><%= t('company.settings.payoutDesc', 'Where Safarny should send your share after a booking is confirmed.') %></p>
+        </div>
+      </div>
+      <% const payout = (company && company.payoutDetails) ? company.payoutDetails : {}; %>
+      <% if (payout.verifiedAt) { %>
+        <p class="company-settings-alert company-settings-alert--success"><%= t('company.settings.payoutVerified', 'Verified by Safarny. Changes will need a new review.') %></p>
+      <% } else if (payoutReady) { %>
+        <p class="company-settings-alert"><%= t('company.settings.payoutPending', 'Saved — waiting for Safarny to verify.') %></p>
+      <% } else { %>
+        <p class="company-settings-alert company-settings-alert--warning"><%= t('company.settings.payoutRequiredHint', 'Choose one method. Only the fields for that method are required.') %></p>
+      <% } %>
+      <form method="post" action="/company/settings/payout" class="company-form" data-payout-details>
+        <div class="company-form-grid">
+          <label class="company-field">
+            <span><%= t('company.settings.payoutMethod', 'Payout method') %></span>
+            <select name="method" class="company-input" data-payout-method required>
+              <option value=""><%= t('shared.select', 'Select') %></option>
+              <% (typeof payoutMethods !== 'undefined' ? payoutMethods : []).forEach(function(method) { %>
+                <option value="<%= method.id %>" <%= payout.method === method.id ? 'selected' : '' %>><%= payoutMethodLabel(method.id) %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label class="company-field" data-payout-bank hidden>
+            <span><%= t('admin.finance.bankName', 'Bank name') %></span>
+            <input name="bankName" class="company-input" value="<%= payout.bankName || '' %>" autocomplete="off" />
+          </label>
+          <label class="company-field" data-payout-bank hidden>
+            <span><%= t('admin.finance.bankAccountName', 'Account name') %></span>
+            <input name="accountName" class="company-input" value="<%= payout.accountName || '' %>" autocomplete="off" />
+          </label>
+          <label class="company-field" data-payout-bank hidden>
+            <span><%= t('admin.finance.bankAccountNumber', 'Account number') %></span>
+            <input name="accountNumber" class="company-input" value="<%= payout.accountNumber || '' %>" autocomplete="off" />
+          </label>
+          <label class="company-field" data-payout-bank hidden>
+            <span><%= t('admin.finance.bankIban', 'IBAN') %></span>
+            <input name="iban" class="company-input" value="<%= payout.iban || '' %>" autocomplete="off" />
+          </label>
+          <label class="company-field" data-payout-bank hidden>
+            <span><%= t('company.settings.swift', 'SWIFT (optional)') %></span>
+            <input name="swift" class="company-input" value="<%= payout.swift || '' %>" autocomplete="off" />
+          </label>
+          <label class="company-field" data-payout-wallet hidden>
+            <span><%= t('company.settings.walletNumber', 'Wallet / mobile number') %></span>
+            <input name="walletNumber" class="company-input" value="<%= payout.walletNumber || '' %>" inputmode="tel" autocomplete="off" />
+          </label>
+          <label class="company-field" data-payout-instapay hidden>
+            <span><%= t('company.settings.instapayIpa', 'InstaPay IPA') %></span>
+            <input name="instapayIpa" class="company-input" value="<%= payout.instapayIpa || '' %>" autocomplete="off" />
+          </label>
+        </div>
+        <div class="company-form-actions">
+          <button type="submit" class="cp-btn cp-btn--primary"><%= t('company.settings.payoutSave', 'Save payout details') %></button>
         </div>
       </form>
     </section>

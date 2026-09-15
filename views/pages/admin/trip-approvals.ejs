@@ -3,7 +3,10 @@
   <div>
     <a href="/admin/trips" class="admin-back"><%= t('admin.back', 'Back to trips') %></a>
     <h2 class="admin-title"><%= t('admin.trips.approvals', 'Trip approvals') %></h2>
-    <p class="admin-subtitle"><%= t('admin.trips.approvalsDesc', 'Review and approve pending trip listings') %></p>
+    <p class="admin-subtitle">
+      <%= t('admin.trips.approvalsDesc', 'Review and approve pending trip listings') %>
+      <% if (totalPending) { %> · <%= totalPending %> <%= t('admin.trips.pendingCount', 'pending') %><% } %>
+    </p>
   </div>
   <% if (trips.length) { %>
     <form method="post" action="/admin/trips/bulk-approve" data-admin-bulk-form>
@@ -12,19 +15,64 @@
     </form>
   <% } %>
 </div>
+
+<form method="get" class="admin-filters" data-admin-filters>
+  <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.search', 'Search...') %>" class="admin-input" />
+  <select name="companyId" class="admin-input">
+    <option value="all"><%= t('admin.filter.allCompanies', 'All companies') %></option>
+    <% companies.forEach(function(c) { %>
+      <option value="<%= c.id %>" <%= String(filters.companyId) === String(c.id) ? 'selected' : '' %>><%= c.title %></option>
+    <% }) %>
+  </select>
+  <select name="type" class="admin-input">
+    <option value="all"><%= t('filter.allTypes', 'All types') %></option>
+    <option value="leisure" <%= filters.type === 'leisure' ? 'selected' : '' %>><%= t('filter.leisure', 'Leisure') %></option>
+    <option value="umrah" <%= filters.type === 'umrah' ? 'selected' : '' %>><%= t('filter.umrah', 'Umrah') %></option>
+    <option value="hajj" <%= filters.type === 'hajj' ? 'selected' : '' %>><%= t('filter.hajj', 'Hajj') %></option>
+  </select>
+  <select name="sort" class="admin-input">
+    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>><%= t('admin.sort.newest', 'Newest') %></option>
+    <option value="price" <%= filters.sort === 'price' ? 'selected' : '' %>><%= t('admin.sort.priceHigh', 'Highest price') %></option>
+    <option value="company" <%= filters.sort === 'company' ? 'selected' : '' %>><%= t('admin.sort.company', 'Company') %></option>
+  </select>
+  <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
+  <% if (hasActiveFilters) { %>
+    <a href="/admin/trips/approvals" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.filter.clear', 'Clear') %></a>
+  <% } %>
+</form>
+
 <% if (!trips.length) { %>
-  <%- include('../../partials/admin-empty', { title: t('admin.trips.noPending', 'No pending trips'), message: t('admin.trips.noPendingDesc', 'All trip listings are up to date.') }) %>
+  <%- include('../../partials/admin-empty', {
+    title: hasActiveFilters ? t('admin.empty.title', 'Nothing here yet') : t('admin.trips.noPending', 'No pending trips'),
+    message: hasActiveFilters ? t('admin.empty.message', 'No records match your current filters.') : t('admin.trips.noPendingDesc', 'All trip listings are up to date.'),
+    actionHref: hasActiveFilters ? '/admin/trips/approvals' : undefined,
+    actionLabel: hasActiveFilters ? t('admin.filter.clear', 'Clear') : undefined
+  }) %>
 <% } else { %>
   <div class="admin-table-wrap admin-panel">
-    <table class="admin-table" data-admin-bulk-table>
-      <thead><tr><th><input type="checkbox" data-admin-select-all /></th><th><%= t('admin.table.trip', 'Trip') %></th><th><%= t('admin.table.destination', 'Destination') %></th><th><%= t('admin.table.price', 'Price') %></th><th></th></tr></thead>
+    <table class="admin-table admin-table--compact" data-admin-bulk-table>
+      <thead>
+        <tr>
+          <th><input type="checkbox" data-admin-select-all /></th>
+          <th><%= t('admin.table.trip', 'Trip') %></th>
+          <th><%= t('admin.table.company', 'Company') %></th>
+          <th><%= t('admin.table.destination', 'Destination') %></th>
+          <th><%= t('admin.table.category', 'Category') %></th>
+          <th><%= t('admin.table.price', 'Price') %></th>
+          <th><%= t('admin.table.created', 'Created') %></th>
+          <th></th>
+        </tr>
+      </thead>
       <tbody>
         <% trips.forEach(function(trip) { %>
           <tr>
             <td><input type="checkbox" name="ids" value="<%= trip.id %>" data-admin-row-check /></td>
-            <td><a href="/admin/trips/<%= trip.id %>" class="admin-link"><%= trip.title %></a></td>
-            <td><%= trip.destination %></td>
-            <td><%= formatPrice(trip.price) %> EGP</td>
+            <td><a href="/admin/trips/<%= trip.id %>" class="admin-link" dir="auto"><%= tripTitle(trip) %></a></td>
+            <td><a href="/admin/companies/<%= trip.companyId %>" class="admin-link admin-muted-sm"><%= trip.companyName %></a></td>
+            <td><%= typeof destinationLabel === 'function' ? destinationLabel(trip.destination) : trip.destination %></td>
+            <td class="admin-muted-sm"><%= typeof tripTypeLabel === 'function' ? tripTypeLabel(trip.type) : (trip.category || trip.type || '—') %></td>
+            <td><%= formatPrice(trip.price) %> <%= t('shared.egp', 'EGP') %></td>
+            <td class="admin-muted-sm"><%= trip.createdAt ? String(trip.createdAt).slice(0, 10) : '—' %></td>
             <td>
               <form method="post" action="/admin/trips/<%= trip.id %>/approve" class="inline"><button type="submit" class="adm-btn adm-btn--sm adm-btn--primary"><%= t('admin.actions.approve', 'Approve') %></button></form>
             </td>

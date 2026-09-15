@@ -1,0 +1,82 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  function filterQuery(overrides) {
+    const q = Object.assign({}, filters, overrides || {});
+    return Object.keys(q).filter(function(k) { return q[k] && q[k] !== 'all'; }).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+  const exportQs = filterQuery();
+%>
+<div class="admin-header admin-header--compact">
+  <div>
+    <a href="/admin/finance" class="admin-back"><%= t('admin.finance.title', 'Finance') %></a>
+    <h2 class="admin-title"><%= t('admin.finance.refunds.title', 'Refunds') %></h2>
+    <p class="admin-subtitle"><%= t('admin.finance.refunds.subtitle', 'Review traveler requests and record outgoing transfers') %></p>
+  </div>
+  <a href="/admin/finance/refunds/export.csv<%= exportQs ? '?' + exportQs : '' %>" class="adm-btn adm-btn--secondary adm-btn--sm"><%= t('admin.finance.exportCsv', 'Export CSV') %></a>
+</div>
+
+<form method="get" class="admin-filters admin-filters--finance" data-admin-filters>
+  <div class="admin-filters-row">
+    <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="<%= t('admin.finance.refunds.search', 'Search refund ID, booking, reference...') %>" class="admin-input admin-input--search" autocomplete="off" />
+    <select name="status" class="admin-input">
+      <option value="all"><%= t('admin.filter.allStatus', 'All status') %></option>
+      <% ['requested','approved','declined','processing','refunded','cancelled'].forEach(function(s) { %>
+        <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="admin-filters-row admin-filters-row--secondary">
+    <label class="admin-filter-date"><span><%= t('admin.finance.dateFrom', 'From') %></span><input type="date" name="dateFrom" value="<%= filters.dateFrom || '' %>" class="admin-input admin-input--sm" /></label>
+    <label class="admin-filter-date"><span><%= t('admin.finance.dateTo', 'To') %></span><input type="date" name="dateTo" value="<%= filters.dateTo || '' %>" class="admin-input admin-input--sm" /></label>
+    <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.filter.apply', 'Apply') %></button>
+    <% if (hasActiveFilters) { %>
+      <a href="/admin/finance/refunds" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.filter.clear', 'Clear') %></a>
+    <% } %>
+  </div>
+</form>
+
+<% if (typeof meta !== 'undefined' && meta.total !== undefined) { %>
+  <p class="admin-results-meta"><%= meta.total %> <%= t('admin.finance.refunds.results', 'refunds') %></p>
+<% } %>
+
+<% if (!refunds.length) { %>
+  <%- include('../../partials/admin-empty') %>
+<% } else { %>
+  <div class="admin-table-wrap admin-panel">
+    <table class="admin-table admin-table--finance">
+      <thead>
+        <tr>
+          <th><%= t('admin.finance.refunds.id', 'Refund') %></th>
+          <th><%= t('admin.table.customer', 'Customer') %></th>
+          <th><%= t('admin.table.amount', 'Amount') %></th>
+          <th><%= t('admin.table.status', 'Status') %></th>
+          <th><%= t('admin.table.updated', 'Submitted') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% refunds.forEach(function(refund) { %>
+          <tr data-href="/admin/finance/refunds/<%= encodeURIComponent(refund.id) %>" class="admin-support-row">
+            <td>
+              <a href="/admin/finance/refunds/<%= encodeURIComponent(refund.id) %>" class="admin-link"><%= refund.id %></a>
+              <span class="admin-muted-sm block"><%= refund.bookingId %></span>
+            </td>
+            <td>
+              <strong><%= refund.customerName %></strong>
+              <span class="admin-muted-sm block"><%= refund.tripName %></span>
+            </td>
+            <td>
+              <%= formatPrice(refund.approvedAmount || refund.requestedAmount) %> <%= t('shared.egp', 'EGP') %>
+              <% if (refund.approvedAmount && refund.approvedAmount !== refund.requestedAmount) { %>
+                <span class="admin-muted-sm block"><%= t('admin.finance.refunds.requested', 'Requested') %>: <%= formatPrice(refund.requestedAmount) %></span>
+              <% } %>
+            </td>
+            <td><span class="admin-status admin-status--<%= refund.status %>"><%= statusLabel(refund.status) %></span></td>
+            <td class="admin-muted-sm"><%= refund.createdAtLabel %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <%- include('../../partials/admin-pagination', { filterQuery: filterQuery }) %>
+<% } %>
+<%- include('../../partials/admin-shell-end') %>

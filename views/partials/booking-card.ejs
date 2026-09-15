@@ -1,7 +1,7 @@
 <article class="account-booking-card">
   <a href="/bookings/<%= booking.code || booking.id %>" class="account-booking-card-media">
     <img src="<%= booking.image %>" alt="" class="account-booking-card-img" />
-    <span class="account-booking-status account-booking-status--<%= booking.status %>"><%= booking.status %></span>
+    <span class="account-booking-status account-booking-status--<%= booking.status %>"><%= statusLabel(booking.status) %></span>
   </a>
   <div class="account-booking-card-body">
     <div class="account-booking-card-head">
@@ -9,9 +9,12 @@
         <h3 class="account-booking-card-title"><%= booking.title %></h3>
         <p class="account-booking-card-category"><%= booking.category %></p>
         <div class="account-booking-payment">
-          <span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus || 'unpaid' %>"><%= booking.paymentStatus || 'unpaid' %></span>
-          <% if (booking.paymentMethod) { %>
-            <span class="account-booking-detail-value"><%= booking.paymentMethod %></span>
+          <span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus || 'unpaid' %>"><%= statusLabel(booking.paymentStatus || 'unpaid') %></span>
+          <% if (booking.refundStatus && booking.refundStatus !== 'none') { %>
+            <span class="checkout-payment-badge checkout-payment-badge--<%= booking.refundStatus %>"><%= statusLabel(booking.refundStatus) %></span>
+          <% } %>
+          <% if (booking.paymentMethodKey || booking.paymentMethod) { %>
+            <span class="account-booking-detail-value"><%= payoutMethodLabel(booking.paymentMethodKey || booking.paymentMethod) %></span>
           <% } %>
         </div>
       </div>

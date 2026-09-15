@@ -15,9 +15,9 @@
   %>
   <div class="umrah-hero">
     <p class="umrah-kicker"><%= t('umrah.kicker', 'Sacred journeys') %></p>
-    <h1 class="umrah-title"><%= t('umrah.title', 'Umrah') %></h1>
-    <p class="umrah-lead"><%= t('umrah.subtitle', 'Find carefully curated Umrah packages for a peaceful and fulfilling experience.') %></p>
-    <div class="umrah-chips" role="navigation" aria-label="<%= t('umrah.title', 'Umrah') %>">
+    <h1 class="umrah-title"><%= t('umrah.title', 'Umrah & Hajj') %></h1>
+    <p class="umrah-lead"><%= t('umrah.subtitle', 'Find carefully curated Umrah and Hajj packages for a peaceful and fulfilling experience.') %></p>
+    <div class="umrah-chips" role="navigation" aria-label="<%= t('umrah.title', 'Umrah & Hajj') %>">
       <a href="<%= umrahHref({ destination: '', duration: '' }) %>" class="umrah-chip <%= !filters.destination && !filters.duration ? 'is-active' : '' %>"><%= t('umrah.chipAll', 'All packages') %></a>
       <% (umrahDestinations || []).forEach(function(dest) { %>
         <a href="<%= umrahHref({ destination: dest }) %>" class="umrah-chip <%= filters.destination === dest ? 'is-active' : '' %>"><%= dest %></a>
@@ -31,13 +31,13 @@
 
   <div class="page-results w-full flex flex-col gap-7 mt-8">
     <h2 class="text-base sm:text-xl lg:text-2xl font-semibold capitalize">
-      <span class="text-orange-500"><%= total %> <%= total === 1 ? t('umrah.packageSingular', 'package') : t('umrah.packagesFound', 'Umrah packages') %></span>
+      <span class="text-orange-500"><%= total %> <%= total === 1 ? t('umrah.packageSingular', 'package') : t('umrah.packagesFound', 'Umrah & Hajj packages') %></span>
       <% if (typeof hasActiveFilters !== 'undefined' && hasActiveFilters) { %>
         <span class="text-sky-950"> <%= t('filter.thatMatch', 'that match your search') %></span>
       <% } %>
     </h2>
     <% if (!items.length) { %>
-      <%- include('../partials/empty-results', { clearUrl: clearUrl, emptyTitle: t('umrah.empty', 'No Umrah packages match your filters') }) %>
+      <%- include('../partials/empty-results', { clearUrl: clearUrl, emptyTitle: t('umrah.empty', 'No Umrah & Hajj packages match your filters') }) %>
     <% } else { %>
       <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7 gap-y-6.5">
         <% items.forEach(function(trip) { %>

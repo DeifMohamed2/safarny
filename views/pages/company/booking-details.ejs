@@ -1,4 +1,25 @@
 <%- include('../../partials/company-shell-start', { companyActive: 'bookings' }) %>
+<%
+  const bookingStatus = String(booking.status || 'pending').toLowerCase();
+  const paymentStatus = String(booking.paymentStatus || 'unpaid').toLowerCase();
+  const refundStatus = String(booking.refundStatus || 'none').toLowerCase();
+  const canCancel = bookingStatus === 'pending' || bookingStatus === 'confirmed';
+  const cancelReasonKeys = typeof cancelReasons !== 'undefined' && cancelReasons.length
+    ? cancelReasons
+    : ['traveler_request', 'operational', 'overbooking', 'duplicate', 'invalid_details', 'other'];
+  const paymentHints = {
+    unpaid: t('company.bookings.paymentHintUnpaid', 'The traveler has not submitted payment yet.'),
+    submitted: t('company.bookings.paymentHintSubmitted', 'Safarny is reviewing the traveler’s payment privately.'),
+    verified: t('company.bookings.paymentHintVerified', 'Safarny confirmed this payment. Your payout follows the usual settlement cycle.'),
+    rejected: t('company.bookings.paymentHintRejected', 'Safarny rejected the payment proof. The traveler may resubmit.'),
+  };
+  const bookingHints = {
+    pending: t('company.bookings.bookingHintPending', 'Waiting for Safarny to confirm payment.'),
+    confirmed: t('company.bookings.bookingHintConfirmed', 'Safarny confirmed this booking.'),
+    cancelled: t('company.bookings.bookingHintCancelled', 'This booking is cancelled.'),
+    refunded: t('company.bookings.bookingHintRefunded', 'This booking was refunded.'),
+  };
+%>
   <header class="company-header company-booking-detail-head" data-scroll-reveal>
     <div class="company-booking-detail-intro">
       <span class="company-booking-avatar company-booking-avatar--lg"><%= initials(booking.customerName) %></span>
@@ -8,24 +29,55 @@
         <p class="company-subtitle"><%= booking.tripName %></p>
       </div>
     </div>
-    <div class="company-header-actions">
-      <span class="company-status company-status--<%= booking.status.toLowerCase() %> company-status--lg"><%= t('company.bookingStatus.' + booking.status.toLowerCase(), booking.status) %></span>
+    <div class="company-header-actions company-booking-badges">
+      <span class="company-status company-status--<%= bookingStatus %> company-status--lg"><%= t('company.bookingStatus.' + bookingStatus, statusLabel(booking.status)) %></span>
+      <span class="company-status company-status--<%= paymentStatus %> company-status--lg"><%= t('company.paymentStatus.' + paymentStatus, statusLabel(booking.paymentStatus)) %></span>
       <a href="/company/bookings" class="cp-btn cp-btn--ghost"><%= t('company.back', 'Back') %></a>
     </div>
   </header>
 
+  <div class="company-booking-status-grid" data-scroll-reveal>
+    <article class="company-booking-status-card">
+      <span><%= t('company.bookings.status', 'Booking') %></span>
+      <strong class="company-status company-status--<%= bookingStatus %>"><%= t('company.bookingStatus.' + bookingStatus, statusLabel(booking.status)) %></strong>
+      <p><%= bookingHints[bookingStatus] || '' %></p>
+    </article>
+    <article class="company-booking-status-card">
+      <span><%= t('company.bookings.paymentReview', 'Payment review') %></span>
+      <strong class="company-status company-status--<%= paymentStatus %>"><%= t('company.paymentStatus.' + paymentStatus, statusLabel(booking.paymentStatus)) %></strong>
+      <p><%= paymentHints[paymentStatus] || '' %></p>
+    </article>
+    <article class="company-booking-status-card">
+      <span><%= t('company.stats.settled', 'Settlement') %></span>
+      <strong class="company-status company-status--<%= booking.settlementStatus === 'settled' ? 'verified' : 'pending' %>">
+        <%= booking.settlementStatus === 'settled' ? t('company.stats.settled', 'Settled') : t('company.stats.unsettled', 'Awaiting settlement') %>
+      </strong>
+      <p><%= t('company.bookings.settlementHint', 'Payouts are issued by Safarny after confirmed bookings are settled.') %></p>
+    </article>
+    <article class="company-booking-status-card">
+      <span><%= t('checkout.refund.status', 'Refund') %></span>
+      <% if (refundStatus && refundStatus !== 'none') { %>
+        <strong class="company-status company-status--<%= refundStatus %>"><%= t('company.refundStatus.' + refundStatus, statusLabel(booking.refundStatus)) %></strong>
+        <p><%= t('company.bookings.refundHintActive', 'Safarny handles traveler refunds. You will see the outcome here.') %></p>
+      <% } else { %>
+        <strong class="company-status company-status--draft"><%= t('company.refundStatus.none', 'No refund') %></strong>
+        <p><%= t('company.bookings.refundHintNone', 'No refund is in progress for this booking.') %></p>
+      <% } %>
+    </article>
+  </div>
+
   <div class="company-booking-detail-stats" data-scroll-reveal>
     <article class="company-booking-stat">
-      <strong><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></strong>
-      <span><%= t('company.bookings.total', 'Total') %></span>
+      <strong><%= formatPrice(booking.companyPayout || booking.basePrice) %> <%= t('shared.egp', 'EGP') %></strong>
+      <span><%= t('company.bookings.yourPayout', 'Your payout') %></span>
     </article>
     <article class="company-booking-stat">
       <strong><%= booking.seats %></strong>
       <span><%= t('company.bookings.seats', 'Seats') %></span>
     </article>
     <article class="company-booking-stat">
-      <strong><%= formatPrice(booking.pricePerSeat) %> <%= t('shared.egp', 'EGP') %></strong>
-      <span><%= t('company.bookings.perSeat', 'Per seat') %></span>
+      <strong><%= formatPrice(booking.pricePerRoom || booking.pricePerSeat) %> <%= t('shared.egp', 'EGP') %></strong>
+      <span><%= t('company.bookings.perRoom', 'Per room') %></span>
     </article>
     <article class="company-booking-stat">
       <strong><%= booking.daysUntilTrip !== null ? booking.daysUntilTrip : '—' %></strong>
@@ -54,10 +106,6 @@
           <strong><%= booking.bookingDate %></strong>
         </li>
       </ul>
-      <div class="company-detail-actions">
-        <a href="mailto:<%= booking.customerEmail %>" class="cp-btn cp-btn--secondary cp-btn--sm"><%= t('company.bookings.emailCustomer', 'Email customer') %></a>
-        <a href="tel:<%= booking.customerPhone %>" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('company.bookings.callCustomer', 'Call customer') %></a>
-      </div>
     </section>
 
     <section class="company-panel" data-scroll-reveal>
@@ -84,36 +132,25 @@
     </section>
 
     <section class="company-panel" data-scroll-reveal>
-      <h2 class="company-panel-title"><%= t('company.bookings.paymentInfo', 'Payment details') %></h2>
+      <h2 class="company-panel-title"><%= t('company.bookings.summary', 'Booking summary') %></h2>
+      <p class="company-booking-privacy"><%= t('company.bookings.paymentPrivacy', 'Payment method and proof stay with Safarny. You only see whether payment was reviewed and confirmed.') %></p>
       <ul class="company-detail-list">
         <li>
-          <span><%= t('company.bookings.total', 'Total') %></span>
-          <strong><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></strong>
+          <span><%= t('company.bookings.yourPayout', 'Your payout') %></span>
+          <strong><%= formatPrice(booking.companyPayout || booking.basePrice) %> <%= t('shared.egp', 'EGP') %></strong>
         </li>
         <li>
-          <span><%= t('company.bookings.perSeat', 'Per seat') %></span>
-          <strong><%= formatPrice(booking.pricePerSeat) %> <%= t('shared.egp', 'EGP') %></strong>
+          <span><%= t('company.bookings.perRoom', 'Per room') %></span>
+          <strong><%= formatPrice(booking.pricePerRoom || booking.pricePerSeat) %> <%= t('shared.egp', 'EGP') %></strong>
         </li>
         <li>
-          <span><%= t('company.bookings.paymentMethod', 'Payment method') %></span>
-          <strong><%= booking.paymentMethod %></strong>
+          <span><%= t('company.bookings.paymentReview', 'Payment review') %></span>
+          <strong><span class="company-status company-status--<%= paymentStatus %>"><%= t('company.paymentStatus.' + paymentStatus, statusLabel(booking.paymentStatus)) %></span></strong>
         </li>
         <li>
-          <span><%= t('company.bookings.paymentStatus', 'Payment status') %></span>
-          <strong><span class="checkout-payment-badge checkout-payment-badge--<%= booking.paymentStatus %>"><%= booking.paymentStatus %></span></strong>
+          <span><%= t('company.stats.settled', 'Settled') %></span>
+          <strong><%= booking.settlementStatus === 'settled' ? t('company.stats.settled', 'Settled') : t('company.stats.unsettled', 'Awaiting settlement') %></strong>
         </li>
-        <% if (payment && payment.proof && payment.proof.url) { %>
-          <li>
-            <span><%= t('company.bookings.paymentProof', 'Payment proof') %></span>
-            <strong>
-              <% if (payment.isImageProof) { %>
-                <a href="<%= payment.proof.url %>" target="_blank" rel="noopener" class="company-inline-link"><%= t('company.bookings.viewProof', 'View proof') %></a>
-              <% } else { %>
-                <a href="<%= payment.proof.url %>" target="_blank" rel="noopener" class="company-inline-link"><%= payment.proof.name || 'PDF' %></a>
-              <% } %>
-            </strong>
-          </li>
-        <% } %>
         <li>
           <span><%= t('company.bookings.reference', 'Reference') %></span>
           <strong><%= booking.referenceCode %></strong>
@@ -126,15 +163,43 @@
     </section>
 
     <section class="company-panel" data-scroll-reveal>
-      <h2 class="company-panel-title"><%= t('company.bookings.updateStatus', 'Update status') %></h2>
-      <form method="post" action="/company/bookings/<%= booking.id %>/status" class="company-status-form company-status-form--stack">
-        <select name="status" class="company-input">
-          <% ['Pending', 'Confirmed', 'Cancelled'].forEach(function(option) { %>
-            <option value="<%= option %>" <%= booking.status === option ? 'selected' : '' %>><%= t('company.bookingStatus.' + option.toLowerCase(), option) %></option>
-          <% }) %>
-        </select>
-        <button type="submit" class="cp-btn cp-btn--primary"><%= t('shared.saveChanges', 'Save') %></button>
-      </form>
+      <% if (canCancel) { %>
+        <h2 class="company-panel-title"><%= t('company.bookings.cancelTitle', 'Cancel booking') %></h2>
+        <p class="company-copy muted"><%= t('company.bookings.cancelHint', 'If this reservation cannot go ahead, cancel it and add a reason so Safarny can follow up.') %></p>
+        <form method="post" action="/company/bookings/<%= booking.id %>/cancel" class="company-cancel-form">
+          <label class="company-field">
+            <span class="company-label"><%= t('company.bookings.cancelReason', 'Reason') %></span>
+            <select name="reason" class="company-input" required>
+              <option value=""><%= t('company.bookings.cancelReasonPlaceholder', 'Select a reason') %></option>
+              <% cancelReasonKeys.forEach(function(reason) { %>
+                <option value="<%= reason %>"><%= t('company.cancelReasons.' + reason, reason) %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label class="company-field">
+            <span class="company-label"><%= t('company.bookings.cancelNote', 'Details (required for Other)') %></span>
+            <textarea name="note" class="company-input company-textarea" rows="3" placeholder="<%= t('company.bookings.cancelNoteHint', 'Add context for Safarny and the traveler…') %>"></textarea>
+          </label>
+          <button type="submit" class="cp-btn cp-btn--danger"><%= t('company.bookings.cancelSubmit', 'Cancel this booking') %></button>
+        </form>
+      <% } else { %>
+        <h2 class="company-panel-title"><%= t('company.bookings.closedTitle', 'Booking closed') %></h2>
+        <p class="company-copy"><%= bookingHints[bookingStatus] %></p>
+        <% if (booking.cancelReason) { %>
+          <ul class="company-detail-list">
+            <li>
+              <span><%= t('company.bookings.cancelReason', 'Reason') %></span>
+              <strong><%= t('company.cancelReasons.' + booking.cancelReason, booking.cancelReason) %></strong>
+            </li>
+            <% if (booking.cancelNote) { %>
+              <li>
+                <span><%= t('company.bookings.cancelNote', 'Details') %></span>
+                <strong><%= booking.cancelNote %></strong>
+              </li>
+            <% } %>
+          </ul>
+        <% } %>
+      <% } %>
     </section>
   </div>
 
@@ -146,8 +211,9 @@
           <li class="company-timeline-item <%= index === booking.statusHistory.length - 1 ? 'is-latest' : '' %>">
             <span class="company-timeline-dot" aria-hidden="true"></span>
             <div>
-              <strong><%= t('company.bookingStatus.' + item.status.toLowerCase(), item.status) %></strong>
+              <strong><%= t('company.bookingStatus.' + String(item.status || '').toLowerCase(), item.status) %></strong>
               <p><%= item.label %></p>
+              <% if (item.note) { %><p class="company-muted"><%= item.note %></p><% } %>
               <em><%= item.date %></em>
             </div>
           </li>
@@ -157,8 +223,9 @@
 
     <section class="company-panel" data-scroll-reveal>
       <h2 class="company-panel-title"><%= t('company.bookings.notes', 'Notes') %></h2>
-      <% if (booking.notes) { %>
-        <p class="company-copy"><%= booking.notes %></p>
+      <% if (booking.notes || booking.cancelNote) { %>
+        <% if (booking.notes) { %><p class="company-copy"><%= booking.notes %></p><% } %>
+        <% if (booking.cancelNote) { %><p class="company-copy"><%= booking.cancelNote %></p><% } %>
       <% } else { %>
         <p class="company-copy muted"><%= t('company.bookings.noNotes', 'No notes for this booking.') %></p>
       <% } %>

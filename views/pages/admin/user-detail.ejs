@@ -3,7 +3,7 @@
   <div>
     <a href="/admin/users" class="admin-back"><%= t('admin.back', 'Back to users') %></a>
     <h2 class="admin-title"><%= profile.userName %></h2>
-    <p class="admin-subtitle"><%= profile.email %> · <span class="admin-status admin-status--<%= profile.role %>"><%= profile.role %></span></p>
+    <p class="admin-subtitle"><%= profile.email %> · <span class="admin-status admin-status--<%= profile.role %>"><%= roleLabel(profile.role) %></span></p>
   </div>
   <div class="admin-header-actions">
     <% if (profile.status === 'suspended') { %>

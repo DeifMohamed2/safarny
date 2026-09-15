@@ -8,8 +8,8 @@
         <h2 class="admin-title"><%= admin.userName %></h2>
         <p class="admin-subtitle"><%= admin.email %></p>
         <div class="adm-traveler-badges">
-          <span class="admin-status admin-status--admin">admin</span>
-          <span class="admin-status admin-status--<%= admin.status || 'active' %>"><%= admin.status || 'active' %></span>
+          <span class="admin-status admin-status--admin"><%= roleLabel('admin') %></span>
+          <span class="admin-status admin-status--<%= admin.status || 'active' %>"><%= statusLabel(admin.status || 'active') %></span>
         </div>
       </div>
     </div>
@@ -26,7 +26,7 @@
       <dt><%= t('admin.table.phone', 'Phone') %></dt><dd><%= admin.phone || '—' %></dd>
       <dt><%= t('admin.table.joined', 'Joined') %></dt><dd><%= admin.createdAt || '—' %></dd>
       <dt><%= t('admin.admins.lastLogin', 'Last login') %></dt><dd><%= admin.lastLoginAt || '—' %></dd>
-      <dt><%= t('admin.table.role', 'Role') %></dt><dd><span class="admin-status admin-status--admin">Platform admin</span></dd>
+      <dt><%= t('admin.table.role', 'Role') %></dt><dd><span class="admin-status admin-status--admin"><%= t('admin.admins.platformRole', 'Platform admin') %></span></dd>
     </dl>
   </div>
   <div class="admin-panel">

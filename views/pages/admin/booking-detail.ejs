@@ -5,6 +5,10 @@
     <h2 class="admin-title"><%= booking.referenceCode %></h2>
     <p class="admin-subtitle"><%= booking.customerName %> · <%= booking.tripName %></p>
   </div>
+  <div class="admin-header-actions">
+    <span class="admin-status admin-status--<%= String(booking.status).toLowerCase() %>"><%= statusLabel(booking.status) %></span>
+    <span class="admin-status admin-status--<%= booking.paymentStatus %>"><%= statusLabel(booking.paymentStatus) %></span>
+  </div>
 </div>
 <div class="admin-grid-2">
   <div class="admin-panel">
@@ -12,29 +16,75 @@
     <dl class="admin-dl">
       <dt><%= t('admin.table.customer', 'Customer') %></dt><dd><%= booking.customerName %><br/><span class="admin-muted"><%= booking.customerEmail %></span></dd>
       <dt><%= t('admin.table.company', 'Company') %></dt><dd><%= company ? company.title : booking.companyId %></dd>
-      <dt><%= t('admin.table.amount', 'Amount') %></dt><dd><%= formatPrice(booking.totalPrice) %> EGP (<%= booking.seats %> <%= t('admin.table.seats', 'seats') %>)</dd>
-      <dt><%= t('admin.table.status', 'Status') %></dt><dd><span class="admin-status admin-status--<%= booking.status.toLowerCase() %>"><%= booking.status %></span></dd>
-      <dt><%= t('admin.finance.paymentStatus', 'Payment status') %></dt><dd><span class="admin-status admin-status--<%= booking.paymentStatus %>"><%= booking.paymentStatus %></span></dd>
+      <dt><%= t('admin.table.amount', 'Amount') %></dt>
+      <dd><%= formatPrice(booking.totalPrice) %> <%= t('shared.egp', 'EGP') %> (<%= booking.seats %> <%= t('admin.table.seats', 'seats') %>)</dd>
+      <% const markupAmount = Number(booking.markupAmount || 0); %>
+      <% if (markupAmount > 0) { %>
+        <dt><%= t('admin.finance.platformCut', 'Platform markup') %></dt>
+        <dd><%= formatPrice(markupAmount) %> <%= t('shared.egp', 'EGP') %></dd>
+        <dt><%= t('admin.finance.payableToCompany', 'Company') %></dt>
+        <dd><%= formatPrice(Number(booking.basePrice || booking.totalPrice - markupAmount)) %> <%= t('shared.egp', 'EGP') %></dd>
+      <% } %>
+      <dt><%= t('admin.table.status', 'Status') %></dt><dd><span class="admin-status admin-status--<%= booking.status.toLowerCase() %>"><%= statusLabel(booking.status) %></span></dd>
+      <dt><%= t('admin.finance.paymentStatus', 'Payment status') %></dt><dd><span class="admin-status admin-status--<%= booking.paymentStatus %>"><%= statusLabel(booking.paymentStatus) %></span></dd>
       <dt><%= t('admin.finance.method', 'Payment method') %></dt><dd><%= booking.paymentMethod %></dd>
       <dt><%= t('admin.table.dates', 'Dates') %></dt><dd><%= t('admin.bookings.booked', 'Booked') %>: <%= booking.bookingDate %> · <%= t('admin.bookings.travel', 'Travel') %>: <%= booking.tripDate %></dd>
+      <% if (booking.cancelReason) { %>
+        <dt><%= t('admin.bookings.cancelReason', 'Cancel reason') %></dt>
+        <dd><%= booking.cancelReason %><% if (booking.cancelNote) { %> — <%= booking.cancelNote %><% } %></dd>
+      <% } %>
     </dl>
     <% if (payment) { %>
       <a href="/admin/finance/payments/<%= payment.id %>" class="admin-link mt-3 inline-block"><%= t('admin.finance.viewPayment', 'View payment in Finance') %> →</a>
     <% } %>
+    <% if (booking.paymentStatus === 'verified' || booking.status === 'Confirmed' || booking.status === 'confirmed') { %>
+      <a href="/admin/bookings/<%= booking.id %>/invoice" class="admin-link mt-2 inline-block"><%= t('checkout.invoice', 'Download invoice') %> →</a>
+    <% } %>
   </div>
   <div class="admin-panel">
-    <h3 class="admin-panel-title"><%= t('admin.bookings.override', 'Status override') %></h3>
-    <form method="post" action="/admin/bookings/<%= booking.id %>/status" class="admin-form">
-      <label class="admin-label"><%= t('admin.table.status', 'Status') %></label>
-      <select name="status" class="admin-input">
-        <% ['Pending','Confirmed','Cancelled','Refunded'].forEach(function(s) { %>
-          <option value="<%= s %>" <%= booking.status === s ? 'selected' : '' %>><%= s %></option>
-        <% }) %>
-      </select>
-      <label class="admin-label"><%= t('admin.bookings.reason', 'Reason (optional)') %></label>
-      <textarea name="reason" class="admin-textarea" rows="3"><%= booking.adminNote || '' %></textarea>
-      <button type="submit" class="adm-btn adm-btn--primary mt-3"><%= t('admin.actions.update', 'Update status') %></button>
-    </form>
+    <h3 class="admin-panel-title"><%= t('admin.finance.proof', 'Payment proof') %></h3>
+    <% if (payment && payment.proof && payment.proof.viewUrl) { %>
+      <p class="admin-muted mb-3"><%= t('admin.bookings.proofHint', 'Only admins can view payment method and proof. Review the file, then confirm or reject.') %></p>
+      <div class="admin-finance-proof-actions admin-finance-proof-actions--detail">
+        <a href="<%= payment.proof.viewUrl %>" target="_blank" rel="noopener" class="adm-btn adm-btn--secondary adm-btn--sm"><%= t('admin.finance.viewProof', 'View') %></a>
+        <a href="<%= payment.proof.downloadUrl %>" download="<%= payment.proof.downloadName %>" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.finance.downloadProof', 'Download') %></a>
+      </div>
+      <% if (payment.isImageProof) { %>
+        <a href="<%= payment.proof.viewUrl %>" target="_blank" rel="noopener" class="admin-finance-proof-preview-link">
+          <img src="<%= payment.proof.viewUrl %>" alt="" class="admin-finance-proof-preview" onerror="this.closest('.admin-finance-proof-preview-link').hidden=true" />
+        </a>
+      <% } else { %>
+        <p class="admin-muted mt-2"><%= payment.proof.name || payment.proof.downloadName %></p>
+      <% } %>
+      <% if (payment.status !== 'verified') { %>
+        <div class="admin-booking-proof-actions">
+          <form method="post" action="/admin/finance/payments/<%= payment.id %>/verify">
+            <button type="submit" class="adm-btn adm-btn--primary"><%= t('admin.finance.verifyPayment', 'Verify payment') %></button>
+          </form>
+          <form method="post" action="/admin/finance/payments/<%= payment.id %>/reject" class="admin-form">
+            <label class="admin-label"><%= t('admin.finance.rejectNote', 'Rejection reason (required)') %></label>
+            <textarea name="reviewNote" class="admin-textarea" rows="2" required></textarea>
+            <button type="submit" class="adm-btn adm-btn--danger mt-2"><%= t('admin.finance.rejectPayment', 'Reject payment') %></button>
+          </form>
+        </div>
+      <% } %>
+    <% } else { %>
+      <p class="admin-muted"><%= t('admin.finance.noProof', 'No proof uploaded.') %></p>
+    <% } %>
   </div>
+</div>
+<div class="admin-panel mt-4">
+  <h3 class="admin-panel-title"><%= t('admin.bookings.override', 'Status override') %></h3>
+  <form method="post" action="/admin/bookings/<%= booking.id %>/status" class="admin-form">
+    <label class="admin-label"><%= t('admin.table.status', 'Status') %></label>
+    <select name="status" class="admin-input">
+      <% ['Pending','Confirmed','Cancelled','Refunded'].forEach(function(s) { %>
+        <option value="<%= s %>" <%= booking.status === s ? 'selected' : '' %>><%= s %></option>
+      <% }) %>
+    </select>
+    <label class="admin-label"><%= t('admin.bookings.reason', 'Reason (optional)') %></label>
+    <textarea name="reason" class="admin-textarea" rows="3"><%= booking.adminNote || '' %></textarea>
+    <button type="submit" class="adm-btn adm-btn--primary mt-3"><%= t('admin.actions.update', 'Update status') %></button>
+  </form>
 </div>
 <%- include('../../partials/admin-shell-end') %>

@@ -1,0 +1,15 @@
+<p class="admin-subtitle admin-subtitle--meta">
+  <% if (company.location) { %><span><%= company.location %></span><% } %>
+  <% if (companyReviewCount(company)) { %>
+    <span><%= formatCompanyRating(company) %> · <%= companyReviewCount(company) %> <%= t('admin.companies.reviewsCount', 'reviews') %></span>
+  <% } else { %>
+    <span><%= t('admin.companies.noReviewsYet', 'No reviews yet') %></span>
+  <% } %>
+  <span>
+    <% if (company.markupType === 'fixed') { %>
+      <%= formatPrice(company.markupFixed || 0) %> <%= t('shared.egp', 'EGP') %> <%= t('admin.companies.markupFixedLabel', 'fixed markup') %>
+    <% } else { %>
+      <%= Number(company.commissionRate || 0) %>% <%= t('admin.companies.markupPercentLabel', 'markup') %>
+    <% } %>
+  </span>
+</p>

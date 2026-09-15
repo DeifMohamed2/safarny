@@ -159,8 +159,8 @@
                   <span class="company-muted"><%= booking.customerEmail %></span>
                 </td>
                 <td><%= booking.tripName %></td>
-                <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= t('company.bookingStatus.' + booking.status.toLowerCase(), booking.status) %></span></td>
-                <td><%= formatPrice(booking.companyPayout || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></td>
+                <td><span class="company-status company-status--<%= booking.status.toLowerCase() %>"><%= statusLabel(booking.status) %></span></td>
+                <td><%= formatPrice(booking.companyPayout || booking.basePrice) %> <%= t('shared.egp', 'EGP') %></td>
               </tr>
             <% }) %>
           </tbody>

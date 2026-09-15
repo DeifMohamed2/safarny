@@ -13,6 +13,11 @@ dist-ssr
 *.local
 .env
 
+# Generated finance PDFs (served through authorized routes)
+storage/**
+!storage/finance-docs/
+!storage/finance-docs/.gitkeep
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -552,13 +552,82 @@
     });
   }
 
+  function initDestinationAdminSearch() {
+    const input = document.querySelector('[data-dest-admin-search]');
+    if (!input) return;
+    input.addEventListener('input', () => {
+      const needle = input.value.trim().toLowerCase();
+      document.querySelectorAll('[data-dest-row]').forEach((row) => {
+        const hay = String(row.dataset.haystack || '');
+        row.hidden = Boolean(needle) && !hay.includes(needle);
+      });
+    });
+  }
+
+  function initCopyButtons() {
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const value = btn.getAttribute('data-copy') || '';
+        if (!value) return;
+        try {
+          await navigator.clipboard.writeText(value);
+        } catch {
+          const input = document.createElement('input');
+          input.value = value;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          input.remove();
+        }
+        const prev = btn.textContent;
+        btn.classList.add('is-copied');
+        btn.textContent = btn.getAttribute('data-copied-label') || 'Copied';
+        setTimeout(() => {
+          btn.classList.remove('is-copied');
+          btn.textContent = prev;
+        }, 1400);
+      });
+    });
+  }
+
   function initSupportTableRows() {
-    document.querySelectorAll('.admin-support-row[data-href], .adm-people-row[data-href]').forEach((row) => {
+    document.querySelectorAll('.admin-support-row[data-href], .adm-people-row[data-href], .admin-company-row[data-href]').forEach((row) => {
       row.addEventListener('click', (event) => {
         if (event.target.closest('a, button')) return;
         window.location.href = row.dataset.href;
       });
     });
+  }
+
+  function initPayoutBuilder() {
+    const root = document.querySelector('[data-payout-builder]');
+    if (!root) return;
+    const boxes = [...root.querySelectorAll('[data-payout-row]')];
+    const all = root.querySelector('[data-payout-select-all]');
+    const total = root.querySelector('[data-payout-total]');
+    const net = root.querySelector('[data-payout-net]');
+    const count = root.querySelector('[data-payout-count]');
+    const submit = root.querySelector('[data-payout-submit]');
+    const clawback = Number(root.dataset.clawback || 0);
+    const money = (value) => Math.max(0, Math.round(Number(value) || 0)).toLocaleString();
+    function sync() {
+      const selected = boxes.filter((box) => box.checked);
+      const payable = selected.reduce((sum, box) => sum + Number(box.dataset.payable || 0), 0);
+      const netValue = Math.max(0, payable + clawback);
+      if (total) total.textContent = money(payable);
+      if (net) net.textContent = money(netValue);
+      if (count) count.textContent = String(selected.length);
+      if (all) all.checked = boxes.length > 0 && selected.length === boxes.length;
+      if (submit) submit.disabled = selected.length === 0;
+    }
+    boxes.forEach((box) => box.addEventListener('change', sync));
+    if (all) {
+      all.addEventListener('change', () => {
+        boxes.forEach((box) => { box.checked = all.checked; });
+        sync();
+      });
+    }
+    sync();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -573,7 +642,10 @@
     initBulkSelect();
     initPasswordForm();
     initSupportTableRows();
+    initDestinationAdminSearch();
     initSupportChat();
+    initCopyButtons();
+    initPayoutBuilder();
     window.SafarnyTripForm?.boot();
   });
 })();

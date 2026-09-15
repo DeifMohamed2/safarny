@@ -1,0 +1,275 @@
+<%- include('../../partials/admin-shell-start') %>
+<%
+  const payoutStatus = String(payout.status || 'draft').toLowerCase();
+  const canAct = payoutStatus !== 'paid' && payoutStatus !== 'cancelled';
+  const hasProof = Boolean(payout.proof && payout.proof.viewUrl);
+  const bookings = payout.bookings || [];
+  const collectedTotal = bookings.reduce(function(sum, booking) { return sum + Number(booking.collected || booking.totalPrice || 0); }, 0);
+  const companyTotal = bookings.reduce(function(sum, booking) { return sum + Number(booking.payableToCompany || booking.basePrice || booking.totalPrice || 0); }, 0);
+  const statusHints = {
+    draft: t('admin.finance.payouts.hintDraft', 'Ready to send. Mark processing when the transfer starts.'),
+    processing: t('admin.finance.payouts.hintProcessing', 'Transfer in progress. Add the reference and proof once the money has left.'),
+    failed: t('admin.finance.payouts.hintFailed', 'This transfer did not complete. Fix the issue, then retry or cancel so the bookings can be paid later.'),
+    paid: t('admin.finance.payouts.hintPaid', 'Settled. Included bookings are marked paid out to the company.'),
+    cancelled: t('admin.finance.payouts.hintCancelled', 'This payout was cancelled. Bookings are available for a new payout.'),
+  };
+  function stepClass(id) {
+    if (id === 'created') return 'is-done';
+    if (id === 'send') {
+      if (payoutStatus === 'draft') return 'is-current';
+      if (payoutStatus === 'processing') return 'is-current is-done';
+      if (payoutStatus === 'cancelled') return '';
+      return 'is-done';
+    }
+    if (payoutStatus === 'paid') return 'is-done';
+    if (payoutStatus === 'failed') return 'is-fail';
+    if (payoutStatus === 'cancelled') return 'is-fail';
+    return '';
+  }
+%>
+<div class="admin-payout-page">
+  <div class="admin-payout-head">
+    <div>
+      <a href="/admin/finance/payouts" class="admin-back"><%= t('admin.finance.payouts.title', 'Payouts') %></a>
+      <div class="admin-payout-head-row">
+        <h2 class="admin-payout-id"><%= payout.id %></h2>
+        <span class="admin-status admin-status--<%= payoutStatus %> admin-status--lg"><%= t('admin.status.' + payoutStatus, statusLabel(payout.status)) %></span>
+      </div>
+      <p class="admin-payout-kicker">
+        <a href="/admin/companies/<%= payout.companyId %>" class="admin-link"><%= payout.companyName %></a>
+        <span aria-hidden="true">·</span>
+        <span><%= payout.methodLabel || payout.method %></span>
+        <span aria-hidden="true">·</span>
+        <span><%= payout.createdAtLabel %></span>
+      </p>
+    </div>
+    <div class="admin-payout-head-actions">
+      <% if (payoutStatus === 'paid') { %>
+        <a href="/admin/finance/payouts/<%= payout.id %>/statement" class="adm-btn adm-btn--primary adm-btn--sm"><%= t('admin.finance.payouts.statement', 'Download statement') %></a>
+      <% } %>
+    </div>
+  </div>
+
+  <p class="admin-payout-banner admin-payout-banner--<%= payoutStatus %>"><%= statusHints[payoutStatus] || '' %></p>
+  <% if (payout.note) { %>
+    <p class="admin-payout-note"><strong><%= payoutStatus === 'failed' ? t('admin.finance.payouts.failNote', 'Failure note') : t('admin.finance.payouts.note', 'Note') %>:</strong> <%= payout.note %></p>
+  <% } %>
+
+  <div class="admin-payout-kpis">
+    <article class="admin-payout-kpi">
+      <span><%= t('admin.finance.collected', 'Collected from travelers') %></span>
+      <strong><%= formatPrice(payout.grossCollected) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+    </article>
+    <article class="admin-payout-kpi">
+      <span><%= t('admin.finance.platformCut', 'Platform markup') %></span>
+      <strong><%= formatPrice(payout.platformFee) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+    </article>
+    <article class="admin-payout-kpi admin-payout-kpi--net">
+      <span><%= t('admin.finance.payouts.net', 'Net payable') %></span>
+      <strong><%= formatPrice(payout.netPayable) %> <small><%= t('shared.egp', 'EGP') %></small></strong>
+    </article>
+  </div>
+
+  <div class="admin-payout-grid">
+    <section class="admin-panel admin-payout-card">
+      <h3 class="admin-panel-title"><%= t('admin.finance.payouts.details', 'Payout details') %></h3>
+      <ol class="admin-payout-steps" aria-label="<%= t('admin.finance.payouts.progress', 'Progress') %>">
+        <li class="<%= stepClass('created') %>"><%= t('admin.finance.payouts.stepCreated', 'Created') %></li>
+        <li class="<%= stepClass('send') %>"><%= t('admin.finance.payouts.stepSend', 'Send') %></li>
+        <li class="<%= stepClass('done') %>">
+          <% if (payoutStatus === 'failed') { %><%= t('admin.status.failed', 'Failed') %>
+          <% } else if (payoutStatus === 'cancelled') { %><%= t('admin.status.cancelled', 'Cancelled') %>
+          <% } else { %><%= t('admin.finance.payouts.stepSettled', 'Settled') %><% } %>
+        </li>
+      </ol>
+      <dl class="admin-payout-facts">
+        <div>
+          <dt><%= t('admin.table.company', 'Company') %></dt>
+          <dd><a href="/admin/companies/<%= payout.companyId %>" class="admin-link"><%= payout.companyName %></a></dd>
+        </div>
+        <div>
+          <dt><%= t('admin.finance.method', 'Method') %></dt>
+          <dd><%= payout.methodLabel || payout.method || '—' %></dd>
+        </div>
+        <div>
+          <dt><%= t('admin.finance.transferRef', 'Transfer reference') %></dt>
+          <dd class="admin-payout-value">
+            <span><%= payout.reference || '—' %></span>
+            <% if (payout.reference) { %>
+              <button type="button" class="admin-copy" data-copy="<%= payout.reference %>" data-copied-label="<%= t('shared.copied', 'Copied') %>"><%= t('shared.copy', 'Copy') %></button>
+            <% } %>
+          </dd>
+        </div>
+        <div>
+          <dt><%= t('admin.finance.payouts.created', 'Created') %></dt>
+          <dd><%= payout.createdAtLabel || '—' %></dd>
+        </div>
+        <% if (payout.paidAtLabel) { %>
+          <div>
+            <dt><%= t('admin.finance.payouts.paidAt', 'Paid') %></dt>
+            <dd><%= payout.paidAtLabel %></dd>
+          </div>
+        <% } else if (payout.updatedAtLabel && payoutStatus !== 'draft') { %>
+          <div>
+            <dt><%= t('admin.table.updated', 'Updated') %></dt>
+            <dd><%= payout.updatedAtLabel %></dd>
+          </div>
+        <% } %>
+        <div>
+          <dt><%= t('admin.finance.payouts.bookings', 'Bookings') %></dt>
+          <dd><%= payout.bookingCount || bookings.length %></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="admin-panel admin-payout-card">
+      <h3 class="admin-panel-title"><%= t('admin.finance.payouts.destination', 'Pay to') %></h3>
+      <p class="admin-muted-sm"><%= t('admin.finance.payouts.payHint', 'Copy these details into the bank or wallet app, then send the net payable.') %></p>
+      <% if (payout.destinationFields && payout.destinationFields.length) { %>
+        <dl class="admin-payout-facts">
+          <% payout.destinationFields.forEach(function(field) { %>
+            <div>
+              <dt><%= field.label %></dt>
+              <dd class="admin-payout-value admin-payout-mono">
+                <span><%= field.value %></span>
+                <button type="button" class="admin-copy" data-copy="<%= field.value %>" data-copied-label="<%= t('shared.copied', 'Copied') %>"><%= t('shared.copy', 'Copy') %></button>
+              </dd>
+            </div>
+          <% }) %>
+        </dl>
+      <% } else { %>
+        <p class="admin-muted"><%= t('admin.finance.payouts.noDestination', 'No payout destination on file.') %></p>
+      <% } %>
+    </section>
+
+    <section class="admin-panel admin-payout-card admin-payout-proof">
+      <h3 class="admin-panel-title"><%= t('admin.finance.proof', 'Transfer proof') %></h3>
+      <% if (hasProof) { %>
+        <div class="admin-finance-proof-actions admin-finance-proof-actions--detail">
+          <a href="<%= payout.proof.viewUrl %>" target="_blank" rel="noopener" class="adm-btn adm-btn--secondary adm-btn--sm"><%= t('admin.finance.viewProof', 'View') %></a>
+          <a href="<%= payout.proof.downloadUrl %>" download="<%= payout.proof.downloadName %>" class="adm-btn adm-btn--ghost adm-btn--sm"><%= t('admin.finance.downloadProof', 'Download') %></a>
+        </div>
+        <% if (payout.proof.isImage) { %>
+          <a href="<%= payout.proof.viewUrl %>" target="_blank" rel="noopener" class="admin-finance-proof-preview-link">
+            <img src="<%= payout.proof.viewUrl %>" alt="" class="admin-finance-proof-preview" />
+          </a>
+        <% } else { %>
+          <p class="admin-muted mt-2"><%= payout.proof.name || payout.proof.downloadName %></p>
+        <% } %>
+      <% } else { %>
+        <div class="admin-payout-proof-empty">
+          <span aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </span>
+          <p><%= t('admin.finance.payouts.proofEmpty', 'No transfer proof yet. Attach a screenshot or PDF when you mark this payout paid.') %></p>
+        </div>
+      <% } %>
+    </section>
+  </div>
+
+  <section class="admin-panel admin-payout-card">
+    <div class="admin-panel-head">
+      <h3 class="admin-panel-title"><%= t('admin.finance.payouts.includedBookings', 'Included bookings') %></h3>
+      <span class="admin-muted-sm"><%= bookings.length %></span>
+    </div>
+    <% if (!bookings.length) { %>
+      <p class="admin-muted"><%= t('admin.finance.payouts.noLinkedBookings', 'No bookings linked to this payout.') %></p>
+    <% } else { %>
+      <div class="admin-table-wrap">
+        <table class="admin-table admin-table--compact">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th><%= t('admin.table.customer', 'Customer') %></th>
+              <th><%= t('admin.table.trip', 'Trip') %></th>
+              <th><%= t('admin.finance.collected', 'Collected') %></th>
+              <th><%= t('admin.finance.payouts.companyShare', 'Company share') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% bookings.forEach(function(booking) { %>
+              <tr>
+                <td><a href="/admin/bookings/<%= booking.id %>" class="admin-link"><%= booking.code || booking.id %></a></td>
+                <td><%= booking.customerName %></td>
+                <td><%= booking.tripName %></td>
+                <td class="admin-muted-sm"><%= formatPrice(booking.collected || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></td>
+                <td><strong><%= formatPrice(booking.payableToCompany || booking.basePrice || booking.totalPrice) %> <%= t('shared.egp', 'EGP') %></strong></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3"><%= t('admin.finance.payouts.totals', 'Totals') %></td>
+              <td class="admin-muted-sm"><%= formatPrice(collectedTotal) %> <%= t('shared.egp', 'EGP') %></td>
+              <td><strong><%= formatPrice(companyTotal) %> <%= t('shared.egp', 'EGP') %></strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    <% } %>
+    <% if (payout.adjustments && payout.adjustments.length) { %>
+      <h4 class="admin-docs-title mt-4"><%= t('admin.finance.payouts.adjustments', 'Adjustments') %></h4>
+      <ul class="admin-settlement-list">
+        <% payout.adjustments.forEach(function(row) { %>
+          <li><span><%= row.label %></span><strong><%= formatPrice(row.amount) %> <%= t('shared.egp', 'EGP') %></strong></li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+
+  <% if (canAct) { %>
+    <div class="admin-payout-actions">
+      <section class="admin-panel admin-payout-card">
+        <h3 class="admin-panel-title">
+          <%= payoutStatus === 'failed' ? t('admin.finance.payouts.retry', 'Retry transfer') : t('admin.finance.payouts.recordPaid', 'Record transfer') %>
+        </h3>
+        <p class="admin-muted mb-3"><%= payoutStatus === 'failed' ? t('admin.finance.payouts.retryHint', 'Fix the destination or amount, then mark processing again or record the transfer if it already went through.') : t('admin.finance.payouts.recordHint', 'After you send the money, save the bank/wallet reference and proof. This settles the selected bookings.') %></p>
+        <% if (payoutStatus === 'draft' || payoutStatus === 'failed') { %>
+          <form method="post" action="/admin/finance/payouts/<%= payout.id %>/processing" class="mb-3">
+            <button type="submit" class="adm-btn <%= payoutStatus === 'failed' ? 'adm-btn--primary' : 'adm-btn--secondary' %>"><%= payoutStatus === 'failed' ? t('admin.finance.payouts.retryProcessing', 'Retry — mark processing') : t('admin.finance.payouts.markProcessing', 'Mark processing') %></button>
+          </form>
+        <% } %>
+        <form method="post" action="/admin/finance/payouts/<%= payout.id %>/paid" enctype="multipart/form-data" class="admin-payout-form">
+          <label class="admin-field">
+            <span class="admin-label"><%= t('admin.finance.transferRef', 'Transfer reference') %></span>
+            <input name="reference" class="admin-input" required value="<%= payout.reference || '' %>" placeholder="<%= t('admin.finance.payouts.refPlaceholder', 'Bank / InstaPay / wallet reference') %>" />
+          </label>
+          <label class="admin-field">
+            <span class="admin-label"><%= t('admin.finance.proof', 'Proof') %></span>
+            <input type="file" name="proof" accept="image/jpeg,image/png,image/webp,application/pdf" class="admin-input" <%= hasProof ? '' : 'required' %> />
+            <% if (hasProof) { %>
+              <span class="admin-field-hint"><%= t('admin.finance.payouts.proofReplace', 'Optional — leave empty to keep the current proof.') %></span>
+            <% } else { %>
+              <span class="admin-field-hint"><%= t('admin.finance.payouts.proofRequired', 'Screenshot or PDF of the completed transfer.') %></span>
+            <% } %>
+          </label>
+          <label class="admin-field">
+            <span class="admin-label"><%= t('admin.finance.payouts.note', 'Note') %></span>
+            <textarea name="note" class="admin-textarea" rows="2" placeholder="<%= t('admin.finance.payouts.notePlaceholder', 'Optional internal note') %>"><%= payoutStatus === 'failed' ? '' : (payout.note || '') %></textarea>
+          </label>
+          <button type="submit" class="adm-btn <%= payoutStatus === 'failed' ? 'adm-btn--secondary' : 'adm-btn--primary' %>"><%= t('admin.finance.payouts.markPaid', 'Mark paid') %></button>
+        </form>
+      </section>
+
+      <section class="admin-panel admin-payout-card admin-payout-card--danger">
+        <h3 class="admin-panel-title"><%= t('admin.finance.payouts.otherActions', 'If the transfer cannot complete') %></h3>
+        <% if (payoutStatus !== 'failed') { %>
+          <p class="admin-muted mb-3"><%= t('admin.finance.payouts.failHint', 'Mark failed to keep the payout for a retry, or cancel to release the bookings.') %></p>
+          <form method="post" action="/admin/finance/payouts/<%= payout.id %>/failed" class="admin-payout-form mb-3">
+            <label class="admin-field">
+              <span class="admin-label"><%= t('admin.finance.payouts.failNote', 'Failure note') %></span>
+              <textarea name="note" class="admin-textarea" rows="2" required placeholder="<%= t('admin.finance.payouts.failPlaceholder', 'Why the transfer failed') %>"></textarea>
+            </label>
+            <button type="submit" class="adm-btn adm-btn--secondary"><%= t('admin.finance.payouts.markFailed', 'Mark failed') %></button>
+          </form>
+        <% } else { %>
+          <p class="admin-muted mb-3"><%= t('admin.finance.payouts.cancelHint', 'Cancel only if you will not retry this batch. Bookings become available for a new payout.') %></p>
+        <% } %>
+        <form method="post" action="/admin/finance/payouts/<%= payout.id %>/cancel">
+          <button type="submit" class="adm-btn adm-btn--danger"><%= t('admin.finance.payouts.cancel', 'Cancel payout') %></button>
+        </form>
+      </section>
+    </div>
+  <% } %>
+</div>
+<%- include('../../partials/admin-shell-end') %>

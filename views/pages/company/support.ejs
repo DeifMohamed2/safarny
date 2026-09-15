@@ -151,7 +151,7 @@
                 </td>
                 <td><a href="/company/support/<%= ticket.id %>" class="company-support-subject-link"><%= ticket.subject %></a></td>
                 <td><span class="company-ticket-category"><%= ticket.category %></span></td>
-                <td><span class="company-ticket-priority company-ticket-priority--<%= ticket.priority %>"><%= ticket.priority %></span></td>
+                <td><span class="company-ticket-priority company-ticket-priority--<%= ticket.priority %>"><%= statusLabel(ticket.priority) %></span></td>
                 <td><span class="company-ticket-status company-ticket-status--<%= ticket.status %>"><%= t(statusKey(ticket.status), ticket.status) %></span></td>
                 <td><%= ticket.updatedAt %></td>
                 <td><a href="/company/support/<%= ticket.id %>" class="cp-btn cp-btn--ghost cp-btn--sm"><%= t('shared.viewDetails', 'View') %></a></td>

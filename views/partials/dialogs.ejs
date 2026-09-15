@@ -17,7 +17,7 @@
   <div class="dialog-panel wide p-5.5">
     <h1 class="text-[22px] font-semibold capitalize"><%= t('tripDetails.bookingDialog.summary', 'Booking Summary') %></h1>
     <% if (currentTrip) { %>
-      <p class="text-[#263859] font-medium mt-1"><%= currentTrip.title %></p>
+      <p class="text-[#263859] font-medium mt-1" dir="auto"><%= tripTitle(currentTrip) %></p>
       <p class="text-sm text-[#535353] mt-2"><%= currentTrip.location %></p>
     <% } %>
     <form id="booking-form" action="<%= currentTrip ? '/trips/' + currentTrip.id + '/book' : '/trips/1/book' %>" method="post" class="mt-6 flex flex-col gap-4">
@@ -26,7 +26,7 @@
         <h3><%= t('tripDetails.bookingDialog.tripSummary', 'Trip Summary') %></h3>
         <div class="flex justify-between"><span class="text-[#535353]"><%= t('tripDetails.bookingDialog.duration', 'Duration') %></span><span id="booking-duration"><%= currentTrip ? currentTrip.days + ' ' + t('tripDetails.durationDays') + ' / ' + currentTrip.nights + ' ' + t('tripDetails.durationNights') : '5 ' + t('tripDetails.durationDays') + ' / 4 ' + t('tripDetails.durationNights') %></span></div>
         <div class="flex justify-between"><span class="text-[#535353]"><%= t('tripDetails.bookingDialog.selectedDateTime', 'Selected Date') %></span><span id="booking-selected-date"><%= typeof tripDates !== 'undefined' && tripDates[0] ? tripDates[0].date : '—' %></span></div>
-        <div class="flex justify-between"><span class="text-[#535353]"><%= t('tripDetails.bookingDialog.pricePerPerson', 'Price per person') %></span><span><%= currentTrip ? formatPrice(currentTrip.price) : '8,500' %> <%= t('shared.egp') %></span></div>
+        <div class="flex justify-between"><span class="text-[#535353]"><%= t('checkout.pricePerRoom', 'Price per room') %></span><span><%= currentTrip ? formatPrice(currentTrip.price) : '8,500' %> <%= t('shared.egp') %></span></div>
       </div>
       <label class="flex flex-col gap-1 text-sm">
         <%= t('tripDetails.bookingDialog.persons', 'Persons') %>

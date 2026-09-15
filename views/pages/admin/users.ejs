@@ -38,8 +38,8 @@
           <tr>
             <td><%= u.userName %></td>
             <td><%= u.email %></td>
-            <td><span class="admin-status admin-status--<%= u.role %>"><%= u.role %></span></td>
-            <td><span class="admin-status admin-status--<%= u.status || 'active' %>"><%= u.status || 'active' %></span></td>
+            <td><span class="admin-status admin-status--<%= u.role %>"><%= roleLabel(u.role) %></span></td>
+            <td><span class="admin-status admin-status--<%= u.status || 'active' %>"><%= statusLabel(u.status || 'active') %></span></td>
             <td><a href="/admin/users/<%= u.id %>" class="adm-btn adm-btn--sm adm-btn--ghost"><%= t('admin.actions.view', 'View') %></a></td>
           </tr>
         <% }) %>

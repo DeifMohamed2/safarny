@@ -2,6 +2,8 @@ const { Payment, Booking, Company, nextSeq } = require('../models');
 const { toDoc, toDocs } = require('../lib/document');
 const { paginateList } = require('../lib/paginate');
 const { methodLabel, MOBILE_WALLET_METHODS } = require('../lib/payment-methods');
+const { bookingSplit, roundMoney } = require('../lib/money');
+const { payoutDetailsVerified } = require('../lib/payout-details');
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -242,15 +244,13 @@ async function getFinanceSummary() {
   };
 }
 
-function bookingSplit(booking) {
-  const collected = Number(booking.totalPrice) || 0;
-  const markup = Number(booking.markupAmount);
-  const storedBase = Number(booking.basePrice);
-  const platformCut = Number.isFinite(markup) && markup >= 0 ? markup : 0;
-  const payableToCompany = Number.isFinite(storedBase) && storedBase > 0
-    ? storedBase
-    : Math.max(0, collected - platformCut);
-  return { collected, platformCut, payableToCompany };
+function splitForSettlement(booking) {
+  const split = bookingSplit(booking);
+  return {
+    collected: split.collected,
+    platformCut: split.platformFee,
+    payableToCompany: split.payableToCompany,
+  };
 }
 
 async function getCompanySettlements() {
@@ -272,26 +272,83 @@ async function getCompanySettlements() {
         platformCut: 0,
         payableToCompany: 0,
         unsettledPayable: 0,
+        settledPayable: 0,
+        availablePayable: 0,
         bookingCount: 0,
         unsettledCount: 0,
         settledCount: 0,
+        availableCount: 0,
+        payoutReady: payoutDetailsVerified(company?.payoutDetails),
+        method: company?.payoutDetails?.method || '',
       });
     }
     const row = groups.get(companyId);
-    const split = bookingSplit(booking);
+    const split = splitForSettlement(booking);
     row.collected += split.collected;
     row.platformCut += split.platformCut;
     row.payableToCompany += split.payableToCompany;
     row.bookingCount += 1;
     if (booking.settlementStatus === 'settled') {
       row.settledCount += 1;
+      row.settledPayable += split.payableToCompany;
     } else {
       row.unsettledCount += 1;
       row.unsettledPayable += split.payableToCompany;
+      if (!booking.payoutId) {
+        row.availableCount += 1;
+        row.availablePayable += split.payableToCompany;
+      }
     }
   });
 
-  return [...groups.values()].sort((a, b) => b.unsettledPayable - a.unsettledPayable || b.payableToCompany - a.payableToCompany);
+  return [...groups.values()]
+    .map((row) => ({
+      ...row,
+      collected: roundMoney(row.collected),
+      platformCut: roundMoney(row.platformCut),
+      payableToCompany: roundMoney(row.payableToCompany),
+      unsettledPayable: roundMoney(row.unsettledPayable),
+      settledPayable: roundMoney(row.settledPayable),
+      availablePayable: roundMoney(row.availablePayable),
+    }))
+    .sort((a, b) => b.unsettledPayable - a.unsettledPayable || b.payableToCompany - a.payableToCompany);
+}
+
+function summarizeSettlements(rows = []) {
+  const summary = rows.reduce((acc, row) => {
+    acc.unsettledPayable += Number(row.unsettledPayable || 0);
+    acc.settledPayable += Number(row.settledPayable || 0);
+    acc.payableToCompany += Number(row.payableToCompany || 0);
+    acc.unsettledBookings += Number(row.unsettledCount || 0);
+    acc.settledBookings += Number(row.settledCount || 0);
+    acc.availablePayable += Number(row.availablePayable || 0);
+    acc.availableBookings += Number(row.availableCount || 0);
+    if (Number(row.unsettledCount || 0) > 0) {
+      acc.unsettledCompanies += 1;
+      if (row.payoutReady) acc.readyCompanies += 1;
+      else acc.blockedCompanies += 1;
+    }
+    return acc;
+  }, {
+    unsettledPayable: 0,
+    settledPayable: 0,
+    payableToCompany: 0,
+    unsettledBookings: 0,
+    settledBookings: 0,
+    availablePayable: 0,
+    availableBookings: 0,
+    unsettledCompanies: 0,
+    readyCompanies: 0,
+    blockedCompanies: 0,
+  });
+  return {
+    ...summary,
+    unsettledPayable: roundMoney(summary.unsettledPayable),
+    settledPayable: roundMoney(summary.settledPayable),
+    payableToCompany: roundMoney(summary.payableToCompany),
+    availablePayable: roundMoney(summary.availablePayable),
+    dueCompanies: rows.filter((row) => Number(row.unsettledCount || 0) > 0),
+  };
 }
 
 async function settleCompanyBookings(companyId) {
@@ -382,9 +439,11 @@ module.exports = {
   countSubmittedPayments,
   getFinanceSummary,
   getCompanySettlements,
+  summarizeSettlements,
   settleCompanyBookings,
   verifyPayment,
   rejectPayment,
   exportPaymentsCsv,
   paginateList,
+  bookingSplit,
 };

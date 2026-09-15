@@ -1,0 +1,91 @@
+<%- include('../../partials/company-shell-start', { companyActive: 'finance' }) %>
+<%
+  const payoutStatus = String(payout.status || 'draft').toLowerCase();
+  const statusHints = {
+    draft: t('company.finance.hintDraft', 'Safarny is preparing this payout.'),
+    processing: t('company.finance.hintProcessing', 'Safarny is sending this transfer.'),
+    failed: t('company.finance.hintFailed', 'This transfer did not complete. Safarny will retry or send a new payout.'),
+    paid: t('company.finance.hintPaid', 'This amount was sent to your payout method.'),
+    cancelled: t('company.finance.hintCancelled', 'This payout was cancelled. The bookings can be included in a later payout.'),
+  };
+%>
+  <header class="company-header company-payout-head">
+    <div>
+      <a href="/company/finance" class="company-inline-link"><%= t('company.finance.title', 'Finance') %></a>
+      <div class="company-payout-title-row">
+        <h1 class="company-title"><%= payout.id %></h1>
+        <span class="company-status company-status--<%= payoutStatus %> company-status--lg"><%= t('admin.status.' + payoutStatus, statusLabel(payout.status)) %></span>
+      </div>
+      <p class="company-subtitle"><%= payout.methodLabel || payout.method || '' %></p>
+    </div>
+    <% if (payoutStatus === 'paid') { %>
+      <a href="/company/finance/payouts/<%= payout.id %>/statement" class="cp-btn cp-btn--primary"><%= t('company.finance.statement', 'Statement') %></a>
+    <% } %>
+  </header>
+
+  <% if (statusHints[payoutStatus]) { %>
+    <p class="company-payout-banner company-payout-banner--<%= payoutStatus %>"><%= statusHints[payoutStatus] %></p>
+  <% } %>
+
+  <div class="company-payout-kpis">
+    <article class="company-booking-stat">
+      <strong><%= formatPrice(payout.netPayable) %> <%= t('shared.egp', 'EGP') %></strong>
+      <span><%= t('admin.finance.payouts.net', 'Net payable') %></span>
+    </article>
+    <article class="company-booking-stat">
+      <strong><%= (bookings || []).length %></strong>
+      <span><%= t('company.finance.includedBookings', 'Included bookings') %></span>
+    </article>
+  </div>
+
+  <div class="company-grid-2">
+    <section class="company-panel">
+      <h3 class="company-panel-title"><%= t('company.finance.payoutDetails', 'Payout details') %></h3>
+      <ul class="company-dl">
+        <li><span><%= t('admin.finance.method', 'Method') %></span><strong><%= payout.methodLabel || payout.method || '—' %></strong></li>
+        <li><span><%= t('admin.finance.transferRef', 'Reference') %></span><strong><%= payout.reference || '—' %></strong></li>
+        <li><span><%= t('admin.table.status', 'Status') %></span><strong><%= t('admin.status.' + payoutStatus, statusLabel(payout.status)) %></strong></li>
+      </ul>
+    </section>
+    <section class="company-panel">
+      <h3 class="company-panel-title"><%= t('admin.finance.payouts.destination', 'Pay to') %></h3>
+      <% if (payout.destinationFields && payout.destinationFields.length) { %>
+        <ul class="company-dl">
+          <% payout.destinationFields.forEach(function(field) { %>
+            <li><span><%= field.label %></span><strong><%= field.value %></strong></li>
+          <% }) %>
+        </ul>
+      <% } else if (payout.destinationLines && payout.destinationLines.length) { %>
+        <p class="company-muted"><%= payout.destinationLines.join(' · ') %></p>
+      <% } else { %>
+        <p class="company-muted"><%= t('admin.finance.payouts.noDestination', 'No payout destination on file.') %></p>
+      <% } %>
+    </section>
+  </div>
+
+  <section class="company-panel mt-4">
+    <h3 class="company-panel-title"><%= t('company.finance.includedBookings', 'Included bookings') %></h3>
+    <div class="company-table-wrap">
+      <table class="company-table company-table--compact">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th><%= t('admin.table.trip', 'Trip') %></th>
+            <th><%= t('admin.table.customer', 'Customer') %></th>
+            <th><%= t('admin.table.amount', 'Amount') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (bookings || []).forEach(function(booking) { %>
+            <tr>
+              <td><a href="/company/bookings/<%= booking.id %>" class="company-inline-link"><%= booking.code || booking.id %></a></td>
+              <td><%= booking.tripName %></td>
+              <td><%= booking.customerName %></td>
+              <td><strong><%= formatPrice(booking.companyPayout || booking.basePrice) %> <%= t('shared.egp', 'EGP') %></strong></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<%- include('../../partials/company-shell-end') %>
